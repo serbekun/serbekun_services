@@ -1,4 +1,6 @@
+import Core.IdeasTexts;
 import Handles.Handles;
+import Services.IdeasTextsService;
 import io.javalin.Javalin;
 // import io.javalin.community.ssl.SslPlugin;
 
@@ -6,7 +8,7 @@ public class Main {
     
     public static void main(String[] args) {
 
-        int port = 2000;
+        // int port = 2000;
 
         // Javalin svr = Javalin.create(config -> {
         // config.registerPlugin(new SslPlugin(ssl -> {
@@ -31,8 +33,14 @@ public class Main {
         
         Javalin svr = Javalin.create();
 
+        // init core
+        IdeasTexts ideasTexts = new IdeasTexts();
+    
+        // init services
+        IdeasTextsService ideasTextsService = new IdeasTextsService(ideasTexts);
+
         // initialize server endpoint handles
-        Handles.InitHandles(svr);
+        Handles.InitHandles(svr, ideasTextsService);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Stopping server...");

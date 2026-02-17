@@ -2,11 +2,11 @@ package Services;
 
 import Core.IdeasTexts;
 
-public class IdeasTextService {
+public class IdeasTextsService {
     
     private IdeasTexts ideasTexts;
 
-    public IdeasTextService(IdeasTexts ideasTexts) {
+    public IdeasTextsService(IdeasTexts ideasTexts) {
         this.ideasTexts = ideasTexts;
     }
 

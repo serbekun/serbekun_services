@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * core class that managing ideas texts
  */
-public class IdeasText {
+public class IdeasTexts {
     
     private List<String> ideasTexts;
     private ObjectMapper mapper;

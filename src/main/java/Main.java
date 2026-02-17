@@ -1,3 +1,4 @@
+import Handles.Handles;
 import io.javalin.Javalin;
 import io.javalin.community.ssl.SslPlugin;
 
@@ -29,6 +30,11 @@ public class Main {
             }));
         });
 
-        
+        // initialize server endpoint handles
+        Handles.InitHandles(svr);
+
+        // starting server
+        svr.start();
+    
     }
 }

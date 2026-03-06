@@ -1,7 +1,6 @@
 package com.serbekun.core;
 
 import java.util.UUID;
-import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -54,7 +53,7 @@ public class Links {
     }
 
     private final Map<UUID, Link> linksByUuid;
-    
+
     public Links(Map<UUID, Link> linksByUID) {
         this.linksByUuid = linksByUID;
     }
@@ -109,10 +108,10 @@ public class Links {
      * 
      * @param uuid UUID of link
      */
-    public synchronized void removeLink(UUID uuid) {
+    public synchronized Link removeLink(UUID uuid) {
         if (uuid == null) {
-            return;
+            return null;
         }
-        Link removed = linksByUuid.remove(uuid);
+        return linksByUuid.remove(uuid);
     }
 }

@@ -21,14 +21,6 @@ public class Main {
         LinksRepository linksRepository = new LinksRepository(CoreConfig.LinksConfig.getLinksStorageFile());
         
         Links links = new Links(linksRepository.load()); 
-        
-        Link link1 = new Link(UUID.randomUUID(), "https://github.com", "github", "github index page");
-        Link link2 = new Link(UUID.randomUUID(), "https://youtube.com", "youtube", "youtube index page");
-
-        links.addLink(link1);
-        links.addLink(link2);
-
-        linksRepository.save(links.getAllLinks());
 
     }
 }

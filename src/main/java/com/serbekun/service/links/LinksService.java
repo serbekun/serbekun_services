@@ -3,18 +3,38 @@ package com.serbekun.service.links;
 import java.util.Map;
 import java.util.UUID;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.serbekun.core.Links;
 import com.serbekun.core.Links.Link;
+import com.serbekun.service.json.ProgramsJson;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LinksService {
 
+    private static final ObjectMapper mapper = new ObjectMapper();
     private final Links links;
+
+    private static final Logger log = 
+        LoggerFactory.getLogger(ProgramsJson.class);
 
     public LinksService(Links links) {
         this.links = links;
     }
 
-        /**
+     /**
+     * 
+     * @param uuid Link UUID
+     * @return true link exist false uuid don't exist
+     */
+    public synchronized boolean existsLink(UUID uuid) {
+        return links.existsLink(uuid);
+    }
+
+    /**
      * 
      * Add link to catalog
      * 
@@ -41,6 +61,21 @@ public class LinksService {
      */
     public synchronized Map<UUID, Link> getAllLinks() {
         return links.getAllLinks();
+    }
+
+    /**
+     * 
+     * return json string of {@link Links#links}
+     * 
+     * @return json format String
+     */
+    public synchronized String getAllLinksAsJson() {
+        try {
+            return mapper.writeValueAsString(links.getAllLinks());
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize links to JSON", e);
+            return null;
+        }
     }
 
     /**

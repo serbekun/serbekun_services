@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUIZ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        :root {
+            --bg: rgba(0, 0, 0, 0.85);
+            --text: #ffffff;
+            --accent: #acacac;
+            --dark: #4c4c4c;
+            --neon-green: #00ff9f;
+            --neon-red: #ff2a6d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            /* background: linear-gradient(135deg, #0a0a0a, #1f1f1f); */
+            background: #000;
+            color: var(--text);
+            font-family: 'Press Start 2P', system-ui;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: 8px;
+            color: #fff;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #acacac;
+            letter-spacing: 4px;
+            margin-top: 10px;
+        }
+
+        #quiz-container {
+            background: var(--bg);
+            border: 4px solid #acacac;
+            border-radius: 20px;
+            padding: 40px 30px;
+            position: relative;
+        }
+
+        #progress {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #acacac;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        #question-text {
+            font-size: 2.1rem;
+            line-height: 1.4;
+            text-align: center;
+            min-height: 120px;
+            margin-bottom: 40px;
+            color: #ffffff;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .option {
+            background: var(--dark);
+            border: 5px solid #acacac;
+            border-radius: 20px;
+            padding: 28px 20px;
+            font-size: 1.45rem;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            text-align: left;
+        }
+
+        .option:hover {
+            transform: translateY(-8px) scale(1.03);
+            border-color: #ffffff;
+        }
+
+        .option::before {
+            content: "✦";
+            color: #acacac;
+            font-size: 2.2rem;
+            flex-shrink: 0;
+        }
+
+        .option .letter {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #acacac;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .option .text {
+            flex: 1;
+        }
+
+        /* Цвета ответов */
+        .option.correct {
+            background: #00cc66 !important;
+            border-color: #00ff9f !important;
+            color: #000;
+        }
+
+        .option.wrong {
+            background: #cc0033 !important;
+            border-color: #ff2a6d !important;
+        }
+
+        .option.correct .letter,
+        .option.wrong .letter {
+            color: #fff;
+        }
+
+        /* Результаты */
+        #results-screen {
+            display: none;
+            text-align: center;
+            padding: 40px 30px;
+            background: var(--bg);
+            border: 4px solid #acacac;
+            border-radius: 20px;
+        }
+
+        #results-screen h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        #score {
+            font-size: 4.5rem;
+            margin: 20px 0;
+            color: #00ff9f;
+        }
+
+        .restart-btn {
+            margin-top: 30px;
+            padding: 18px 50px;
+            font-size: 1.4rem;
+            background: transparent;
+            border: 5px solid #acacac;
+            color: #fff;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Press Start 2P';
+        }
+
+        .restart-btn:hover {
+            background: #acacac;
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #acacac;
+            padding: 60px;
+        }
+
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+            .logo {
+                font-size: 2.8rem;
+            }
+            #question-text {
+                font-size: 1.7rem;
+            }
+            .option {
+                font-size: 1.25rem;
+                padding: 22px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок -->
+        <header>
+            <div class="logo">QUIZ</div>
+            <div class="subtitle">Serbekun Service</div>
+        </header>
+
+        <!-- Основной контейнер викторины -->
+        <div id="quiz-container">
+            <div id="loading" class="loading">QUestion loading...</div>
+
+            <!-- Экран вопросов -->
+            <div id="question-screen">
+                <div id="progress">
+                    Question <span id="current-q">1</span> / <span id="total-q">10</span>
+                </div>
+                <div id="question-text"></div>
+                <div id="options" class="options-grid"></div>
+            </div>
+
+            <!-- Экран результатов -->
+            <div id="results-screen">
+                <h2>GAME END!</h2>
+                <p style="font-size:1.3rem;color:#acacac;margin-bottom:10px;">SCORE COUNT</p>
+                <div id="score">8/10</div>
+                <p id="result-message" style="font-size:1.4rem;margin:15px 0;color:#00ff9f;"></p>
+                
+                <button onclick="restartQuiz()" class="restart-btn">PLAY AGAIN</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === ДАННЫЕ ===
+        let questions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        // Тестовые вопросы (на случай, если API недоступен)
+        const sampleQuestions = [
+            {
+                "question": "В каком году Россия принимала Чемпионат мира по футболу?",
+                "options": {
+                    "A": "2014",
+                    "B": "2018",
+                    "C": "2022",
+                    "D": "2010"
+                },
+                "correct": "B"
+            },
+            {
+                "question": "Сколько колец на олимпийском флаге?",
+                "options": {
+                    "A": "4",
+                    "B": "5",
+                    "C": "6",
+                    "D": "7"
+                },
+                "correct": "B"
+            },
+            {
+                "question": "Какой вид спорта называют «королём спорта»?",
+                "options": {
+                    "A": "Футбол",
+                    "B": "Лёгкая атлетика",
+                    "C": "Баскетбол",
+                    "D": "Теннис"
+                },
+                "correct": "B"
+            },
+            {
+                "question": "Сколько игроков одной команды на площадке в баскетболе?",
+                "options": {
+                    "A": "5",
+                    "B": "6",
+                    "C": "7",
+                    "D": "4"
+                },
+                "correct": "A"
+            },
+            {
+                "question": "В каком году сборная России выиграла золото Олимпиады в хоккее?",
+                "options": {
+                    "A": "2014",
+                    "B": "2018",
+                    "C": "2022",
+                    "D": "2010"
+                },
+                "correct": "B"
+            }
+        ];
+
+        // === ЗАГРУЗКА ВОПРОСОВ ===
+        async function loadQuestions() {
+            const loadingEl = document.getElementById('loading');
+            const questionScreen = document.getElementById('question-screen');
+            
+            loadingEl.style.display = 'block';
+            questionScreen.style.display = 'none';
+
+            try {
+                const response = await fetch('/v0/api/json/sports_quiz', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (!response.ok) throw new Error('API вернул ошибку');
+                
+                questions = await response.json();
+                console.log('%c✅ Вопросы загружены с сервера', 'color:#00ff9f');
+            } catch (err) {
+                console.log('%c Используем тестовые вопросы (сервер недоступен)', 'color:#ff2a6d');
+                questions = sampleQuestions;
+            }
+
+            loadingEl.style.display = 'none';
+            questionScreen.style.display = 'block';
+
+            // Запускаем викторину
+            currentIndex = 0;
+            score = 0;
+            showQuestion();
+        }
+
+        // === ПОКАЗ ВОПРОСА ===
+        function showQuestion() {
+            answered = false;
+            
+            const q = questions[currentIndex];
+            if (!q) {
+                showResults();
+                return;
+            }
+
+            // Обновляем прогресс
+            document.getElementById('current-q').textContent = currentIndex + 1;
+            document.getElementById('total-q').textContent = questions.length;
+
+            // Текст вопроса
+            document.getElementById('question-text').textContent = q.question;
+
+            // Очищаем и создаём кнопки
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+
+            Object.keys(q.options).forEach(key => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.dataset.letter = key;
+                
+                optionDiv.innerHTML = `
+                    <span class="letter">${key}</span>
+                    <span class="text">${q.options[key]}</span>
+                `;
+
+                optionDiv.addEventListener('click', handleAnswerClick);
+                optionsContainer.appendChild(optionDiv);
+            });
+        }
+
+        // === ОБРАБОТКА ОТВЕТА ===
+        function handleAnswerClick(e) {
+            if (answered) return;
+            answered = true;
+
+            const selectedLetter = e.currentTarget.dataset.letter;
+            const correctLetter = questions[currentIndex].correct;
+
+            // Отключаем все кнопки
+            const allOptions = document.querySelectorAll('.option');
+            allOptions.forEach(opt => {
+                opt.style.pointerEvents = 'none';
+                opt.style.transition = 'all 0.4s';
+            });
+
+            // Подсвечиваем выбранный
+            const selectedBtn = e.currentTarget;
+            if (selectedLetter === correctLetter) {
+                selectedBtn.classList.add('correct');
+                score++;
+            } else {
+                selectedBtn.classList.add('wrong');
+                
+                // Подсвечиваем правильный
+                const correctBtn = Array.from(allOptions).find(
+                    opt => opt.dataset.letter === correctLetter
+                );
+                if (correctBtn) correctBtn.classList.add('correct');
+            }
+
+            // Переход к следующему вопросу
+            setTimeout(() => {
+                currentIndex++;
+                if (currentIndex < questions.length) {
+                    showQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1800);
+        }
+
+        // === ПОКАЗ РЕЗУЛЬТАТОВ ===
+        function showResults() {
+            document.getElementById('question-screen').style.display = 'none';
+            const resultsScreen = document.getElementById('results-screen');
+            resultsScreen.style.display = 'block';
+
+            const percent = Math.round((score / questions.length) * 100);
+            document.getElementById('score').textContent = `${score}/${questions.length}`;
+
+            let message = '';
+            if (percent === 100) message = 'legend! 🔥';
+            else if (percent >= 80) message = 'nice! 🏆';
+            else if (percent >= 60) message = 'not bad! 👍';
+            else message = 'try again 💪';
+
+            document.getElementById('result-message').textContent = message;
+        }
+
+        // === ПЕРЕЗАПУСК ===
+        function restartQuiz() {
+            document.getElementById('results-screen').style.display = 'none';
+            document.getElementById('question-screen').style.display = 'block';
+            currentIndex = 0;
+            score = 0;
+            showQuestion();
+        }
+
+        // === ЗАПУСК ===
+        window.onload = function() {
+            loadQuestions();
+        };
+    </script>
+</body>
+</html>

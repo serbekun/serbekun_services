@@ -1,9 +1,234 @@
 <!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serbekun serivce preview</title>
+    <link rel="icon" href="/icon" type="image/svg+xml">
+    
+    <style>
+        html {
+            background-color: black;
+        }
 
-<html>
+        body {
+            margin: 0;
+            padding: 0 0 3rem 0;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background: 
+                linear-gradient(
+                    rgba(0, 0, 0, 0.7), 
+                    rgba(0, 0, 0, 0.5)
+                ),
+                url('/v0/api/images/static/black_hole.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
 
-    <body>
-        <p>hello</p>
-    </body>
+        .page_title {
+            color: #ffffff;
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 0;
+            text-shadow: 0 0 20px #acacac, 0 0 30px #4c4c4c;
+            animation: glowPulse 5s ease-in-out infinite;
+            z-index: 10;
+            position: relative;
+        }
 
+        .page_tittle_japanese {
+            color: #acacac;
+            font-size: 24px;
+            margin-top: -5px;
+            margin-bottom: 0;
+            text-align: center;
+            text-shadow: 0 0 20px #acacac, 0 0 30px #4c4c4c;
+            animation: glowPulse 5s ease-in-out infinite;
+            z-index: 10;
+            position: relative;
+        }
+
+        @keyframes glowPulse {
+            0% { text-shadow: 0 0 15px #acacac, 0 0 25px #4c4c4c; }
+            25% { text-shadow: 0 0 20px #acacac, 0 0 35px #4c4c4c, 0 0 45px #4c4c4c; }
+            50% { text-shadow: 0 0 25px #acacac, 0 0 40px #4c4c4c, 0 0 50px #4c4c4c; }
+            75% { text-shadow: 0 0 20px #acacac, 0 0 35px #4c4c4c, 0 0 45px #4c4c4c; }
+            100% { text-shadow: 0 0 15px #acacac, 0 0 25px #4c4c4c; }
+        }
+
+        .services-container {
+            max-width: 900px;
+            margin: 2.5rem auto 0 auto;
+            padding: 0 1.8rem 2rem 1.8rem;
+            background: rgba(10, 10, 10, 0.4);
+            border: 1px solid #2c2c2c;
+            border-radius: 32px;
+            backdrop-filter: blur(2px);
+            box-shadow: 0 0 30px rgba(172, 172, 172, 0.1), 0 0 10px rgba(255, 255, 255, 0.02) inset;
+        }
+
+        .intro-text {
+            font-size: 1.2rem;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 1.8rem 2rem;
+            border-radius: 24px;
+            border-left: 4px solid #acacac;
+            margin: 2rem 0 2.5rem 0;
+            box-shadow: 0 0 30px rgba(172, 172, 172, 0.2);
+            color: #f0f0f0;
+            letter-spacing: 0.3px;
+        }
+
+        .intro-text strong {
+            color: white;
+            font-weight: 600;
+            text-shadow: 0 0 8px #acacac;
+        }
+
+        .service-section {
+            margin: 2.8rem 0 3rem 0;
+            border-bottom: 1px dashed #3a3a3a;
+            padding-bottom: 1.5rem;
+        }
+        .service-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-heading {
+            color: #ffffff;
+            font-size: 1.9rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            padding-left: 0.8rem;
+            border-left: 6px solid #acacac;
+            text-shadow: 0 0 10px #7a7a7a;
+            letter-spacing: 1px;
+        }
+
+        .section-sub {
+            color: #bcbcbc;
+            font-size: 1.3rem;
+            margin-top: 1.8rem;
+            margin-bottom: 0.8rem;
+            font-weight: 500;
+            display: inline-block;
+            border-bottom: 1px dotted #4f4f4f;
+            padding-bottom: 4px;
+        }
+
+        .catalog-item {
+            background: #111111;
+            padding: 1rem 1.8rem;
+            border-radius: 40px;
+            margin: 0.8rem 0;
+            border: 1px solid #2e2e2e;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.6);
+            transition: 0.2s;
+            color: #d4d4d4;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .catalog-item:hover {
+            border-color: #5f5f5f;
+            box-shadow: 0 0 15px #3f3f3f;
+            background: #151515;
+        }
+        .catalog-item::before {
+            content: "✦";
+            color: #acacac;
+            font-size: 1.5rem;
+            filter: drop-shadow(0 0 6px #acacac);
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: #1e2a1e;
+            color: #a0daa0;
+            border: 1px solid #3a6d3a;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 0.2rem 0.9rem;
+            margin-left: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 12px #2f6b2f;
+        }
+        .status-off {
+            background: #2a1e1e;
+            color: #daa0a0;
+            border-color: #6d3a3a;
+            box-shadow: 0 0 12px #6b2f2f;
+        }
+
+        .moderation-note {
+            font-size: 0.95rem;
+            color: #a0a0a0;
+            background: #1a1a1a;
+            padding: 0.5rem 1.2rem;
+            border-radius: 30px;
+            margin-top: 0.5rem;
+            border-left: 3px solid #5f5f5f;
+        }
+
+        .suggestion-box {
+            background: #0c0c0c;
+            border-radius: 36px;
+            padding: 2rem 2rem;
+            margin: 2rem 0 1rem 0;
+            border: 1px solid #3c3c3c;
+            box-shadow: 0 0 30px rgba(172,172,172,0.1);
+        }
+        .suggestion-box p {
+            font-size: 1.2rem;
+        }
+        .glow-hint {
+            color: #acacac;
+            text-shadow: 0 0 8px #5f5f5f;
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #4f4f4f, transparent);
+            margin: 2rem 0;
+        }
+
+        .footer-air {
+            text-align: center;
+            margin-top: 3rem;
+            color: #5c5c5c;
+            font-size: 0.9rem;
+            text-shadow: 0 0 4px black;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="page_title">Serbekun Services</h1>
+    <h1 class="page_tittle_japanese">セルビクン サービス</h1>
+
+<div class="services-container">
+    <a href="/v0/page/quiz_ui" class="catalog-link" style="text-decoration: none; color: inherit;">
+        <div class="catalog-item" style="background: #0e0e0e;">
+            1. QUIZ
+        </div>
+    </a>
+</div>
+
+    <div class="footer-air">
+        Serbekun Service
+    </div>
+
+</body>
+    <script>
+
+    </script>
 </html>

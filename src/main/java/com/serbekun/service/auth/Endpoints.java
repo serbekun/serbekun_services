@@ -9,7 +9,10 @@ public enum Endpoints {
     /**
      * Permission endpoint for Links. Does not require authentication.
      */
-    LINKS(false);
+    Index(false),
+    v0StaticImages(false),
+    v0ApiJson(false),
+    v0Page(false);
 
     /**
      * Indicates whether this endpoint requires authentication.
@@ -29,4 +32,5 @@ public enum Endpoints {
     public boolean requiresAuth() {
         return requiresAuth;
     }
+
 }

@@ -60,6 +60,15 @@ public class Links {
 
     /**
      * 
+     * @param uuid Link UUID
+     * @return true link exist false uuid don't exist
+     */
+    public synchronized boolean existsLink(UUID uuid) {
+        return linksByUuid.containsKey(uuid);
+    }
+
+    /**
+     * 
      * Add link to catalog
      * 
      * @param link {@link Link} object which will be added to catalog

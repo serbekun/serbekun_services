@@ -1,7 +1,7 @@
 package com.serbekun.service.auth;
 
 import java.util.List;
-import com.serbekun.service.tokens.TokensService;
+import com.serbekun.service.tokens.EndpointAccessTokensService;
 
 
 // TODO add slf4j logger
@@ -11,9 +11,9 @@ import com.serbekun.service.tokens.TokensService;
  */
 public class AuthService {
     
-    private TokensService tokensService;
+    private EndpointAccessTokensService tokensService;
 
-    public AuthService(TokensService tokensService) {
+    public AuthService(EndpointAccessTokensService tokensService) {
         this.tokensService = tokensService;
     }
 
@@ -25,10 +25,23 @@ public class AuthService {
      * @param token request token
      * @return true Auth successfully. false Auth not successfully
     */
-    public boolean checkAuth(Endpoints endpoint, String token) {
+    public boolean checkAuth(Endpoints endpoint, String tokenHeader) {
 
         if (!endpoint.requiresAuth()) {
             return true;
+        }
+
+        if (tokenHeader == null || tokenHeader.isBlank()) {
+            return false;
+        }
+
+        // Accept both "Bearer <token>" and raw token
+        String token = tokenHeader.startsWith("Bearer ")
+            ? tokenHeader.substring("Bearer ".length()).trim()
+            : tokenHeader.trim();
+
+        if (token.isEmpty()) {
+            return false;
         }
 
         List<Endpoints> allowed = tokensService.getToken(token);

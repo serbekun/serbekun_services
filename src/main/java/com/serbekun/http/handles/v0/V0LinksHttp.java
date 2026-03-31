@@ -9,6 +9,8 @@ import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 import io.javalin.http.HttpStatus;
 
+// TODO move json string writeing to V0Links
+
 public class V0LinksHttp {
     
     private final V0Links v0Links;
@@ -56,16 +58,16 @@ public class V0LinksHttp {
         ctx.contentType("application/json");
 
         V0LinksPostRequest body = parseBody(ctx, V0LinksPostRequest.class);
-        if (body == null || isBlank(body.url) || isBlank(body.name) || isBlank(body.description)) {
+        if (body == null || isBlank(body.url()) || isBlank(body.name()) || isBlank(body.description())) {
             writeInvalidRequest(ctx);
             return;
         }
 
         com.serbekun.service.http.handles.v0.dto.links.V0LinksPostRequest request =
             new com.serbekun.service.http.handles.v0.dto.links.V0LinksPostRequest(
-                body.url,
-                body.name,
-                body.description
+                body.url(),
+                body.name(),
+                body.description()
             );
 
         String token = v0Links.post(request);
@@ -79,11 +81,11 @@ public class V0LinksHttp {
         V0LinksPutRequest body = parseBody(ctx, V0LinksPutRequest.class);
         String uuid = pathParam(ctx, "uuid");
         if (isBlank(uuid) && body != null) {
-            uuid = body.uuid;
+            uuid = body.uuid();
         }
 
-        if (body == null || isBlank(uuid) || isBlank(body.token)
-            || isBlank(body.url) || isBlank(body.name) || isBlank(body.description)) {
+        if (body == null || isBlank(uuid) || isBlank(body.token())
+            || isBlank(body.url()) || isBlank(body.name()) || isBlank(body.description())) {
             writeInvalidRequest(ctx);
             return;
         }
@@ -91,12 +93,11 @@ public class V0LinksHttp {
         com.serbekun.service.http.handles.v0.dto.links.V0LinksPutRequest request =
             new com.serbekun.service.http.handles.v0.dto.links.V0LinksPutRequest(
                 uuid,
-                body.token,
-                body.url,
-                body.name,
-                body.description
+                body.token(),
+                body.url(),
+                body.name(),
+                body.description()
             );
-        request.token = body.token;
 
         int status = v0Links.put(request);
         if (status == 404) {
@@ -116,9 +117,9 @@ public class V0LinksHttp {
 
         V0LinksDeleteRequest body = parseBody(ctx, V0LinksDeleteRequest.class);
         String uuid = pathParam(ctx, "uuid");
-        String token = body != null ? body.token : null;
+        String token = body != null ? body.token() : null;
         if (isBlank(uuid) && body != null) {
-            uuid = body.uuid;
+            uuid = body.uuid();
         }
 
         if (isBlank(uuid) || isBlank(token)) {

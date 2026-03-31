@@ -1,6 +1,7 @@
 package com.serbekun.http.handles;
 
 import com.serbekun.service.resource.ResourcesService;
+import com.serbekun.http.handles.v0.V0CipherAesHttp;
 import com.serbekun.http.handles.v0.V0ImagesHttp;
 import com.serbekun.http.handles.v0.V0JsonHttp;
 import com.serbekun.http.handles.v0.V0LinksHttp;
@@ -9,6 +10,7 @@ import com.serbekun.service.auth.AuthService;
 import com.serbekun.service.auth.api.Endpoint;
 import com.serbekun.service.auth.api.EndpointRegistrar;
 import com.serbekun.service.http.handles.v0.V0ApiJson;
+import com.serbekun.service.http.handles.v0.V0ApiCipherAes;
 import com.serbekun.service.http.handles.v0.V0Links;
 import com.serbekun.service.http.handles.v0.V0Page;
 import com.serbekun.service.http.handles.v0.V0ResourcesImages;
@@ -25,7 +27,8 @@ public class InitHandles {
         V0ApiJson v0ApiJson,
         V0ResourcesImages v0ResourcesImages,
         V0Page v0Page,
-        V0Links v0Links
+        V0Links v0Links,
+        V0ApiCipherAes v0ApiCipherAes
 
     ) {
 
@@ -33,6 +36,7 @@ public class InitHandles {
         IndexHttp index = new IndexHttp(resourcesService);
         V0ImagesHttp Images = new V0ImagesHttp(resourcesService, v0ResourcesImages);
         V0JsonHttp json = new V0JsonHttp(v0ApiJson);
+        V0CipherAesHttp cipherAes = new V0CipherAesHttp(v0ApiCipherAes);
         V0PagesHttp pages = new V0PagesHttp(v0Page);
         V0LinksHttp links = new V0LinksHttp(v0Links);
 
@@ -41,16 +45,21 @@ public class InitHandles {
         Endpoint endpointIndex = new Endpoint("Index");
         Endpoint endpointV0StaticImages = new Endpoint("v0StaticImages");
         Endpoint endpointV0ApiJson = new Endpoint("v0ApiJson");
+        Endpoint endpointV0ApiCipherAes = new Endpoint("v0ApiCipherAes");
         Endpoint endpointV0Page = new Endpoint("v0Page");
 
         endpointRegistrar.register(endpointIndex, false);
         endpointRegistrar.register(endpointV0StaticImages, false);
         endpointRegistrar.register(endpointV0ApiJson, false);
+        endpointRegistrar.register(endpointV0ApiCipherAes, false);
         endpointRegistrar.register(endpointV0Page, false);
 
         svr.before("/", ctx -> ctx.attribute("endpoint", new Endpoint("Index")));
         svr.before("/v0/images/{name}", ctx -> ctx.attribute("endpoint", new Endpoint("v0StaticImages")));
         svr.before("/v0/api/json/{name}", ctx -> ctx.attribute("endpoint", new Endpoint("v0ApiJson")));
+        svr.before("/v0/api/cipher/aes", ctx -> ctx.attribute("endpoint", new Endpoint("v0ApiCipherAes")));
+        svr.before("/v0/api/cipher/aes/encrypt", ctx -> ctx.attribute("endpoint", new Endpoint("v0ApiCipherAes")));
+        svr.before("/v0/api/cipher/aes/decrypt", ctx -> ctx.attribute("endpoint", new Endpoint("v0ApiCipherAes")));
         svr.before("/v0/page/{name}", ctx -> ctx.attribute("endpoint", new Endpoint("v0Page")));
 
         // auth gate: runs after endpoint taggers above
@@ -109,6 +118,10 @@ public class InitHandles {
 
         svr.get("/v0/api/json/{name}", ctx -> json.main(ctx));
         svr.get("/v0/page/{name}", ctx -> pages.main(ctx));
+
+        svr.get("/v0/api/cipher/aes", ctx -> cipherAes.main(ctx));
+        svr.post("/v0/api/cipher/aes/encrypt", ctx -> cipherAes.main(ctx));
+        svr.post("/v0/api/cipher/aes/decrypt", ctx -> cipherAes.main(ctx));
 
         // links
         svr.get("/v0/api/catalog/links", ctx -> links.main(ctx));

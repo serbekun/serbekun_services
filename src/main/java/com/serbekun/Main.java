@@ -87,7 +87,8 @@ public class Main {
         V0ResourcesImages v0ResourcesImages = new V0ResourcesImages(resourcesService);
         V0Page v0Page = new V0Page(resourcesService);
         V0Links V0Links = new V0Links(linksService, localTokensLinks);
-
+        V0ApiCipherAes v0ApiCipherAes = new V0ApiCipherAes();
+        
 
         // init api handles
         InitHandles initHandles = new InitHandles();
@@ -95,7 +96,8 @@ public class Main {
             v0ApiJson,
             v0ResourcesImages,
             v0Page,
-            V0Links
+            V0Links,
+            v0ApiCipherAes
         );
 
         // shutdown server when JWM is stop

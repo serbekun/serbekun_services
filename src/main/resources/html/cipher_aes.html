@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AES Cipher</title>
+    <style>
+        html {
+            background-color: black;
+        }
+        body {
+            margin: 0;
+            padding: 0 0 3rem 0;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #ffffff;
+            background:
+                linear-gradient(
+                    rgba(0, 0, 0, 0.85),
+                    rgba(0, 0, 0, 0.75)
+                ),
+                url('/v0/api/images/static/black_hole.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: rgba(20, 20, 20, 0.85);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.08);
+        }
+        h1 {
+            text-align: center;
+            color: #c0fffc;
+            text-shadow: 0 0 15px rgba(140, 235, 235, 0.3);
+            margin-bottom: 1.5rem;
+        }
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 10px;
+        }
+        .tab-btn {
+            padding: 12px 32px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #c0fffc;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #1ee7bc, #7b61ff);
+            color: #ffffff;
+            font-weight: bold;
+            border-color: transparent;
+        
+            box-shadow: 0 0 20px rgba(123, 97, 255, 0.45);
+        }
+        textarea, input {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            background: rgba(12, 12, 12, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-family: monospace;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: rgba(123, 97, 255, 0.6);
+            box-shadow: 0 0 0 3px rgba(123, 97, 255, 0.15);
+        }
+        textarea {
+            min-height: 120px;
+        }
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            color: #dddddd;
+            font-size: 0.95rem;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 15px;
+            background: linear-gradient(135deg, #1ee7bc 0%, #7b61ff 50%, #ff6bde 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 20px rgba(123, 97, 255, 0.4);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(123, 97, 255, 0.55);
+            filter: brightness(1.1);
+        }
+        button:active {
+            transform: translateY(0);
+            filter: brightness(0.95);
+        }
+
+        /* Result block */
+        .result {
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.75);
+            border-radius: 8px;
+            border-left: 4px solid #7b61ff;
+            font-family: monospace;
+            word-break: break-all;
+            position: relative;
+        }
+        .result strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #c0fffc;
+        }
+
+        /* Copy button */
+        .copy-btn {
+            padding: 8px 16px;
+            background: rgba(30, 231, 188, 0.12);
+            color: #1ee7bc;
+            border: 1px solid rgba(30, 231, 188, 0.45);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            margin-top: 10px;
+            width: auto;
+            font-weight: normal;
+            text-shadow: none;
+            box-shadow: none;
+        }
+        .copy-btn:hover {
+            background: rgba(30, 231, 188, 0.25);
+            border-color: #1ee7bc;
+            box-shadow: 0 0 12px rgba(30, 231, 188, 0.3);
+            transform: translateY(0);
+            filter: none;
+        }
+        .copy-btn:active {
+            transform: none;
+            filter: none;
+        }
+        .copy-btn.copied {
+            background: #1ee7bc;
+            color: #000000;
+            border-color: #1ee7bc;
+        }
+
+        .error {
+            color: #ff5555;
+            background: rgba(40, 0, 0, 0.6);
+            border-left-color: #ff4488;
+        }
+        .status {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #c0fffc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AES Cipher</h1>
+        <p style="text-align:center; color:#cccccc;">Secure AES Encryption Tool</p>
+        
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab(0)">Encrypt</button>
+            <button class="tab-btn" onclick="switchTab(1)">Decrypt</button>
+        </div>
+
+        <!-- Generate key -->
+        <div style="text-align:center; margin-bottom: 20px;">
+            <button onclick="generateKey()" style="width:auto; padding:10px 24px; font-size:1rem;">
+                Generate new key
+            </button>
+        </div>
+
+        <!-- Encrypt Tab -->
+        <div id="encryptTab">
+            <label>Data to encrypt (text)</label>
+            <textarea id="encryptInput" placeholder="Enter the text you want to encrypt..."></textarea>
+            
+            <label>AES Key (base64)</label>
+            <input type="text" id="encryptKey" placeholder="Click the button above to generate a key">
+            
+            <button onclick="encryptData()">Encrypt</button>
+            
+            <div id="encryptResult" class="result" style="display:none;">
+                <strong>Encrypted data:</strong>
+                <span id="encryptResultText"></span>
+                <button class="copy-btn" onclick="copyToClipboard('encryptResultText', this)">Copy</button>
+            </div>
+        </div>
+
+        <!-- Decrypt Tab -->
+        <div id="decryptTab" style="display:none;">
+            <label>Encrypted data (base64)</label>
+            <textarea id="decryptInput" placeholder="Paste the encrypted data here..."></textarea>
+            
+            <label>AES Key (base64)</label>
+            <input type="text" id="decryptKey" placeholder="Enter the key">
+            
+            <button onclick="decryptData()">Decrypt</button>
+            
+            <div id="decryptResult" class="result" style="display:none;">
+                <strong>Decrypted text:</strong>
+                <span id="decryptResultText"></span>
+                <button class="copy-btn" onclick="copyToClipboard('decryptResultText', this)">Copy</button>
+            </div>
+        </div>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        // Switch between Encrypt and Decrypt tabs
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === tab);
+            });
+            document.getElementById('encryptTab').style.display = tab === 0 ? 'block' : 'none';
+            document.getElementById('decryptTab').style.display = tab === 1 ? 'block' : 'none';
+        }
+
+        // Generate new AES key
+        async function generateKey() {
+            try {
+                const res = await fetch('/v0/api/cipher/aes', { method: 'GET' });
+                const data = await res.json();
+                
+                document.getElementById('encryptKey').value = data.key;
+                document.getElementById('decryptKey').value = data.key;
+                
+                showStatus('Новый ключ AES успешно сгенерирован', 'success');
+            } catch (err) {
+                showStatus('Ошибка при генерации ключа', 'error');
+            }
+        }
+
+        // Copy to clipboard
+        async function copyToClipboard(elementId, button) {
+            const textElement = document.getElementById(elementId);
+            const textToCopy = textElement.textContent.trim();
+            if (!textToCopy) return;
+
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                const originalText = button.textContent;
+                button.textContent = 'Скопировано!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = textToCopy;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+
+                const originalText = button.textContent;
+                button.textContent = 'Скопировано';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }
+        }
+
+        // ====================== ИСПРАВЛЕННЫЕ ФУНКЦИИ ======================
+        // Encrypt data
+        async function encryptData() {
+            const data = document.getElementById('encryptInput').value.trim();
+            const key = document.getElementById('encryptKey').value.trim();
+            
+            if (!data || !key) {
+                showStatus('Введите данные и ключ', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/v0/api/cipher/aes/encrypt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        data: btoa(unescape(encodeURIComponent(data))),
+                        key: key
+                    })
+                });
+
+                // ← ИСПРАВЛЕНИЕ: сначала проверяем статус
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(errorText || `HTTP error! Status: ${res.status}`);
+                }
+
+                const result = await res.json();
+                
+                document.getElementById('encryptResultText').textContent = result.data;
+                document.getElementById('encryptResult').style.display = 'block';
+                document.getElementById('encryptResult').classList.remove('error');
+                
+                showStatus('Данные успешно зашифрованы', 'success');
+            } catch (err) {
+                showStatus(err.message, 'error');
+            }
+        }
+
+        // Decrypt data
+        async function decryptData() {
+            const data = document.getElementById('decryptInput').value.trim();
+            const key = document.getElementById('decryptKey').value.trim();
+            
+            if (!data || !key) {
+                showStatus('Введите зашифрованные данные и ключ', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/v0/api/cipher/aes/decrypt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        data: data,
+                        key: key
+                    })
+                });
+
+                // ← ИСПРАВЛЕНИЕ: сначала проверяем статус
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(errorText || `HTTP error! Status: ${res.status}`);
+                }
+
+                const result = await res.json();
+                const decoded = decodeURIComponent(escape(atob(result.data)));
+                
+                document.getElementById('decryptResultText').textContent = decoded;
+                document.getElementById('decryptResult').style.display = 'block';
+                document.getElementById('decryptResult').classList.remove('error');
+                
+                showStatus('Данные успешно расшифрованы', 'success');
+            } catch (err) {
+                showStatus(err.message, 'error');
+            }
+        }
+        // =================================================================
+
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.style.color = type === 'success' ? '#00ffaa' : '#ff5555';
+            
+            setTimeout(() => {
+                statusEl.textContent = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

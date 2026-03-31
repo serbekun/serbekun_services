@@ -1,22 +1,13 @@
 package com.serbekun.http.handles;
 
-import com.serbekun.service.resource.ResourcesService;
-import com.serbekun.http.handles.v0.V0CipherAesHttp;
-import com.serbekun.http.handles.v0.V0ImagesHttp;
-import com.serbekun.http.handles.v0.V0JsonHttp;
-import com.serbekun.http.handles.v0.V0LinksHttp;
-import com.serbekun.http.handles.v0.V0PagesHttp;
+import com.serbekun.http.handles.v0.*;
+import com.serbekun.service.auth.api.*;
+import com.serbekun.service.http.handles.v0.*;
 import com.serbekun.service.auth.AuthService;
-import com.serbekun.service.auth.api.Endpoint;
-import com.serbekun.service.auth.api.EndpointRegistrar;
-import com.serbekun.service.http.handles.v0.V0ApiJson;
-import com.serbekun.service.http.handles.v0.V0ApiCipherAes;
-import com.serbekun.service.http.handles.v0.V0Links;
-import com.serbekun.service.http.handles.v0.V0Page;
-import com.serbekun.service.http.handles.v0.V0ResourcesImages;
+import com.serbekun.service.resource.ResourcesService;
 
-import io.javalin.Javalin;
 import io.javalin.http.UnauthorizedResponse;
+import io.javalin.Javalin;
 
 public class InitHandles {
 
@@ -40,29 +31,30 @@ public class InitHandles {
         V0PagesHttp pages = new V0PagesHttp(v0Page);
         V0LinksHttp links = new V0LinksHttp(v0Links);
 
-        // tag endpoint for auth BEFORE global auth check
-
+        // SINGLE instances (ВАЖНО)
         Endpoint endpointIndex = new Endpoint("Index");
         Endpoint endpointV0StaticImages = new Endpoint("v0StaticImages");
         Endpoint endpointV0ApiJson = new Endpoint("v0ApiJson");
         Endpoint endpointV0ApiCipherAes = new Endpoint("v0ApiCipherAes");
         Endpoint endpointV0Page = new Endpoint("v0Page");
 
+        // register
         endpointRegistrar.register(endpointIndex, false);
         endpointRegistrar.register(endpointV0StaticImages, false);
         endpointRegistrar.register(endpointV0ApiJson, false);
         endpointRegistrar.register(endpointV0ApiCipherAes, false);
         endpointRegistrar.register(endpointV0Page, false);
 
-        svr.before("/", ctx -> ctx.attribute("endpoint", new Endpoint("Index")));
-        svr.before("/v0/images/{name}", ctx -> ctx.attribute("endpoint", new Endpoint("v0StaticImages")));
-        svr.before("/v0/api/json/{name}", ctx -> ctx.attribute("endpoint", new Endpoint("v0ApiJson")));
-        svr.before("/v0/api/cipher/aes", ctx -> ctx.attribute("endpoint", new Endpoint("v0ApiCipherAes")));
-        svr.before("/v0/api/cipher/aes/encrypt", ctx -> ctx.attribute("endpoint", new Endpoint("v0ApiCipherAes")));
-        svr.before("/v0/api/cipher/aes/decrypt", ctx -> ctx.attribute("endpoint", new Endpoint("v0ApiCipherAes")));
-        svr.before("/v0/page/{name}", ctx -> ctx.attribute("endpoint", new Endpoint("v0Page")));
+        // ❗ используем ТОЛЬКО эти же объекты
+        svr.before("/", ctx -> ctx.attribute("endpoint", endpointIndex));
+        svr.before("/v0/images/{name}", ctx -> ctx.attribute("endpoint", endpointV0StaticImages));
+        svr.before("/v0/api/json/{name}", ctx -> ctx.attribute("endpoint", endpointV0ApiJson));
+        svr.before("/v0/api/cipher/aes", ctx -> ctx.attribute("endpoint", endpointV0ApiCipherAes));
+        svr.before("/v0/api/cipher/aes/encrypt", ctx -> ctx.attribute("endpoint", endpointV0ApiCipherAes));
+        svr.before("/v0/api/cipher/aes/decrypt", ctx -> ctx.attribute("endpoint", endpointV0ApiCipherAes));
+        svr.before("/v0/page/{name}", ctx -> ctx.attribute("endpoint", endpointV0Page));
 
-        // auth gate: runs after endpoint taggers above
+        // auth gate
         svr.before(ctx -> {
             Endpoint endpoint = ctx.attribute("endpoint");
             
@@ -72,26 +64,22 @@ public class InitHandles {
 
             String token = null;
 
-            // 1. check Authorization header
+            // Authorization header
             String authHeader = ctx.header("Authorization");
             if (authHeader != null) {
                 if (authHeader.startsWith("Bearer ")) {
                     token = authHeader.substring(7).trim();
-                } else if (authHeader.startsWith("Basic ")) {
-
                 } else {
-
                     token = authHeader.trim();
                 }
             }
 
-            // if Authorization header doesn't exist use from url param value 
+            // query ?token=
             if (token == null) {
                 token = ctx.queryParam("token");
-
             }
 
-            //    ?Authorization=Bearer eyJh...
+            // query ?Authorization=Bearer ...
             if (token == null) {
                 String authInQuery = ctx.queryParam("Authorization");
                 if (authInQuery != null && authInQuery.startsWith("Bearer ")) {
@@ -112,6 +100,7 @@ public class InitHandles {
             }
         });
 
+        // routes
         svr.get("/", ctx -> index.main(ctx));
 
         svr.get("/v0/images/{name}", ctx -> Images.main(ctx));

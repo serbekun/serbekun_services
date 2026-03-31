@@ -2,8 +2,8 @@ package com.serbekun.service.tokens;
 
 import java.util.List;
 import java.util.Map;
-import com.serbekun.service.auth.Endpoints;
 import com.serbekun.core.EndpointsAccessTokens;
+import com.serbekun.service.auth.api.Endpoint;
 
 public class EndpointAccessTokensService {
     
@@ -20,7 +20,7 @@ public class EndpointAccessTokensService {
      * @param token the token string
      * @param allowedEndpoints list of allowed endpoints
      */
-    public synchronized void addToken(String token, List<Endpoints> allowedEndpoints) {
+    public synchronized void addToken(String token, List<Endpoint> allowedEndpoints) {
         if (token == null) {
             return;
         }
@@ -34,7 +34,7 @@ public class EndpointAccessTokensService {
      * @param token the token string
      * @return list of allowed endpoints or null
      */
-    public synchronized List<Endpoints> getToken(String token) {
+    public synchronized List<Endpoint> getToken(String token) {
         return tokens.getToken(token);
     }
 
@@ -43,7 +43,7 @@ public class EndpointAccessTokensService {
      *
      * @return immutable copy of tokens map
      */
-    public synchronized Map<String, List<Endpoints>> getAllTokens() {
+    public synchronized Map<String, List<Endpoint>> getAllTokens() {
         return tokens.getAllTokens();
     }
 
@@ -54,7 +54,7 @@ public class EndpointAccessTokensService {
      * @param token the token string
      * @param newAllowedEndpoints new list of allowed endpoints
      */
-    public synchronized void updateToken(String token, List<Endpoints> newAllowedEndpoints) {
+    public synchronized void updateToken(String token, List<Endpoint> newAllowedEndpoints) {
         tokens.removeToken(token);
         tokens.addToken(token, newAllowedEndpoints);
     }
@@ -66,7 +66,7 @@ public class EndpointAccessTokensService {
      * @param token the token string
      * @return the previous list of allowed endpoints or null
      */
-    public synchronized List<Endpoints> removeToken(String token) {
+    public synchronized List<Endpoint> removeToken(String token) {
         if (token == null) {
             return null;
         }

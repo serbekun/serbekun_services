@@ -4,6 +4,7 @@ package com.serbekun;
 import java.nio.file.Path;
 
 import com.serbekun.service.auth.AuthService;
+import com.serbekun.service.auth.EndpointRegistry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,10 +56,11 @@ public class Main {
 
         // init services
         log.info("Init services");
+        EndpointRegistry endpointRegistry = new EndpointRegistry();
         EndpointAccessTokensService EndpointAccessTokensService = new EndpointAccessTokensService(endpointAccessTokens);
         LinksService linksService = new LinksService(links);
 
-        AuthService authService = new AuthService(EndpointAccessTokensService);
+        AuthService authService = new AuthService(EndpointAccessTokensService, endpointRegistry);
 
         // run auto save threads
         log.info("Init autosave threads");
@@ -89,7 +91,7 @@ public class Main {
 
         // init api handles
         InitHandles initHandles = new InitHandles();
-        initHandles.initHandles(svr, resourcesService, authService,
+        initHandles.initHandles(svr, resourcesService, authService, endpointRegistry,
             v0ApiJson,
             v0ResourcesImages,
             v0Page,

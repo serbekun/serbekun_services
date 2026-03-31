@@ -6,7 +6,8 @@ import com.serbekun.http.handles.v0.V0JsonHttp;
 import com.serbekun.http.handles.v0.V0LinksHttp;
 import com.serbekun.http.handles.v0.V0PagesHttp;
 import com.serbekun.service.auth.AuthService;
-import com.serbekun.service.auth.Endpoints;
+import com.serbekun.service.auth.api.Endpoint;
+import com.serbekun.service.auth.api.EndpointRegistrar;
 import com.serbekun.service.http.handles.v0.V0ApiJson;
 import com.serbekun.service.http.handles.v0.V0Links;
 import com.serbekun.service.http.handles.v0.V0Page;
@@ -17,7 +18,9 @@ import io.javalin.http.UnauthorizedResponse;
 
 public class InitHandles {
 
-    public void initHandles(Javalin svr, ResourcesService resourcesService, AuthService authService,
+    public void initHandles(Javalin svr, ResourcesService resourcesService,
+        AuthService authService, EndpointRegistrar endpointRegistrar,
+
         // API handles services
         V0ApiJson v0ApiJson,
         V0ResourcesImages v0ResourcesImages,
@@ -34,14 +37,26 @@ public class InitHandles {
         V0LinksHttp links = new V0LinksHttp(v0Links);
 
         // tag endpoint for auth BEFORE global auth check
-        svr.before("/", ctx -> ctx.attribute("endpoint", Endpoints.Index));
-        svr.before("/v0/images/{name}", ctx -> ctx.attribute("endpoint", Endpoints.v0StaticImages));
-        svr.before("/v0/api/json/{name}", ctx -> ctx.attribute("endpoint", Endpoints.v0ApiJson));
-        svr.before("/v0/page/{name}", ctx -> ctx.attribute("endpoint", Endpoints.v0Page));
+
+        Endpoint endpointIndex = new Endpoint("Index");
+        Endpoint endpointV0StaticImages = new Endpoint("v0StaticImages");
+        Endpoint endpointV0ApiJson = new Endpoint("v0ApiJson");
+        Endpoint endpointV0Page = new Endpoint("v0Page");
+
+        endpointRegistrar.register(endpointIndex, false);
+        endpointRegistrar.register(endpointV0StaticImages, false);
+        endpointRegistrar.register(endpointV0ApiJson, false);
+        endpointRegistrar.register(endpointV0Page, false);
+
+        svr.before("/", ctx -> ctx.attribute("endpoint", new Endpoint("Index")));
+        svr.before("/v0/images/{name}", ctx -> ctx.attribute("endpoint", new Endpoint("v0StaticImages")));
+        svr.before("/v0/api/json/{name}", ctx -> ctx.attribute("endpoint", new Endpoint("v0ApiJson")));
+        svr.before("/v0/page/{name}", ctx -> ctx.attribute("endpoint", new Endpoint("v0Page")));
 
         // auth gate: runs after endpoint taggers above
         svr.before(ctx -> {
-            Endpoints endpoint = ctx.attribute("endpoint");
+            Endpoint endpoint = ctx.attribute("endpoint");
+            
             if (endpoint == null) {
                 return;
             }
@@ -75,14 +90,17 @@ public class InitHandles {
                 }
             }
 
-            if (token == null || token.isBlank()) {
-                throw new UnauthorizedResponse("Missing or invalid token");
-            }
-
-            if (!authService.checkAuth(endpoint, token)) {
+            boolean authorized = authService.checkAuth(endpoint, token);
+            if (!authorized) {
+                if (token == null || token.isBlank()) {
+                    throw new UnauthorizedResponse("Missing or invalid token");
+                }
                 throw new UnauthorizedResponse("Unauthorized");
             }
-            ctx.attribute("userToken", token);
+
+            if (token != null && !token.isBlank()) {
+                ctx.attribute("userToken", token);
+            }
         });
 
         svr.get("/", ctx -> index.main(ctx));
@@ -92,6 +110,7 @@ public class InitHandles {
         svr.get("/v0/api/json/{name}", ctx -> json.main(ctx));
         svr.get("/v0/page/{name}", ctx -> pages.main(ctx));
 
+        // links
         svr.get("/v0/api/catalog/links", ctx -> links.main(ctx));
         svr.post("/v0/api/catalog/links", ctx -> links.main(ctx));
         svr.put("/v0/api/catalog/links/{uuid}", ctx -> links.main(ctx));

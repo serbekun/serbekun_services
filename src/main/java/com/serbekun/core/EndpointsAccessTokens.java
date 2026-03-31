@@ -3,16 +3,16 @@ package com.serbekun.core;
 import java.util.List;
 import java.util.Map;
 
-import com.serbekun.service.auth.Endpoints;
+import com.serbekun.service.auth.api.Endpoint;
 
 /**
  * Holds endpoint-level access tokens and their allowed endpoints.
  */
 public class EndpointsAccessTokens {
 
-    private final Map<String, List<Endpoints>> tokens;
+    private final Map<String, List<Endpoint>> tokens;
 
-    public EndpointsAccessTokens(Map<String, List<Endpoints>> tokens) {
+    public EndpointsAccessTokens(Map<String, List<Endpoint>> tokens) {
         this.tokens = tokens;
     }
 
@@ -23,7 +23,7 @@ public class EndpointsAccessTokens {
      * @param token the token string
      * @param allowedEndpoints list of allowed endpoints
      */
-    public synchronized void addToken(String token, List<Endpoints> allowedEndpoints) {
+    public synchronized void addToken(String token, List<Endpoint> allowedEndpoints) {
         if (token == null) {
             return;
         }
@@ -37,7 +37,7 @@ public class EndpointsAccessTokens {
      * @param token the token string
      * @return list of allowed endpoints or null
      */
-    public synchronized List<Endpoints> getToken(String token) {
+    public synchronized List<Endpoint> getToken(String token) {
         return (token == null) ? null : tokens.get(token);
     }
 
@@ -46,7 +46,7 @@ public class EndpointsAccessTokens {
      *
      * @return immutable copy of tokens map
      */
-    public synchronized Map<String, List<Endpoints>> getAllTokens() {
+    public synchronized Map<String, List<Endpoint>> getAllTokens() {
         return Map.copyOf(tokens);
     }
 
@@ -57,7 +57,7 @@ public class EndpointsAccessTokens {
      * @param token the token string
      * @param newAllowedEndpoints new list of allowed endpoints
      */
-    public synchronized void updateToken(String token, List<Endpoints> newAllowedEndpoints) {
+    public synchronized void updateToken(String token, List<Endpoint> newAllowedEndpoints) {
         removeToken(token);
         addToken(token, newAllowedEndpoints);
     }
@@ -69,7 +69,7 @@ public class EndpointsAccessTokens {
      * @param token the token string
      * @return the previous list of allowed endpoints or null
      */
-    public synchronized List<Endpoints> removeToken(String token) {
+    public synchronized List<Endpoint> removeToken(String token) {
         if (token == null) {
             return null;
         }

@@ -1,6 +1,9 @@
 package com.serbekun.service.auth;
 
 import java.util.List;
+
+import com.serbekun.service.auth.api.Endpoint;
+import com.serbekun.service.auth.api.EndpointAuthProvider;
 import com.serbekun.service.tokens.EndpointAccessTokensService;
 
 
@@ -12,22 +15,28 @@ import com.serbekun.service.tokens.EndpointAccessTokensService;
 public class AuthService {
     
     private EndpointAccessTokensService tokensService;
+    private EndpointAuthProvider endpointAuthProvider;
 
-    public AuthService(EndpointAccessTokensService tokensService) {
+    // public AuthService(EndpointAccessTokensService tokensService) {
+    //     this(tokensService, endpoint -> true);
+    // }
+
+    public AuthService(EndpointAccessTokensService tokensService, EndpointAuthProvider endpointAuthProvider) {
         this.tokensService = tokensService;
+        this.endpointAuthProvider = endpointAuthProvider;
     }
 
     /**
      * 
      * Auth request to server
      * 
-     * @param endpoints endpoint enum
+     * @param endpoint endpoint value object
      * @param token request token
      * @return true Auth successfully. false Auth not successfully
     */
-    public boolean checkAuth(Endpoints endpoint, String tokenHeader) {
+    public boolean checkAuth(Endpoint endpoint, String tokenHeader) {
 
-        if (!endpoint.requiresAuth()) {
+        if (!endpointAuthProvider.requiresAuth(endpoint)) {
             return true;
         }
 
@@ -44,7 +53,7 @@ public class AuthService {
             return false;
         }
 
-        List<Endpoints> allowed = tokensService.getToken(token);
+        List<Endpoint> allowed = tokensService.getToken(token);
 
         return allowed != null && allowed.contains(endpoint);
     }

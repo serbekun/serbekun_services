@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 // serbekun imports
-import com.serbekun.service.auth.Endpoints;
+import com.serbekun.service.auth.api.Endpoint;
 import com.serbekun.service.autosave.interfaces.AutoSavable;
 import  com.serbekun.core.EndpointsAccessTokens;
 
@@ -73,7 +73,7 @@ public class EndpointAccessTokensRepository implements AutoSavable {
      * Load all EndpointsAccessTokens and index them by token string.
      * If the storage file is missing, an empty map is returned.
      */
-    public Map<String, List<Endpoints>> load() {
+    public Map<String, List<Endpoint>> load() {
 
         File f = file.toFile();
 
@@ -82,14 +82,14 @@ public class EndpointAccessTokensRepository implements AutoSavable {
         // without error log
         if (!f.exists()) {
             log.info("File not found start from new HashMap");
-            return new LinkedHashMap<String, List<Endpoints>>();
+            return new LinkedHashMap<String, List<Endpoint>>();
         }
 
         try {
             // trying reading json value and convert to java object
             var result = mapper.readValue(
                     f,
-                    new TypeReference<Map<String, List<Endpoints>>>() {}
+                    new TypeReference<Map<String, List<Endpoint>>>() {}
             );
 
             // reading data successfully return data
@@ -100,7 +100,7 @@ public class EndpointAccessTokensRepository implements AutoSavable {
             log.info("Error load EndpointsAccessTokens: {}", e);
             log.info("starting from new hashmap");
             // and still return new hash map
-            return new LinkedHashMap<String, List<Endpoints>>();
+            return new LinkedHashMap<String, List<Endpoint>>();
         }
     
     }

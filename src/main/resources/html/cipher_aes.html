@@ -246,7 +246,7 @@
         // Generate new AES key
         async function generateKey() {
             try {
-                const res = await fetch('/v0/api/cipher/aes', { method: 'GET' });
+                const res = await fetch('/api/v0/cipher/aes', { method: 'GET' });
                 const data = await res.json();
                 
                 document.getElementById('encryptKey').value = data.key;
@@ -267,7 +267,7 @@
             try {
                 await navigator.clipboard.writeText(textToCopy);
                 const originalText = button.textContent;
-                button.textContent = 'Скопировано!';
+                button.textContent = 'copied';
                 button.classList.add('copied');
                 setTimeout(() => {
                     button.textContent = originalText;
@@ -283,7 +283,7 @@
                 document.body.removeChild(textarea);
 
                 const originalText = button.textContent;
-                button.textContent = 'Скопировано';
+                button.textContent = 'copied';
                 button.classList.add('copied');
                 setTimeout(() => {
                     button.textContent = originalText;
@@ -292,19 +292,18 @@
             }
         }
 
-        // ====================== ИСПРАВЛЕННЫЕ ФУНКЦИИ ======================
         // Encrypt data
         async function encryptData() {
             const data = document.getElementById('encryptInput').value.trim();
             const key = document.getElementById('encryptKey').value.trim();
             
             if (!data || !key) {
-                showStatus('Введите данные и ключ', 'error');
+                showStatus('Input data and key', 'error');
                 return;
             }
 
             try {
-                const res = await fetch('/v0/api/cipher/aes/encrypt', {
+                const res = await fetch('/api/v0/cipher/aes/encrypt', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -313,7 +312,6 @@
                     })
                 });
 
-                // ← ИСПРАВЛЕНИЕ: сначала проверяем статус
                 if (!res.ok) {
                     const errorText = await res.text();
                     throw new Error(errorText || `HTTP error! Status: ${res.status}`);
@@ -325,7 +323,7 @@
                 document.getElementById('encryptResult').style.display = 'block';
                 document.getElementById('encryptResult').classList.remove('error');
                 
-                showStatus('Данные успешно зашифрованы', 'success');
+                showStatus('Data encrypted successfully', 'success');
             } catch (err) {
                 showStatus(err.message, 'error');
             }
@@ -337,12 +335,12 @@
             const key = document.getElementById('decryptKey').value.trim();
             
             if (!data || !key) {
-                showStatus('Введите зашифрованные данные и ключ', 'error');
+                showStatus('Enter the encrypted data and key', 'error');
                 return;
             }
 
             try {
-                const res = await fetch('/v0/api/cipher/aes/decrypt', {
+                const res = await fetch('/api/v0/cipher/aes/decrypt', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -364,7 +362,7 @@
                 document.getElementById('decryptResult').style.display = 'block';
                 document.getElementById('decryptResult').classList.remove('error');
                 
-                showStatus('Данные успешно расшифрованы', 'success');
+                showStatus('Data successfully decrypted', 'success');
             } catch (err) {
                 showStatus(err.message, 'error');
             }

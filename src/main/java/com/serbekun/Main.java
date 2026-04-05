@@ -3,26 +3,24 @@ package com.serbekun;
 
 import java.nio.file.Path;
 
-import com.serbekun.service.auth.AuthService;
-import com.serbekun.service.auth.EndpointRegistry;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.serbekun.infrastructure.fs.ServerStorageInitializer;
-import com.serbekun.config.core.CoreConfig;
-import com.serbekun.core.*;
-import com.serbekun.http.handles.InitHandles;
-// repository
-import com.serbekun.repository.*;
-import com.serbekun.resources.ResourceCache;
-import com.serbekun.resources.ResourceLoader;
-// autosave
-import com.serbekun.service.autosave.*;
-import com.serbekun.service.http.handles.v0.*;
-import com.serbekun.service.links.LinksService;
-import com.serbekun.service.resource.ResourcesService;
-import com.serbekun.service.tokens.EndpointAccessTokensService;
+import com.serbekun.ss.config.core.CoreConfig;
+import com.serbekun.ss.core.*;
+import com.serbekun.ss.http.handles.InitHandles;
+import com.serbekun.ss.infrastructure.fs.ServerStorageInitializer;
+import com.serbekun.ss.repository.*;
+import com.serbekun.ss.resources.ResourceCache;
+import com.serbekun.ss.resources.ResourceLoader;
+import com.serbekun.ss.service.auth.AuthService;
+import com.serbekun.ss.service.auth.EndpointRegistry;
+import com.serbekun.ss.service.autosave.*;
+import com.serbekun.ss.service.http.handles.v0.*;
+import com.serbekun.ss.service.links.LinksService;
+import com.serbekun.ss.service.resource.ResourcesService;
+import com.serbekun.ss.service.tokens.EndpointAccessTokensService;
+
 import io.javalin.Javalin;
 
 public class Main {
@@ -70,8 +68,6 @@ public class Main {
         autosaveService.register(endpointAccessTokensRepository);
         autosaveService.register(linksRepository);
         
-    
-
         // init server resource
         ResourceLoader loader = new ResourceLoader();
         ResourceCache cache = new ResourceCache(loader);
@@ -112,5 +108,7 @@ public class Main {
         }, "http-server-thread");
 
         httpServerThread.start();
+
+        autosaveService.start();
     }
 }

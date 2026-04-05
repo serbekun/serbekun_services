@@ -1,0 +1,112 @@
+{
+  "template_use_guide": "adapt prompt to it_project theme",
+  "it_theme": "Java",
+  "prompt_template": "A highly detailed anime-style illustration of a cute girl hacker in a cyberpunk city at night, with [hair_color] hair, [eye_color] eyes, wearing a black cropped hoodie with [logo_back] glowing on the back, black pleated skirt, thigh-high stockings, fingerless gloves, and over-ear headphones with [headphone_logo]. She is in a [pose] pose, pointing at a holographic [logo_hologram] with one hand, holding a tablet or laptop showing [screen_content] in the other. Background: neon-lit futuristic cityscape with tall buildings and digital elements. Style: [art_style], [mood], high resolution, intricate details, vibrant colors, dynamic lighting.",
+  "fields": {
+    "hair_color": {
+      "description": "Color of the girl's hair, often matching the theme color of the [it_project].",
+      "type": "string",
+      "example": "Main Color or Full Palette for [ip_project]"
+    },
+    "eye_color": {
+      "description": "Color of the girl's eyes,/*  */ typically red, blue, or brown to match the energetic or thematic vibe.",
+      "type": "string",
+      "example": "red"
+    },
+    "logo_back": {
+      "description": "The logo or symbol on the back of the hoodie, representing the IT project, program, or organization",
+      "type": "string",
+      "example": "[it_project] gear symbol"
+    },
+    "headphone_logo": {
+      "description": "Optional logo on the headphones, sometimes matching the main logo or a variant.",
+      "type": "string",
+      "example": "glowing [it_project] logo circle"
+    },
+    "logo_hologram": {
+      "description": "The holographic symbol she is pointing at, usually the same as the logo_back but in a glowing, floating form.",
+      "type": "string",
+      "example": "glowing [it_project] logo with gear"
+    },
+    "screen_content": {
+      "description": "The command or code displayed on the tablet/laptop screen, relevant to the IT theme",
+      "type": "string",
+      "example": "cargo build"
+    },
+    "pose": {
+      "description": "The girl's pose, typically dynamic like sitting or standing with one leg bent, looking over shoulder.",
+      "type": "string",
+      "example": "sitting on edge, looking back at viewer, pointing forward"
+    },
+    "art_style": {
+      "description": "Overall artistic style, such as anime, cyberpunk, detailed digital art.",
+      "type": "string",
+      "example": "anime, cyberpunk, highly detailed, by artist like Ilya Kuvshinov"
+    },
+    "mood": {
+      "description": "Emotional tone of the image (e.g., determined, cute, serious).",
+      "type": "string",
+      "example": "focused and slightly blushing"
+    },
+    "clothing_details": {
+      "description": "Additional clothing elements (e.g., red trim on skirt, tech accessories).",
+      "type": "array",
+      "example": ["black pleated skirt with red edges", "fingerless black gloves with red accents", "thigh-high black stockings"]
+    },
+    "accessories": {
+      "description": "Extra items like wristbands, belts, or gadgets.",
+      "type": "array",
+      "example": ["glowing wrist device", "utility belt"]
+    },
+    "background_elements": {
+      "description": "Specific background features to enhance the cyberpunk theme.",
+      "type": "array",
+      "example": ["neon signs", "tall skyscrapers", "holographic billboards", "rainy atmosphere"]
+    },
+    "lighting": {
+      "description": "Lighting effects (e.g., neon glow, volumetric lighting).",
+      "type": "string",
+      "example": "neon orange glow from logos, blue city lights"
+    },
+    "color_scheme": {
+      "description": "Dominant colors matching the IT theme",
+      "type": "string",
+      "example": "orange, black, neon blue"
+    },
+    "resolution": {
+      "description": "Desired image resolution or quality level.",
+      "type": "string",
+      "example": "4K, high resolution"
+    },
+    "composition": {
+      "description": "Image composition (e.g., three-quarter view, from behind).",
+      "type": "string",
+      "example": "over-the-shoulder view, dynamic angle"
+    },
+    "facial_expression": {
+      "description": "Detailed facial expression (e.g., slight pout, confident smile).",
+      "type": "string",
+      "example": "determined with a hint of cuteness"
+    },
+    "hair_style": {
+      "description": "Hairstyle details (e.g., short bob, messy).",
+      "type": "string",
+      "example": "short orange hair with side-swept bangs"
+    },
+    "body_type": {
+      "description": "Body proportions (e.g., petite, athletic).",
+      "type": "string",
+      "example": "slim and cute"
+    },
+    "additional_prompt_modifiers": {
+      "description": "Extra keywords for AI generation (e.g., masterpiece, best quality).",
+      "type": "array",
+      "example": ["masterpiece", "highly detailed", "trending on ArtStation"]
+    },
+    "negative_prompt": {
+      "description": "Elements to avoid in generation (e.g., blurry, low quality).",
+      "type": "string",
+      "example": "blurry, lowres, deformed, ugly"
+    }
+  }
+}

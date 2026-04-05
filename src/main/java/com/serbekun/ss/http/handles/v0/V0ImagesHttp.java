@@ -1,7 +1,7 @@
 package com.serbekun.ss.http.handles.v0;
 
 
-import com.serbekun.ss.service.http.handles.v0.V0ResourcesImages;
+import com.serbekun.ss.service.http.handles.v0.StaticV0Images;
 import com.serbekun.ss.service.resource.ResourcesService;
 
 import io.javalin.http.Context;
@@ -10,9 +10,9 @@ import io.javalin.http.HttpStatus;
 public class V0ImagesHttp {
 
     private final ResourcesService resourcesService;
-    private final V0ResourcesImages v0ResourcesImages;
+    private final StaticV0Images v0ResourcesImages;
 
-    public V0ImagesHttp(ResourcesService resourcesService, V0ResourcesImages v0ResourcesImages) {
+    public V0ImagesHttp(ResourcesService resourcesService, StaticV0Images v0ResourcesImages) {
         this.resourcesService = resourcesService;
         this.v0ResourcesImages = v0ResourcesImages;
     }

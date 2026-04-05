@@ -12,12 +12,12 @@ import com.serbekun.ss.service.links.LinksService;
 /**
  * Implement requests to /v0/api/catalog/links
  */
-public class V0Links {
+public class ApiV0CatalogsLinks {
     
     private final LinksService linksService;
     private final LocalTokens tokens;
 
-    public V0Links(LinksService linksService, LocalTokens tokens) {
+    public ApiV0CatalogsLinks(LinksService linksService, LocalTokens tokens) {
         this.linksService = linksService;
         this.tokens = tokens;
     }

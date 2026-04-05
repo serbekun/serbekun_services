@@ -3,11 +3,11 @@ package com.serbekun.ss.service.http.handles.v0;
 import com.serbekun.ss.resources.ResourcesBasePath;
 import com.serbekun.ss.service.resource.ResourcesService;
 
-public class V0ResourcesImages {
+public class StaticV0Images {
     
     private final ResourcesService resourcesService;
 
-    public V0ResourcesImages(ResourcesService resourcesService) {
+    public StaticV0Images(ResourcesService resourcesService) {
         this.resourcesService = resourcesService;
     }
 

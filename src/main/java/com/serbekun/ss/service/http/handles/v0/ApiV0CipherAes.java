@@ -9,11 +9,11 @@ import com.serbekun.ss.service.cipher.AesService;
 /**
  * implement request to /v0/api/cipher/aes/*
  */
-public class V0ApiCipherAes {
+public class ApiV0CipherAes {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public V0ApiCipherAes() {}
+    public ApiV0CipherAes() {}
 
     /**
      * 

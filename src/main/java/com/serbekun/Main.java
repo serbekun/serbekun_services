@@ -79,11 +79,11 @@ public class Main {
 
 
         // init http handles services
-        V0ApiJson v0ApiJson = new V0ApiJson(resourcesService);
-        V0ResourcesImages v0ResourcesImages = new V0ResourcesImages(resourcesService);
-        V0Page v0Page = new V0Page(resourcesService);
-        V0Links V0Links = new V0Links(linksService, localTokensLinks);
-        V0ApiCipherAes v0ApiCipherAes = new V0ApiCipherAes();
+        StaticV0Json v0ApiJson = new StaticV0Json(resourcesService);
+        StaticV0Images v0ResourcesImages = new StaticV0Images(resourcesService);
+        StaticV0Html v0Page = new StaticV0Html(resourcesService);
+        ApiV0CatalogsLinks V0Links = new ApiV0CatalogsLinks(linksService, localTokensLinks);
+        ApiV0CipherAes v0ApiCipherAes = new ApiV0CipherAes();
         
 
         // init api handles

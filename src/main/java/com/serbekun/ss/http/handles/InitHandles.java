@@ -15,11 +15,11 @@ public class InitHandles {
         AuthService authService, EndpointRegistrar endpointRegistrar,
 
         // API handles services
-        V0ApiJson v0ApiJson,
-        V0ResourcesImages v0ResourcesImages,
-        V0Page v0Page,
-        V0Links v0Links,
-        V0ApiCipherAes v0ApiCipherAes
+        StaticV0Json v0ApiJson,
+        StaticV0Images v0ResourcesImages,
+        StaticV0Html v0Page,
+        ApiV0CatalogsLinks v0Links,
+        ApiV0CipherAes v0ApiCipherAes
 
     ) {
 

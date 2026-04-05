@@ -3,7 +3,7 @@ package com.serbekun.ss.http.handles.v0;
 import com.serbekun.ss.http.handles.v0.dto.links.V0LinksDeleteRequest;
 import com.serbekun.ss.http.handles.v0.dto.links.V0LinksPostRequest;
 import com.serbekun.ss.http.handles.v0.dto.links.V0LinksPutRequest;
-import com.serbekun.ss.service.http.handles.v0.V0Links;
+import com.serbekun.ss.service.http.handles.v0.ApiV0CatalogsLinks;
 
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
@@ -13,9 +13,9 @@ import io.javalin.http.HttpStatus;
 
 public class V0LinksHttp {
     
-    private final V0Links v0Links;
+    private final ApiV0CatalogsLinks v0Links;
 
-    public V0LinksHttp(V0Links v0Links) {
+    public V0LinksHttp(ApiV0CatalogsLinks v0Links) {
         this.v0Links = v0Links;
     }
 

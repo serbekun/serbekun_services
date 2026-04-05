@@ -6,11 +6,11 @@ import com.serbekun.ss.service.resource.ResourcesService;
 /**
  * implement request to /v0/api/json/{name}
  */
-public class V0ApiJson {
+public class StaticV0Json {
     
     private final ResourcesService resourcesService;
 
-    public V0ApiJson(ResourcesService resourcesService) {
+    public StaticV0Json(ResourcesService resourcesService) {
         this.resourcesService = resourcesService;
     }
 

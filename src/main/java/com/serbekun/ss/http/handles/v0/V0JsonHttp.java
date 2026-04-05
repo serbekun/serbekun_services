@@ -1,15 +1,15 @@
 package com.serbekun.ss.http.handles.v0;
 
-import com.serbekun.ss.service.http.handles.v0.V0ApiJson;
+import com.serbekun.ss.service.http.handles.v0.StaticV0Json;
 
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
 public class V0JsonHttp {
 
-    private final V0ApiJson v0ApiJson;
+    private final StaticV0Json v0ApiJson;
 
-    public V0JsonHttp(V0ApiJson v0ApiJson) {
+    public V0JsonHttp(StaticV0Json v0ApiJson) {
         this.v0ApiJson = v0ApiJson;
     }
 

@@ -1,7 +1,7 @@
 package com.serbekun.ss.http.handles.v0;
 
 import com.serbekun.ss.http.handles.v0.dto.cipher.aes.*;
-import com.serbekun.ss.service.http.handles.v0.V0ApiCipherAes;
+import com.serbekun.ss.service.http.handles.v0.ApiV0CipherAes;
 
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
@@ -9,9 +9,9 @@ import io.javalin.http.HttpStatus;
 
 public class V0CipherAesHttp {
     
-    private V0ApiCipherAes v0ApiCipherAes;
+    private ApiV0CipherAes v0ApiCipherAes;
 
-    public V0CipherAesHttp(V0ApiCipherAes v0ApiCipherAes) {
+    public V0CipherAesHttp(ApiV0CipherAes v0ApiCipherAes) {
         this.v0ApiCipherAes = v0ApiCipherAes;
     }
 
@@ -67,14 +67,7 @@ public class V0CipherAesHttp {
         }
 
     
-        String json;
-        try {
-            json = v0ApiCipherAes.postEncrypt(v0CipherPostEncrypt.data(), v0CipherPostEncrypt.key());
-        } catch (IllegalArgumentException e) {
-            ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("Invalid base64 input");
-            return;
-        }
+        String json = v0ApiCipherAes.postEncrypt(v0CipherPostEncrypt.data(), v0CipherPostEncrypt.key());
         if (json == null) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             return;
@@ -96,14 +89,7 @@ public class V0CipherAesHttp {
             return;
         }
 
-        String json;
-        try {
-            json = v0ApiCipherAes.postDecrypt(v0CipherPostDecrypt.data(), v0CipherPostDecrypt.key());
-        } catch (IllegalArgumentException e) {
-            ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("Invalid base64 input");
-            return;
-        }
+        String json = v0ApiCipherAes.postDecrypt(v0CipherPostDecrypt.data(), v0CipherPostDecrypt.key());
         if (json == null) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             return;

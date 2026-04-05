@@ -1,15 +1,15 @@
 package com.serbekun.ss.http.handles.v0;
 
-import com.serbekun.ss.service.http.handles.v0.V0Page;
+import com.serbekun.ss.service.http.handles.v0.StaticV0Html;
 
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
 public class V0PagesHttp {
     
-    private final V0Page v0Page;
+    private final StaticV0Html v0Page;
 
-    public V0PagesHttp(V0Page v0Page) {
+    public V0PagesHttp(StaticV0Html v0Page) {
         this.v0Page = v0Page;
     } 
 

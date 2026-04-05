@@ -43,6 +43,8 @@ public class AesService {
             cipher.init(Cipher.ENCRYPT_MODE, keySpec);
             byte[] encryptedBytes = cipher.doFinal(dataBytes);
             return Base64.getEncoder().encodeToString(encryptedBytes);
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -65,6 +67,8 @@ public class AesService {
             cipher.init(Cipher.DECRYPT_MODE, keySpec);
             byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
             return Base64.getEncoder().encodeToString(decryptedBytes);
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

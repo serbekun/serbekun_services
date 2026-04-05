@@ -57,12 +57,12 @@
             transition: all 0.3s;
         }
         .tab-btn.active {
-            background: linear-gradient(135deg, #1ee7bc, #7b61ff);
+            /* background: linear-gradient(135deg, #1ee7bc, #7b61ff); */
             color: #ffffff;
             font-weight: bold;
             border-color: transparent;
         
-            box-shadow: 0 0 20px rgba(123, 97, 255, 0.45);
+            box-shadow: 0 0 20px rgba(97, 255, 136, 0.45);
         }
         textarea, input {
             width: 100%;
@@ -95,7 +95,7 @@
             width: 100%;
             padding: 14px;
             margin-top: 15px;
-            background: linear-gradient(135deg, #1ee7bc 0%, #7b61ff 50%, #ff6bde 100%);
+            background: rgba(255, 255, 255, 0.06);
             color: #ffffff;
             border: none;
             border-radius: 8px;
@@ -104,7 +104,7 @@
             cursor: pointer;
             transition: all 0.3s;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-            box-shadow: 0 4px 20px rgba(123, 97, 255, 0.4);
+            /* box-shadow: 0 4px 20px rgba(123, 97, 255, 0.4); */
         }
         button:hover {
             transform: translateY(-2px);
@@ -252,9 +252,9 @@
                 document.getElementById('encryptKey').value = data.key;
                 document.getElementById('decryptKey').value = data.key;
                 
-                showStatus('Новый ключ AES успешно сгенерирован', 'success');
+                showStatus('New AES key successfully generated', 'success');
             } catch (err) {
-                showStatus('Ошибка при генерации ключа', 'error');
+                showStatus('Error generate AES key', 'error');
             }
         }
 
@@ -293,12 +293,25 @@
         }
 
         // Encrypt data
+        function isValidBase64(value) {
+            if (!value || value.length % 4 !== 0) return false;
+            try {
+                return btoa(atob(value)) === value;
+            } catch {
+                return false;
+            }
+        }
+
         async function encryptData() {
             const data = document.getElementById('encryptInput').value.trim();
             const key = document.getElementById('encryptKey').value.trim();
             
             if (!data || !key) {
                 showStatus('Input data and key', 'error');
+                return;
+            }
+            if (!isValidBase64(key)) {
+                showStatus('Key must be base64', 'error');
                 return;
             }
 
@@ -338,6 +351,10 @@
                 showStatus('Enter the encrypted data and key', 'error');
                 return;
             }
+            if (!isValidBase64(data) || !isValidBase64(key)) {
+                showStatus('Encrypted data and key must be base64', 'error');
+                return;
+            }
 
             try {
                 const res = await fetch('/api/v0/cipher/aes/decrypt', {
@@ -349,7 +366,6 @@
                     })
                 });
 
-                // ← ИСПРАВЛЕНИЕ: сначала проверяем статус
                 if (!res.ok) {
                     const errorText = await res.text();
                     throw new Error(errorText || `HTTP error! Status: ${res.status}`);

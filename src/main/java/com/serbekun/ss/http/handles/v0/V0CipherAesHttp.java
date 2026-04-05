@@ -67,7 +67,14 @@ public class V0CipherAesHttp {
         }
 
     
-        String json = v0ApiCipherAes.postEncrypt(v0CipherPostEncrypt.data(), v0CipherPostEncrypt.key());
+        String json;
+        try {
+            json = v0ApiCipherAes.postEncrypt(v0CipherPostEncrypt.data(), v0CipherPostEncrypt.key());
+        } catch (IllegalArgumentException e) {
+            ctx.status(HttpStatus.BAD_REQUEST);
+            ctx.result("Invalid base64 input");
+            return;
+        }
         if (json == null) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             return;
@@ -89,7 +96,14 @@ public class V0CipherAesHttp {
             return;
         }
 
-        String json = v0ApiCipherAes.postDecrypt(v0CipherPostDecrypt.data(), v0CipherPostDecrypt.key());
+        String json;
+        try {
+            json = v0ApiCipherAes.postDecrypt(v0CipherPostDecrypt.data(), v0CipherPostDecrypt.key());
+        } catch (IllegalArgumentException e) {
+            ctx.status(HttpStatus.BAD_REQUEST);
+            ctx.result("Invalid base64 input");
+            return;
+        }
         if (json == null) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             return;

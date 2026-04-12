@@ -7,12 +7,12 @@ import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 import io.javalin.http.HttpStatus;
 
-public class V0CipherAesHttp {
+public class ApiV0CipherAesHttp {
     
-    private ApiV0CipherAes v0ApiCipherAes;
+    private ApiV0CipherAes apiV0CipherAes;
 
-    public V0CipherAesHttp(ApiV0CipherAes v0ApiCipherAes) {
-        this.v0ApiCipherAes = v0ApiCipherAes;
+    public ApiV0CipherAesHttp(ApiV0CipherAes apiV0CipherAes) {
+        this.apiV0CipherAes = apiV0CipherAes;
     }
 
     public void main(Context ctx) {
@@ -44,7 +44,7 @@ public class V0CipherAesHttp {
     private void handleGet(Context ctx) {
         ctx.contentType("application/json");
 
-        String json = v0ApiCipherAes.get();
+        String json = apiV0CipherAes.get();
         if (json == null) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             return;
@@ -67,7 +67,7 @@ public class V0CipherAesHttp {
         }
 
     
-        String json = v0ApiCipherAes.postEncrypt(v0CipherPostEncrypt.data(), v0CipherPostEncrypt.key());
+        String json = apiV0CipherAes.postEncrypt(v0CipherPostEncrypt.data(), v0CipherPostEncrypt.key());
         if (json == null) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             return;
@@ -89,7 +89,7 @@ public class V0CipherAesHttp {
             return;
         }
 
-        String json = v0ApiCipherAes.postDecrypt(v0CipherPostDecrypt.data(), v0CipherPostDecrypt.key());
+        String json = apiV0CipherAes.postDecrypt(v0CipherPostDecrypt.data(), v0CipherPostDecrypt.key());
         if (json == null) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             return;

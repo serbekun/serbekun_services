@@ -5,19 +5,19 @@ import com.serbekun.ss.service.http.handles.v0.StaticV0Json;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
-public class V0JsonHttp {
+public class StaticV0JsonHttp {
 
-    private final StaticV0Json v0ApiJson;
+    private final StaticV0Json staticV0Json;
 
-    public V0JsonHttp(StaticV0Json v0ApiJson) {
-        this.v0ApiJson = v0ApiJson;
+    public StaticV0JsonHttp(StaticV0Json staticV0Json) {
+        this.staticV0Json = staticV0Json;
     }
 
     public void main(Context ctx) {
         ctx.contentType("application/json");
         
         String name = ctx.pathParam("name");
-        String json = v0ApiJson.run(name);
+        String json = staticV0Json.run(name);
 
         if (json == null) {
             ctx.status(HttpStatus.NOT_FOUND);

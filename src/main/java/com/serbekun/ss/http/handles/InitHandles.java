@@ -15,43 +15,47 @@ public class InitHandles {
         AuthService authService, EndpointRegistrar endpointRegistrar,
 
         // API handles services
-        StaticV0Json v0ApiJson,
-        StaticV0Images v0ResourcesImages,
-        StaticV0Html v0Page,
-        ApiV0CatalogsLinks v0Links,
-        ApiV0CipherAes v0ApiCipherAes
+        StaticV0Json staticV0Json,
+        StaticV0Images staticV0Images,
+        StaticV0Html staticV0Html,
+        ApiV0CatalogsLinks apiV0CatalogsLinks,
+        ApiV0CipherAes apiV0CipherAes
 
     ) {
 
         // init handles objects
         IndexHttp index = new IndexHttp(resourcesService);
-        V0ImagesHttp Images = new V0ImagesHttp(resourcesService, v0ResourcesImages);
-        V0JsonHttp json = new V0JsonHttp(v0ApiJson);
-        V0CipherAesHttp cipherAes = new V0CipherAesHttp(v0ApiCipherAes);
-        V0PagesHttp pages = new V0PagesHttp(v0Page);
-        V0LinksHttp links = new V0LinksHttp(v0Links);
+        StaticV0ImagesHttp staticV0ImagesHttp = new StaticV0ImagesHttp(resourcesService, staticV0Images);
+        StaticV0JsonHttp staticV0JsonHttp = new StaticV0JsonHttp(staticV0Json);
+        StaticV0HtmlHttp staticV0HtmlHttp = new StaticV0HtmlHttp(staticV0Html);
+        ApiV0CipherAesHttp apiV0CipherAesHttp = new ApiV0CipherAesHttp(apiV0CipherAes);
+        ApiV0CatalogsLinksHttp apiV0CatalogsLinksHttp = new ApiV0CatalogsLinksHttp(apiV0CatalogsLinks);
 
         // SINGLE instances
-        Endpoint endpointIndex = new Endpoint("Index");
-        Endpoint endpointV0StaticImages = new Endpoint("v0StaticImages");
-        Endpoint endpointV0ApiJson = new Endpoint("v0ApiJson");
-        Endpoint endpointV0ApiCipherAes = new Endpoint("v0ApiCipherAes");
-        Endpoint endpointV0Page = new Endpoint("v0Page");
+        Endpoint endpointIndex = new Endpoint("/index");
+        Endpoint endpointStaticV0Images = new Endpoint("/static/v0/images");
+        Endpoint endpointStaticV0Json = new Endpoint("/static/v0/json/");
+        Endpoint endpointStaticV0Html = new Endpoint("/static/v0/html/");
+        Endpoint endpointApiV0CipherAes = new Endpoint("/api/v0/cipher");
+        Endpoint endpointApiV0CatalogsLinks = new Endpoint("/api/v0/catalogs/links");
 
         // register
         endpointRegistrar.register(endpointIndex, false);
-        endpointRegistrar.register(endpointV0StaticImages, false);
-        endpointRegistrar.register(endpointV0ApiJson, false);
-        endpointRegistrar.register(endpointV0ApiCipherAes, false);
-        endpointRegistrar.register(endpointV0Page, false);
+        endpointRegistrar.register(endpointStaticV0Images, false);
+        endpointRegistrar.register(endpointStaticV0Json, false);
+        endpointRegistrar.register(endpointStaticV0Html, false);
+        endpointRegistrar.register(endpointApiV0CipherAes, false);
+        endpointRegistrar.register(endpointApiV0CatalogsLinks, false);
 
         svr.before("/", ctx -> ctx.attribute("endpoint", endpointIndex));
-        svr.before("/static/v0/images/{name}", ctx -> ctx.attribute("endpoint", endpointV0StaticImages));
-        svr.before("/static/v0/json/{name}", ctx -> ctx.attribute("endpoint", endpointV0ApiJson));
-        svr.before("/api/v0/cipher/aes", ctx -> ctx.attribute("endpoint", endpointV0ApiCipherAes));
-        svr.before("/api/v0/cipher/aes/encrypt", ctx -> ctx.attribute("endpoint", endpointV0ApiCipherAes));
-        svr.before("/api/v0/cipher/aes/decrypt", ctx -> ctx.attribute("endpoint", endpointV0ApiCipherAes));
-        svr.before("/static/v0/html/{name}", ctx -> ctx.attribute("endpoint", endpointV0Page));
+        svr.before("/static/v0/images/{name}", ctx -> ctx.attribute("endpoint", endpointStaticV0Images));
+        svr.before("/static/v0/json/{name}", ctx -> ctx.attribute("endpoint", endpointStaticV0Json));
+        svr.before("/static/v0/html/{name}", ctx -> ctx.attribute("endpoint", endpointStaticV0Html));
+        svr.before("/api/v0/cipher/aes", ctx -> ctx.attribute("endpoint", endpointApiV0CipherAes));
+        svr.before("/api/v0/cipher/aes/encrypt", ctx -> ctx.attribute("endpoint", endpointApiV0CipherAes));
+        svr.before("/api/v0/cipher/aes/decrypt", ctx -> ctx.attribute("endpoint", endpointApiV0CipherAes));
+        svr.before("/api/v0/catalogs/links", ctx -> ctx.attribute("endpoint", endpointApiV0CatalogsLinks));
+        svr.before("/api/v0/catalogs/links/{uuid}", ctx -> ctx.attribute("endpoint", endpointApiV0CatalogsLinks));
 
         // auth gate
         svr.before(ctx -> {
@@ -103,23 +107,22 @@ public class InitHandles {
         svr.get("/", ctx -> index.main(ctx));
 
         // static
-        svr.get("/static/v0/images/{name}", ctx -> Images.main(ctx));
-        svr.get("/static/v0/json/{name}", ctx -> json.main(ctx));
-        svr.get("/static/v0/html/{name}", ctx -> pages.main(ctx));
+        svr.get("/static/v0/images/{name}", ctx -> staticV0ImagesHttp.main(ctx));
+        svr.get("/static/v0/json/{name}", ctx -> staticV0JsonHttp.main(ctx));
+        svr.get("/static/v0/html/{name}", ctx -> staticV0HtmlHttp.main(ctx));
 
         
-        svr.get("/api/v0/cipher/aes", ctx -> cipherAes.main(ctx));
-        svr.post("/api/v0/cipher/aes/encrypt", ctx -> cipherAes.main(ctx));
-        svr.post("/api/v0/cipher/aes/decrypt", ctx -> cipherAes.main(ctx));
+        svr.get("/api/v0/cipher/aes", ctx -> apiV0CipherAesHttp.main(ctx));
+        svr.post("/api/v0/cipher/aes/encrypt", ctx -> apiV0CipherAesHttp.main(ctx));
+        svr.post("/api/v0/cipher/aes/decrypt", ctx -> apiV0CipherAesHttp.main(ctx));
 
         // in future
         // /api/v0/cipher/rsa/*
 
         // links
-        svr.get("/api/v0/catalogs/links", ctx -> links.main(ctx));
-        svr.post("/api/v0/catalogs/links", ctx -> links.main(ctx));
-        svr.put("/api/v0/catalogs/links/{uuid}", ctx -> links.main(ctx));
-        svr.delete("/api/v0/catalogs/links/{uuid}", ctx -> links.main(ctx));
-        // in future programs поэтому catlogs чтоб можно было новые каталоги добавить
+        svr.get("/api/v0/catalogs/links", ctx -> apiV0CatalogsLinksHttp.main(ctx));
+        svr.post("/api/v0/catalogs/links", ctx -> apiV0CatalogsLinksHttp.main(ctx));
+        svr.put("/api/v0/catalogs/links/{uuid}", ctx -> apiV0CatalogsLinksHttp.main(ctx));
+        svr.delete("/api/v0/catalogs/links/{uuid}", ctx -> apiV0CatalogsLinksHttp.main(ctx));
     } 
 }

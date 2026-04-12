@@ -7,21 +7,21 @@ import com.serbekun.ss.service.resource.ResourcesService;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
-public class V0ImagesHttp {
+public class StaticV0ImagesHttp {
 
     private final ResourcesService resourcesService;
-    private final StaticV0Images v0ResourcesImages;
+    private final StaticV0Images staticV0Images;
 
-    public V0ImagesHttp(ResourcesService resourcesService, StaticV0Images v0ResourcesImages) {
+    public StaticV0ImagesHttp(ResourcesService resourcesService, StaticV0Images staticV0Images) {
         this.resourcesService = resourcesService;
-        this.v0ResourcesImages = v0ResourcesImages;
+        this.staticV0Images = staticV0Images;
     }
 
     public void main(Context ctx) {
         String name = ctx.pathParam("name");
         ctx.contentType(resourcesService.detectMimeType(name));
 
-        byte[] image = v0ResourcesImages.run(name);
+        byte[] image = staticV0Images.run(name);
         
         if (image == null) {
             ctx.status(HttpStatus.NOT_FOUND);

@@ -5,12 +5,12 @@ import com.serbekun.ss.service.http.handles.v0.StaticV0Html;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
-public class V0PagesHttp {
+public class StaticV0HtmlHttp {
     
-    private final StaticV0Html v0Page;
+    private final StaticV0Html staticV0Html;
 
-    public V0PagesHttp(StaticV0Html v0Page) {
-        this.v0Page = v0Page;
+    public StaticV0HtmlHttp(StaticV0Html staticV0Html) {
+        this.staticV0Html = staticV0Html;
     } 
 
     public void main(Context ctx) {
@@ -18,7 +18,7 @@ public class V0PagesHttp {
         ctx.contentType("text/html");
 
         String name = ctx.pathParam("name");
-        String html = v0Page.run(name);
+        String html = staticV0Html.run(name);
 
         if (html == null) {
             ctx.status(HttpStatus.NOT_FOUND);

@@ -11,12 +11,12 @@ import io.javalin.http.HttpStatus;
 
 // TODO move json string writeing to V0Links
 
-public class V0LinksHttp {
+public class ApiV0CatalogsLinksHttp {
     
-    private final ApiV0CatalogsLinks v0Links;
+    private final ApiV0CatalogsLinks apiV0CatalogsLinks;
 
-    public V0LinksHttp(ApiV0CatalogsLinks v0Links) {
-        this.v0Links = v0Links;
+    public ApiV0CatalogsLinksHttp(ApiV0CatalogsLinks apiV0CatalogsLinks) {
+        this.apiV0CatalogsLinks = apiV0CatalogsLinks;
     }
 
     public void main(Context ctx) {
@@ -45,7 +45,7 @@ public class V0LinksHttp {
     private void handleGet(Context ctx) {
         ctx.contentType("application/json");
 
-        String json = v0Links.get();
+        String json = apiV0CatalogsLinks.get();
         if (json == null) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             return;
@@ -70,7 +70,7 @@ public class V0LinksHttp {
                 body.description()
             );
 
-        String token = v0Links.post(request);
+        String token = apiV0CatalogsLinks.post(request);
         ctx.status(HttpStatus.CREATED);
         ctx.result("{\"token\":\"" + token + "\"}");
     }
@@ -99,7 +99,7 @@ public class V0LinksHttp {
                 body.description()
             );
 
-        int status = v0Links.put(request);
+        int status = apiV0CatalogsLinks.put(request);
         if (status == 404) {
             ctx.status(HttpStatus.NOT_FOUND);
             return;
@@ -133,7 +133,7 @@ public class V0LinksHttp {
                 token
             );
 
-        int status = v0Links.delete(request);
+        int status = apiV0CatalogsLinks.delete(request);
         if (status == 404) {
             ctx.status(HttpStatus.NOT_FOUND);
             return;

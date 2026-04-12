@@ -2,209 +2,439 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AES Cipher</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>✦ AES CIPHER · COSMIC ENCRYPTION ✦</title>
     <style>
-        html {
-            background-color: black;
-        }
-        body {
+        /* ===== RESET & BASE ===== */
+        * {
             margin: 0;
-            padding: 0 0 3rem 0;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            background: #03050b;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
             line-height: 1.6;
             color: #ffffff;
-            background:
-                linear-gradient(
-                    rgba(0, 0, 0, 0.85),
-                    rgba(0, 0, 0, 0.75)
-                ),
-                url('/v0/api/images/static/black_hole.jpg');
-            background-size: cover;
-            background-position: center;
+            background: 
+                radial-gradient(circle at 30% 40%, rgba(20, 157, 220, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 80% 70%, rgba(180, 70, 240, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 10% 85%, rgba(0, 255, 200, 0.05) 0%, transparent 40%),
+                #050a14;
+            background-blend-mode: overlay, screen, normal;
+            position: relative;
+            padding: 1.5rem 1rem 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Animated starfield (pure CSS) */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                radial-gradient(2px 2px at 15px 60px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 75px 340px, #f8f0e3, rgba(0,0,0,0)),
+                radial-gradient(3px 3px at 280px 80px, #c1e4ff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 420px 520px, #a0d0ff, rgba(0,0,0,0)),
+                radial-gradient(4px 4px at 650px 150px, #ffe6b0, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 820px 380px, #b0e0ff, rgba(0,0,0,0)),
+                radial-gradient(3px 3px at 120px 720px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 560px 640px, #e0d0ff, rgba(0,0,0,0)),
+                radial-gradient(4px 4px at 90% 20%, #9ec8ff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 20% 90%, #b8e2ff, rgba(0,0,0,0));
             background-repeat: no-repeat;
-            background-attachment: fixed;
-            min-height: 100vh;
+            opacity: 0.7;
+            pointer-events: none;
+            z-index: 0;
         }
+
+        /* ===== MAIN CARD ===== */
         .container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background: rgba(20, 20, 20, 0.85);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 40px rgba(255, 255, 255, 0.08);
+            max-width: 880px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2.5rem 2.2rem;
+            background: rgba(8, 15, 28, 0.55);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 42px;
+            border: 1px solid rgba(110, 230, 255, 0.22);
+            box-shadow: 
+                0 25px 45px -12px rgba(0, 0, 0, 0.85),
+                0 0 0 1px rgba(0, 255, 255, 0.08) inset,
+                0 0 40px rgba(0, 200, 255, 0.2);
+            position: relative;
+            z-index: 10;
+            transition: box-shadow 0.4s ease, border-color 0.3s;
         }
+
+        .container:hover {
+            box-shadow: 
+                0 30px 55px -12px #000000cc,
+                0 0 0 1.5px rgba(80, 220, 255, 0.25) inset,
+                0 0 50px rgba(0, 220, 255, 0.3);
+            border-color: rgba(140, 240, 255, 0.4);
+        }
+
+        /* ===== TYPOGRAPHY & HEADER ===== */
         h1 {
             text-align: center;
-            color: #c0fffc;
-            text-shadow: 0 0 15px rgba(140, 235, 235, 0.3);
-            margin-bottom: 1.5rem;
+            font-weight: 600;
+            font-size: 2.7rem;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #b7f5ff 0%, #d6b0ff 50%, #9ee7ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            margin-bottom: 0.5rem;
+            filter: drop-shadow(0 4px 6px #00000040);
         }
+
+        .subhead {
+            text-align: center;
+            color: #b0d9ff;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            word-spacing: 6px;
+        }
+
+        /* ===== TAB BUTTONS ===== */
         .tab-buttons {
             display: flex;
             justify-content: center;
-            margin-bottom: 2rem;
-            gap: 10px;
+            gap: 16px;
+            margin-bottom: 2.5rem;
         }
+
         .tab-btn {
-            padding: 12px 32px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #c0fffc;
-            border-radius: 9999px;
+            padding: 12px 42px;
+            background: rgba(20, 40, 60, 0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(100, 210, 255, 0.25);
+            color: #d0ecff;
+            border-radius: 60px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 1px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
         }
+
+        .tab-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.15), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .tab-btn:hover::before {
+            opacity: 1;
+        }
+
         .tab-btn.active {
-            /* background: linear-gradient(135deg, #1ee7bc, #7b61ff); */
+            background: linear-gradient(145deg, #0f3350, #071a2b);
             color: #ffffff;
-            font-weight: bold;
-            border-color: transparent;
-        
-            box-shadow: 0 0 20px rgba(97, 255, 136, 0.45);
+            border-color: #5ee0fa;
+            box-shadow: 0 0 25px #1ee7bc66, 0 8px 18px #00000060, 0 0 0 1px #7fd1ff inset;
+            transform: scale(1.02);
+            text-shadow: 0 0 8px #b5ffff;
         }
-        textarea, input {
-            width: 100%;
-            padding: 14px;
-            margin: 10px 0;
-            background: rgba(12, 12, 12, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: 8px;
-            color: #e0e0e0;
-            font-family: monospace;
-            resize: vertical;
-            box-sizing: border-box;
-            transition: border-color 0.3s;
-        }
-        textarea:focus, input:focus {
-            outline: none;
-            border-color: rgba(123, 97, 255, 0.6);
-            box-shadow: 0 0 0 3px rgba(123, 97, 255, 0.15);
-        }
-        textarea {
-            min-height: 120px;
-        }
+
+        /* ===== FORM ELEMENTS ===== */
         label {
             display: block;
-            margin: 15px 0 5px;
-            color: #dddddd;
+            margin: 24px 0 8px 8px;
+            color: #cfe6ff;
+            font-weight: 500;
             font-size: 0.95rem;
-        }
-        button {
-            width: 100%;
-            padding: 14px;
-            margin-top: 15px;
-            background: rgba(255, 255, 255, 0.06);
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-            /* box-shadow: 0 4px 20px rgba(123, 97, 255, 0.4); */
-        }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(123, 97, 255, 0.55);
-            filter: brightness(1.1);
-        }
-        button:active {
-            transform: translateY(0);
-            filter: brightness(0.95);
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 5px #00000050;
         }
 
-        /* Result block */
-        .result {
-            margin-top: 20px;
-            padding: 16px;
-            background: rgba(0, 0, 0, 0.75);
-            border-radius: 8px;
-            border-left: 4px solid #7b61ff;
-            font-family: monospace;
-            word-break: break-all;
-            position: relative;
+        textarea, input {
+            width: 100%;
+            padding: 16px 18px;
+            background: rgba(2, 12, 24, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1.8px solid rgba(90, 200, 255, 0.25);
+            border-radius: 24px;
+            color: #f0f7ff;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 1rem;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: all 0.25s ease;
+            box-shadow: 0 8px 12px -6px #00000080, inset 0 0 0 1px #2f6080;
+            line-height: 1.5;
         }
+
+        textarea {
+            min-height: 130px;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: #6ee7ff;
+            box-shadow: 0 0 0 5px rgba(0, 210, 255, 0.15), 0 0 20px #1ee7bc60, inset 0 0 8px #a0e0ff;
+            background: rgba(5, 20, 35, 0.8);
+        }
+
+        textarea::placeholder, input::placeholder {
+            color: #9bb8da;
+            opacity: 0.7;
+            font-size: 0.95rem;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-primary {
+            width: 100%;
+            padding: 16px 20px;
+            margin-top: 28px;
+            background: linear-gradient(115deg, #102b44, #062238);
+            color: #ffffff;
+            border: 1.5px solid #3fcbff;
+            border-radius: 60px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px -5px #000000b0, 0 0 15px #1ee7bc40, inset 0 0 12px #6ed4ff30;
+            text-transform: uppercase;
+            backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s;
+            transform: rotate(25deg);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 30px -8px #000, 0 0 30px #2ad4b0, inset 0 0 18px #b3f0ff;
+            border-color: #8eeeff;
+            background: linear-gradient(115deg, #1a3f5a, #0a2638);
+        }
+
+        .btn-primary:hover::after {
+            opacity: 0.5;
+        }
+
+        .btn-primary:active {
+            transform: translateY(2px);
+            box-shadow: 0 5px 15px #000000, 0 0 20px #1ee7bc;
+        }
+
+        /* generate key button (smaller) */
+        .gen-key-btn {
+            background: rgba(16, 45, 70, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid #4ab7ff;
+            color: #e0f3ff;
+            padding: 12px 32px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 1.2px;
+            cursor: pointer;
+            transition: 0.25s;
+            box-shadow: 0 4px 12px #00000060, 0 0 12px #1ee7bc30;
+            margin-bottom: 10px;
+            width: auto;
+            display: inline-block;
+        }
+
+        .gen-key-btn:hover {
+            background: #1e4768;
+            border-color: #9ee2ff;
+            box-shadow: 0 0 20px #6df, 0 6px 14px #000;
+            transform: scale(1.02);
+        }
+
+        .gen-key-wrapper {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        /* ===== RESULT CARD ===== */
+        .result {
+            margin-top: 30px;
+            padding: 20px 22px;
+            background: rgba(0, 15, 30, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 28px;
+            border-left: 6px solid #1ee7bc;
+            box-shadow: 0 10px 25px -5px #000000, 0 0 0 1px #2f9bb3 inset;
+            font-family: 'SF Mono', monospace;
+            word-break: break-all;
+            animation: fadeGlow 0.5s ease-out;
+            transition: all 0.2s;
+        }
+
+        @keyframes fadeGlow {
+            0% { opacity: 0.6; box-shadow: 0 0 0 0 #1ee7bc; }
+            100% { opacity: 1; box-shadow: 0 10px 25px -5px #000, 0 0 0 1px #2f9bb3 inset; }
+        }
+
         .result strong {
             display: block;
-            margin-bottom: 8px;
-            color: #c0fffc;
+            margin-bottom: 14px;
+            color: #b7f0ff;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px #1ee7bc;
         }
 
-        /* Copy button */
+        .result span {
+            display: inline-block;
+            background: #051520;
+            padding: 12px 16px;
+            border-radius: 18px;
+            color: #d0f0ff;
+            border: 1px solid #2c7a9e;
+            width: 100%;
+            margin-bottom: 16px;
+            font-size: 0.95rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        /* copy button */
         .copy-btn {
-            padding: 8px 16px;
-            background: rgba(30, 231, 188, 0.12);
-            color: #1ee7bc;
-            border: 1px solid rgba(30, 231, 188, 0.45);
-            border-radius: 8px;
+            padding: 10px 24px;
+            background: rgba(30, 231, 188, 0.08);
+            color: #a6f5ff;
+            border: 1.5px solid #1ee7bc;
+            border-radius: 60px;
             cursor: pointer;
             font-size: 0.95rem;
-            transition: all 0.3s;
-            margin-top: 10px;
-            width: auto;
-            font-weight: normal;
-            text-shadow: none;
-            box-shadow: none;
-        }
-        .copy-btn:hover {
-            background: rgba(30, 231, 188, 0.25);
-            border-color: #1ee7bc;
-            box-shadow: 0 0 12px rgba(30, 231, 188, 0.3);
-            transform: translateY(0);
-            filter: none;
-        }
-        .copy-btn:active {
-            transform: none;
-            filter: none;
-        }
-        .copy-btn.copied {
-            background: #1ee7bc;
-            color: #000000;
-            border-color: #1ee7bc;
+            font-weight: 600;
+            transition: all 0.25s;
+            backdrop-filter: blur(5px);
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px #1ee7bc40;
         }
 
-        .error {
-            color: #ff5555;
-            background: rgba(40, 0, 0, 0.6);
-            border-left-color: #ff4488;
+        .copy-btn:hover {
+            background: #1ee7bc20;
+            border-color: #b3ffe6;
+            color: #ffffff;
+            box-shadow: 0 0 22px #1ee7bc, 0 4px 10px #000;
+            transform: translateY(-2px);
         }
+
+        .copy-btn.copied {
+            background: #1ee7bc;
+            color: #031016;
+            border-color: #ffffff;
+            font-weight: bold;
+            box-shadow: 0 0 30px #b0ffee;
+        }
+
+        /* ===== STATUS ===== */
         .status {
             text-align: center;
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #c0fffc;
+            margin-top: 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            min-height: 28px;
+            color: #bdf2ff;
+            text-shadow: 0 0 12px #00ccff;
+            transition: 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        /* error style */
+        .result.error {
+            border-left-color: #ff5577;
+            box-shadow: 0 0 0 1px #ff6688 inset, 0 10px 20px #300;
+        }
+        .result.error strong {
+            color: #ffb0b0;
+        }
+
+        /* ===== TABS ===== */
+        #decryptTab {
+            display: none;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 550px) {
+            .container {
+                padding: 1.8rem 1.2rem;
+                border-radius: 32px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .tab-btn {
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+            .btn-primary {
+                font-size: 1.1rem;
+                padding: 14px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>AES Cipher</h1>
-        <p style="text-align:center; color:#cccccc;">Secure AES Encryption Tool</p>
-        
+        <h1>AES CIPHER</h1>
+        <div class="subhead">✦ quantum-grade encryption ✦</div>
+
         <div class="tab-buttons">
             <button class="tab-btn active" onclick="switchTab(0)">Encrypt</button>
             <button class="tab-btn" onclick="switchTab(1)">Decrypt</button>
         </div>
 
-        <!-- Generate key -->
-        <div style="text-align:center; margin-bottom: 20px;">
-            <button onclick="generateKey()" style="width:auto; padding:10px 24px; font-size:1rem;">
-                Generate new key
+        <!-- generate key block -->
+        <div class="gen-key-wrapper">
+            <button class="gen-key-btn" onclick="generateKey()">
+                ✦ GENERATE NEW KEY ✦
             </button>
         </div>
 
-        <!-- Encrypt Tab -->
+        <!-- ENCRYPT TAB -->
         <div id="encryptTab">
             <label>Data to encrypt (text)</label>
             <textarea id="encryptInput" placeholder="Enter the text you want to encrypt..."></textarea>
             
-            <label>AES Key (base64)</label>
-            <input type="text" id="encryptKey" placeholder="Click the button above to generate a key">
+            <label>🗝️ AES Key (base64)</label>
+            <input type="text" id="encryptKey" placeholder="Click the button above to generate a key" spellcheck="false">
             
-            <button onclick="encryptData()">Encrypt</button>
+            <button class="btn-primary" onclick="encryptData()">⟳ Encrypt ⟳</button>
             
             <div id="encryptResult" class="result" style="display:none;">
                 <strong>Encrypted data:</strong>
@@ -213,15 +443,15 @@
             </div>
         </div>
 
-        <!-- Decrypt Tab -->
-        <div id="decryptTab" style="display:none;">
+        <!-- DECRYPT TAB -->
+        <div id="decryptTab">
             <label>Encrypted data (base64)</label>
             <textarea id="decryptInput" placeholder="Paste the encrypted data here..."></textarea>
             
-            <label>AES Key (base64)</label>
-            <input type="text" id="decryptKey" placeholder="Enter the key">
+            <label>🗝️ AES Key (base64)</label>
+            <input type="text" id="decryptKey" placeholder="Enter the key" spellcheck="false">
             
-            <button onclick="decryptData()">Decrypt</button>
+            <button class="btn-primary" onclick="decryptData()">⟲ Decrypt ⟲</button>
             
             <div id="decryptResult" class="result" style="display:none;">
                 <strong>Decrypted text:</strong>
@@ -234,166 +464,215 @@
     </div>
 
     <script>
-        // Switch between Encrypt and Decrypt tabs
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-                btn.classList.toggle('active', i === tab);
-            });
-            document.getElementById('encryptTab').style.display = tab === 0 ? 'block' : 'none';
-            document.getElementById('decryptTab').style.display = tab === 1 ? 'block' : 'none';
-        }
-
-        // Generate new AES key
-        async function generateKey() {
-            try {
-                const res = await fetch('/api/v0/cipher/aes', { method: 'GET' });
-                const data = await res.json();
+        (function(){
+            // Smooth tab switching with animation hint
+            window.switchTab = function(tabIndex) {
+                const tabs = document.querySelectorAll('.tab-btn');
+                const encryptTab = document.getElementById('encryptTab');
+                const decryptTab = document.getElementById('decryptTab');
                 
-                document.getElementById('encryptKey').value = data.key;
-                document.getElementById('decryptKey').value = data.key;
-                
-                showStatus('New AES key successfully generated', 'success');
-            } catch (err) {
-                showStatus('Error generate AES key', 'error');
-            }
-        }
-
-        // Copy to clipboard
-        async function copyToClipboard(elementId, button) {
-            const textElement = document.getElementById(elementId);
-            const textToCopy = textElement.textContent.trim();
-            if (!textToCopy) return;
-
-            try {
-                await navigator.clipboard.writeText(textToCopy);
-                const originalText = button.textContent;
-                button.textContent = 'copied';
-                button.classList.add('copied');
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.classList.remove('copied');
-                }, 2000);
-            } catch (err) {
-                // Fallback
-                const textarea = document.createElement('textarea');
-                textarea.value = textToCopy;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-
-                const originalText = button.textContent;
-                button.textContent = 'copied';
-                button.classList.add('copied');
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.classList.remove('copied');
-                }, 2000);
-            }
-        }
-
-        // Encrypt data
-        function isValidBase64(value) {
-            if (!value || value.length % 4 !== 0) return false;
-            try {
-                return btoa(atob(value)) === value;
-            } catch {
-                return false;
-            }
-        }
-
-        async function encryptData() {
-            const data = document.getElementById('encryptInput').value.trim();
-            const key = document.getElementById('encryptKey').value.trim();
-            
-            if (!data || !key) {
-                showStatus('Input data and key', 'error');
-                return;
-            }
-            if (!isValidBase64(key)) {
-                showStatus('Key must be base64', 'error');
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/v0/cipher/aes/encrypt', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        data: btoa(unescape(encodeURIComponent(data))),
-                        key: key
-                    })
+                tabs.forEach((btn, idx) => {
+                    btn.classList.toggle('active', idx === tabIndex);
                 });
+                
+                if (tabIndex === 0) {
+                    encryptTab.style.display = 'block';
+                    decryptTab.style.display = 'none';
+                } else {
+                    encryptTab.style.display = 'none';
+                    decryptTab.style.display = 'block';
+                }
+                // Clear status when switching
+                document.getElementById('status').textContent = '';
+            };
 
-                if (!res.ok) {
-                    const errorText = await res.text();
-                    throw new Error(errorText || `HTTP error! Status: ${res.status}`);
+            // Generate new AES key (calls backend)
+            window.generateKey = async function() {
+                const statusEl = document.getElementById('status');
+                try {
+                    statusEl.textContent = 'Generating secure key...';
+                    statusEl.style.color = '#bdf2ff';
+                    
+                    const res = await fetch('/api/v0/cipher/aes', { method: 'GET' });
+                    if (!res.ok) throw new Error(`Server error ${res.status}`);
+                    
+                    const data = await res.json();
+                    document.getElementById('encryptKey').value = data.key;
+                    document.getElementById('decryptKey').value = data.key;
+                    
+                    showStatus('New AES key generated · ready for use', 'success');
+                } catch (err) {
+                    showStatus('Unable to generate key · ' + err.message, 'error');
+                }
+            };
+
+            // Copy to clipboard with visual feedback
+            window.copyToClipboard = async function(elementId, button) {
+                const textElement = document.getElementById(elementId);
+                const textToCopy = textElement.textContent.trim();
+                if (!textToCopy) return;
+
+                const originalText = button.textContent;
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    button.textContent = '✓ Copied!';
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.classList.remove('copied');
+                    }, 2000);
+                } catch (err) {
+                    // fallback
+                    const textarea = document.createElement('textarea');
+                    textarea.value = textToCopy;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    button.textContent = '✓ Copied!';
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.classList.remove('copied');
+                    }, 2000);
+                }
+            };
+
+            // Base64 validation
+            function isValidBase64(str) {
+                if (!str || typeof str !== 'string') return false;
+                const base64Regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/;
+                return base64Regex.test(str);
+            }
+
+            // Encrypt
+            window.encryptData = async function() {
+                const dataInput = document.getElementById('encryptInput');
+                const keyInput = document.getElementById('encryptKey');
+                const data = dataInput.value.trim();
+                const key = keyInput.value.trim();
+                
+                if (!data || !key) {
+                    showStatus('Both data and key are required', 'error');
+                    return;
+                }
+                if (!isValidBase64(key)) {
+                    showStatus('Key must be valid base64', 'error');
+                    return;
                 }
 
-                const result = await res.json();
+                const resultDiv = document.getElementById('encryptResult');
+                const resultSpan = document.getElementById('encryptResultText');
                 
-                document.getElementById('encryptResultText').textContent = result.data;
-                document.getElementById('encryptResult').style.display = 'block';
-                document.getElementById('encryptResult').classList.remove('error');
+                try {
+                    showStatus('Encrypting with AES...', 'info');
+                    
+                    // encode UTF-8 safely (compatible with backend)
+                    const utf8Bytes = unescape(encodeURIComponent(data));
+                    const base64Data = btoa(utf8Bytes);
+                    
+                    const res = await fetch('/api/v0/cipher/aes/encrypt', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: base64Data, key: key })
+                    });
+
+                    if (!res.ok) {
+                        const errText = await res.text();
+                        throw new Error(errText || `Encryption failed (${res.status})`);
+                    }
+
+                    const result = await res.json();
+                    resultSpan.textContent = result.data;
+                    resultDiv.style.display = 'block';
+                    resultDiv.classList.remove('error');
+                    showStatus('Data encrypted successfully', 'success');
+                } catch (err) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.classList.add('error');
+                    resultSpan.textContent = 'Error: ' + err.message;
+                    showStatus('' + err.message, 'error');
+                }
+            };
+
+            // Decrypt
+            window.decryptData = async function() {
+                const dataInput = document.getElementById('decryptInput');
+                const keyInput = document.getElementById('decryptKey');
+                const data = dataInput.value.trim();
+                const key = keyInput.value.trim();
                 
-                showStatus('Data encrypted successfully', 'success');
-            } catch (err) {
-                showStatus(err.message, 'error');
-            }
-        }
-
-        // Decrypt data
-        async function decryptData() {
-            const data = document.getElementById('decryptInput').value.trim();
-            const key = document.getElementById('decryptKey').value.trim();
-            
-            if (!data || !key) {
-                showStatus('Enter the encrypted data and key', 'error');
-                return;
-            }
-            if (!isValidBase64(data) || !isValidBase64(key)) {
-                showStatus('Encrypted data and key must be base64', 'error');
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/v0/cipher/aes/decrypt', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        data: data,
-                        key: key
-                    })
-                });
-
-                if (!res.ok) {
-                    const errorText = await res.text();
-                    throw new Error(errorText || `HTTP error! Status: ${res.status}`);
+                if (!data || !key) {
+                    showStatus('Encrypted data and key are required', 'error');
+                    return;
+                }
+                if (!isValidBase64(data) || !isValidBase64(key)) {
+                    showStatus('Both encrypted data and key must be valid base64', 'error');
+                    return;
                 }
 
-                const result = await res.json();
-                const decoded = decodeURIComponent(escape(atob(result.data)));
+                const resultDiv = document.getElementById('decryptResult');
+                const resultSpan = document.getElementById('decryptResultText');
                 
-                document.getElementById('decryptResultText').textContent = decoded;
-                document.getElementById('decryptResult').style.display = 'block';
-                document.getElementById('decryptResult').classList.remove('error');
-                
-                showStatus('Data successfully decrypted', 'success');
-            } catch (err) {
-                showStatus(err.message, 'error');
-            }
-        }
-        // =================================================================
+                try {
+                    showStatus('Decrypting data...', 'info');
+                    
+                    const res = await fetch('/api/v0/cipher/aes/decrypt', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: data, key: key })
+                    });
 
-        function showStatus(message, type = 'info') {
-            const statusEl = document.getElementById('status');
-            statusEl.textContent = message;
-            statusEl.style.color = type === 'success' ? '#00ffaa' : '#ff5555';
-            
-            setTimeout(() => {
-                statusEl.textContent = '';
-            }, 5000);
-        }
+                    if (!res.ok) {
+                        const errText = await res.text();
+                        throw new Error(errText || `Decryption failed (${res.status})`);
+                    }
+
+                    const result = await res.json();
+                    // decode from base64 (UTF-8 safe)
+                    const decoded = decodeURIComponent(escape(atob(result.data)));
+                    
+                    resultSpan.textContent = decoded;
+                    resultDiv.style.display = 'block';
+                    resultDiv.classList.remove('error');
+                    showStatus('Decryption successful', 'success');
+                } catch (err) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.classList.add('error');
+                    resultSpan.textContent = 'Error: ' + err.message;
+                    showStatus('' + err.message, 'error');
+                }
+            };
+
+            // status helper
+            function showStatus(message, type = 'info') {
+                const statusEl = document.getElementById('status');
+                statusEl.textContent = message;
+                if (type === 'success') {
+                    statusEl.style.color = '#9effe6';
+                    statusEl.style.textShadow = '0 0 15px #1ee7bc';
+                } else if (type === 'error') {
+                    statusEl.style.color = '#ffa6b0';
+                    statusEl.style.textShadow = '0 0 12px #ff4466';
+                } else {
+                    statusEl.style.color = '#cfe6ff';
+                    statusEl.style.textShadow = '0 0 10px #7fc9ff';
+                }
+                
+                if (type !== 'info') {
+                    setTimeout(() => {
+                        if (statusEl.textContent === message) {
+                            statusEl.textContent = '';
+                        }
+                    }, 5000);
+                }
+            }
+            window.showStatus = showStatus;
+
+            // Prefill with any existing key? (optional)
+            // If backend responds with key, generateKey will fill.
+        })();
     </script>
 </body>
 </html>

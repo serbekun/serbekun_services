@@ -70,7 +70,7 @@ public class LinksService {
      */
     public synchronized String getAllLinksAsJson() {
         try {
-            return mapper.writeValueAsString(links.getAllLinks());
+            return mapper.writeValueAsString(links.getAllLinks().values());
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize links to JSON", e);
             return null;

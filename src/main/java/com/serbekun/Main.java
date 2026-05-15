@@ -25,90 +25,84 @@ import io.javalin.Javalin;
 
 public class Main {
     
+    /**
+     * Main entry point of the application.
+     * Initializes server storage, repositories, services, autosave, HTTP handlers,
+     * starts Javalin server on port 8080 and autosave service.
+     * Adds shutdown hook for graceful server stop.
+     */
     public static void main(String[] args) {
-        
         Logger log = LoggerFactory.getLogger(Main.class);
-
-        // init server folders
-        log.info("Init server folder");
-        ServerStorageInitializer serverStorageInitializer = new ServerStorageInitializer();
-        serverStorageInitializer.initialize(Path.of(CoreConfig.Infrastructure.Fs.getServerStorageFolder()));
-        // ==========================
-
-        // init core repository
-        log.info("Init core repository");
-        LinksRepository linksRepository = new LinksRepository(CoreConfig.LinksConfig.getLinksStorageFile());
-        EndpointAccessTokensRepository endpointAccessTokensRepository  = new EndpointAccessTokensRepository(CoreConfig.TokensConfig.getTokensStorageFolder());
-
-        // local tokens repository
-        LocalTokensRepository localTokensRepositoryLinks = new LocalTokensRepository(CoreConfig.LinksConfig.getLinksLocalTokensStorageFile());
-
-        // init core
-        log.info("Init core");
-        Links links = linksRepository.getLinks();
-        EndpointsAccessTokens endpointAccessTokens = endpointAccessTokensRepository.getEndpointAccessTokens();
-
-
-        // init tokens
-        LocalTokens localTokensLinks = localTokensRepositoryLinks.getTokens();
-
-        // init services
-        log.info("Init services");
-        EndpointRegistry endpointRegistry = new EndpointRegistry();
-        EndpointAccessTokensService EndpointAccessTokensService = new EndpointAccessTokensService(endpointAccessTokens);
-        LinksService linksService = new LinksService(links);
-
-        AuthService authService = new AuthService(EndpointAccessTokensService, endpointRegistry);
-
-        // run auto save threads
-        log.info("Init autosave threads");
         
+        // 1. Initialize server storage folders
+        log.info("Initializing server storage folders");
+        ServerStorageInitializer storageInitializer = new ServerStorageInitializer();
+        storageInitializer.initialize(Path.of(CoreConfig.Infrastructure.Fs.getServerStorageFolder()));
+        
+        // 2. Initialize repositories
+        log.info("Initializing repositories");
+        LinksRepository linksRepository = new LinksRepository(CoreConfig.LinksConfig.getLinksStorageFile());
+        EndpointAccessTokensRepository tokensRepository = new EndpointAccessTokensRepository(
+            CoreConfig.TokensConfig.getTokensStorageFolder()
+        );
+        LocalTokensRepository localTokensRepository = new LocalTokensRepository(
+            CoreConfig.LinksConfig.getLinksLocalTokensStorageFile()
+        );
+        
+        // Load core data from repositories
+        Links links = linksRepository.getLinks();
+        EndpointsAccessTokens endpointTokens = tokensRepository.getEndpointAccessTokens();
+        LocalTokens localTokens = localTokensRepository.getTokens();
+        
+        // 3. Initialize services
+        log.info("Initializing services");
+        EndpointRegistry endpointRegistry = new EndpointRegistry();
+        EndpointAccessTokensService tokensService = new EndpointAccessTokensService(endpointTokens);
+        LinksService linksService = new LinksService(links);
+        AuthService authService = new AuthService(tokensService, endpointRegistry);
+        
+        // 4. Initialize autosave service and register repositories
+        log.info("Initializing autosave service");
         AutosaveService autosaveService = new AutosaveService();
-
-        autosaveService.register(endpointAccessTokensRepository);
+        autosaveService.register(tokensRepository);
         autosaveService.register(linksRepository);
         
-        // init server resource
-        ResourceLoader loader = new ResourceLoader();
-        ResourceCache cache = new ResourceCache(loader);
-        ResourcesService resourcesService = new ResourcesService(loader, cache);
-
-        // init javalin
-        log.info("Init javalin");
-        Javalin svr = Javalin.create();
-
-
-        // init http handles services
-        StaticV0Json v0ApiJson = new StaticV0Json(resourcesService);
-        StaticV0Images v0ResourcesImages = new StaticV0Images(resourcesService);
-        StaticV0Html v0Page = new StaticV0Html(resourcesService);
-        ApiV0CatalogsLinks V0Links = new ApiV0CatalogsLinks(linksService, localTokensLinks);
-        ApiV0CipherAes v0ApiCipherAes = new ApiV0CipherAes();
+        // 5. Initialize resources
+        log.info("Initializing resources");
+        ResourceLoader resourceLoader = new ResourceLoader();
+        ResourceCache resourceCache = new ResourceCache(resourceLoader);
+        ResourcesService resourcesService = new ResourcesService(resourceLoader, resourceCache);
         
-
-        // init api handles
+        // 6. Initialize Javalin server
+        log.info("Initializing Javalin server");
+        Javalin server = Javalin.create();
+        
+        // 7. Initialize HTTP handlers
+        StaticV0Json jsonHandler = new StaticV0Json(resourcesService);
+        StaticV0Images imagesHandler = new StaticV0Images(resourcesService);
+        StaticV0Html htmlHandler = new StaticV0Html(resourcesService);
+        ApiV0CatalogsLinks linksHandler = new ApiV0CatalogsLinks(linksService, localTokens);
+        ApiV0CipherAes cipherHandler = new ApiV0CipherAes();
+        
         InitHandles initHandles = new InitHandles();
-        initHandles.initHandles(svr, resourcesService, authService, endpointRegistry,
-            v0ApiJson,
-            v0ResourcesImages,
-            v0Page,
-            V0Links,
-            v0ApiCipherAes
+        initHandles.initHandles(
+            server, resourcesService, authService, endpointRegistry,
+            jsonHandler, imagesHandler, htmlHandler, linksHandler, cipherHandler
         );
-
-        // shutdown server when JWM is stop
+        
+        // 8. Add shutdown hook for graceful shutdown
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            log.info("Stopping server...");
-            svr.stop();
+            log.info("Shutting down server...");
+            autosaveService.stop(); // Ensure autosave stops
+            server.stop();
         }));
-    
-        // run http thread
-        Thread httpServerThread = new Thread(() -> {
-            svr.start(8080);
-        }, "http-server-thread");
-
-        httpServerThread.start();
-
+        
+        // 9. Start HTTP server and autosave in separate threads
+        log.info("Starting server on port 8080");
+        Thread httpThread = new Thread(() -> server.start(8080), "http-server");
+        httpThread.start();
+        
         autosaveService.start();
+        log.info("Server started successfully");
     }
 }

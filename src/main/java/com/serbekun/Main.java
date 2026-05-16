@@ -25,6 +25,8 @@ import io.javalin.Javalin;
 
 public class Main {
     
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
+    
     /**
      * Main entry point of the application.
      * Initializes server storage, repositories, services, autosave, HTTP handlers,
@@ -32,77 +34,224 @@ public class Main {
      * Adds shutdown hook for graceful server stop.
      */
     public static void main(String[] args) {
-        Logger log = LoggerFactory.getLogger(Main.class);
-        
-        // 1. Initialize server storage folders
+        log.info("Starting Serbekun server...");
+
+        ServerContext context = initializeApplication();
+
+        startServer(context);
+
+        log.info("Server started successfully on port 8080");
+    }
+
+    private static ServerContext initializeApplication() {
+        // 1. Storage
+        initializeStorage();
+
+        // 2. Repositories + data
+        Repositories repos = initializeRepositories();
+
+        // 3. Services
+        Services services = initializeServices(repos);
+
+        // 4. Resources
+        Resources resources = initializeResources();
+
+        // 5. HTTP handlers
+        Handlers handlers = initializeHandlers(services, resources, repos);
+
+        return new ServerContext(repos, services, resources, handlers);
+    }
+
+    private static void initializeStorage() {
         log.info("Initializing server storage folders");
-        ServerStorageInitializer storageInitializer = new ServerStorageInitializer();
-        storageInitializer.initialize(Path.of(CoreConfig.Infrastructure.Fs.getServerStorageFolder()));
-        
-        // 2. Initialize repositories
+        new ServerStorageInitializer()
+            .initialize(Path.of(CoreConfig.Infrastructure.Fs.getServerStorageFolder()));
+    }
+
+    private static Repositories initializeRepositories() {
         log.info("Initializing repositories");
-        LinksRepository linksRepository = new LinksRepository(CoreConfig.LinksConfig.getLinksStorageFile());
-        EndpointAccessTokensRepository tokensRepository = new EndpointAccessTokensRepository(
-            CoreConfig.TokensConfig.getTokensStorageFolder()
+
+        var linksRepo = new LinksRepository(CoreConfig.LinksConfig.getLinksStorageFile());
+        var tokensRepo = new EndpointAccessTokensRepository(
+            CoreConfig.TokensConfig.getTokensStorageFolder());
+        var localTokensRepo = new LocalTokensRepository(
+            CoreConfig.LinksConfig.getLinksLocalTokensStorageFile());
+
+        return new Repositories(
+            linksRepo,
+            tokensRepo,
+            localTokensRepo,
+            linksRepo.getLinks(),
+            tokensRepo.getEndpointAccessTokens(),
+            localTokensRepo.getTokens()
         );
-        LocalTokensRepository localTokensRepository = new LocalTokensRepository(
-            CoreConfig.LinksConfig.getLinksLocalTokensStorageFile()
-        );
-        
-        // Load core data from repositories
-        Links links = linksRepository.getLinks();
-        EndpointsAccessTokens endpointTokens = tokensRepository.getEndpointAccessTokens();
-        LocalTokens localTokens = localTokensRepository.getTokens();
-        
-        // 3. Initialize services
+    }
+
+    private static Services initializeServices(Repositories repos) {
         log.info("Initializing services");
-        EndpointRegistry endpointRegistry = new EndpointRegistry();
-        EndpointAccessTokensService tokensService = new EndpointAccessTokensService(endpointTokens);
-        LinksService linksService = new LinksService(links);
-        AuthService authService = new AuthService(tokensService, endpointRegistry);
-        
-        // 4. Initialize autosave service and register repositories
-        log.info("Initializing autosave service");
-        AutosaveService autosaveService = new AutosaveService();
-        autosaveService.register(tokensRepository);
-        autosaveService.register(linksRepository);
-        
-        // 5. Initialize resources
+
+        var endpointRegistry = new EndpointRegistry();
+        var tokensService = new EndpointAccessTokensService(repos.endpointTokens);
+        var linksService = new LinksService(repos.links);
+        var authService = new AuthService(tokensService, endpointRegistry);
+
+        return new Services(endpointRegistry, tokensService, linksService, authService);
+    }
+
+    private static Resources initializeResources() {
         log.info("Initializing resources");
-        ResourceLoader resourceLoader = new ResourceLoader();
-        ResourceCache resourceCache = new ResourceCache(resourceLoader);
-        ResourcesService resourcesService = new ResourcesService(resourceLoader, resourceCache);
-        
-        // 6. Initialize Javalin server
+        var resourceLoader = new ResourceLoader();
+        var resourceCache = new ResourceCache(resourceLoader);
+        var resourcesService = new ResourcesService(resourceLoader, resourceCache);
+
+        return new Resources(resourceLoader, resourceCache, resourcesService);
+    }
+
+    private static Handlers initializeHandlers(Services services, Resources resources, Repositories repos) {
+        log.info("Initializing HTTP handlers");
+
+        return new Handlers(
+            new StaticV0Json(resources.resourcesService),
+            new StaticV0Images(resources.resourcesService),
+            new StaticV0Html(resources.resourcesService),
+            new ApiV0CatalogsLinks(services.linksService, repos.localTokens),
+            new ApiV0CipherAes()
+        );
+    }
+
+    private static void startServer(ServerContext ctx) {
         log.info("Initializing Javalin server");
         Javalin server = Javalin.create();
-        
-        // 7. Initialize HTTP handlers
-        StaticV0Json jsonHandler = new StaticV0Json(resourcesService);
-        StaticV0Images imagesHandler = new StaticV0Images(resourcesService);
-        StaticV0Html htmlHandler = new StaticV0Html(resourcesService);
-        ApiV0CatalogsLinks linksHandler = new ApiV0CatalogsLinks(linksService, localTokens);
-        ApiV0CipherAes cipherHandler = new ApiV0CipherAes();
-        
+
         InitHandles initHandles = new InitHandles();
         initHandles.initHandles(
-            server, resourcesService, authService, endpointRegistry,
-            jsonHandler, imagesHandler, htmlHandler, linksHandler, cipherHandler
+            server,
+            ctx.resources.resourcesService,
+            ctx.services.authService,
+            ctx.services.endpointRegistry,
+            ctx.handlers.json,
+            ctx.handlers.images,
+            ctx.handlers.html,
+            ctx.handlers.links,
+            ctx.handlers.cipher
         );
-        
-        // 8. Add shutdown hook for graceful shutdown
+
+        // Autosave
+        AutosaveService autosaveService = createAndStartAutosave(ctx.repos);
+
+        addShutdownHook(server, autosaveService);
+
+        // Run
+        server.start(8080);
+    }
+
+    private static AutosaveService createAndStartAutosave(Repositories repos) {
+        log.info("Initializing autosave service");
+        var autosave = new AutosaveService();
+        autosave.register(repos.linksRepo);
+        autosave.register(repos.endpointTokensRepo);
+        autosave.register(repos.localTokensRepo);
+        autosave.start();
+        return autosave;
+    }
+
+    private static void addShutdownHook(Javalin server, AutosaveService autosave) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             log.info("Shutting down server...");
-            autosaveService.stop(); // Ensure autosave stops
+            autosave.stop();
             server.stop();
-        }));
-        
-        // 9. Start HTTP server and autosave in separate threads
-        log.info("Starting server on port 8080");
-        Thread httpThread = new Thread(() -> server.start(8080), "http-server");
-        httpThread.start();
-        
-        autosaveService.start();
-        log.info("Server started successfully");
+        }, "shutdown-hook"));
+    }
+
+    private static final class ServerContext {
+        private final Repositories repos;
+        private final Services services;
+        private final Resources resources;
+        private final Handlers handlers;
+
+        private ServerContext(Repositories repos, Services services, Resources resources, Handlers handlers) {
+            this.repos = repos;
+            this.services = services;
+            this.resources = resources;
+            this.handlers = handlers;
+        }
+    }
+
+    private static final class Repositories {
+        private final LinksRepository linksRepo;
+        private final EndpointAccessTokensRepository endpointTokensRepo;
+        private final LocalTokensRepository localTokensRepo;
+        private final com.serbekun.ss.core.Links links;
+        private final com.serbekun.ss.core.EndpointsAccessTokens endpointTokens;
+        private final com.serbekun.ss.core.LocalTokens localTokens;
+
+        private Repositories(
+                LinksRepository linksRepo,
+                EndpointAccessTokensRepository endpointTokensRepo,
+                LocalTokensRepository localTokensRepo,
+                com.serbekun.ss.core.Links links,
+                com.serbekun.ss.core.EndpointsAccessTokens endpointTokens,
+                com.serbekun.ss.core.LocalTokens localTokens) {
+            this.linksRepo = linksRepo;
+            this.endpointTokensRepo = endpointTokensRepo;
+            this.localTokensRepo = localTokensRepo;
+            this.links = links;
+            this.endpointTokens = endpointTokens;
+            this.localTokens = localTokens;
+        }
+    }
+
+    private static final class Services {
+        private final EndpointRegistry endpointRegistry;
+        private final EndpointAccessTokensService tokensService;
+        private final LinksService linksService;
+        private final AuthService authService;
+
+        private Services(
+                EndpointRegistry endpointRegistry,
+                EndpointAccessTokensService tokensService,
+                LinksService linksService,
+                AuthService authService) {
+            this.endpointRegistry = endpointRegistry;
+            this.tokensService = tokensService;
+            this.linksService = linksService;
+            this.authService = authService;
+        }
+    }
+
+    private static final class Resources {
+        private final ResourceLoader resourceLoader;
+        private final ResourceCache resourceCache;
+        private final ResourcesService resourcesService;
+
+        private Resources(
+                ResourceLoader resourceLoader,
+                ResourceCache resourceCache,
+                ResourcesService resourcesService) {
+            this.resourceLoader = resourceLoader;
+            this.resourceCache = resourceCache;
+            this.resourcesService = resourcesService;
+        }
+    }
+
+    private static final class Handlers {
+        private final StaticV0Json json;
+        private final StaticV0Images images;
+        private final StaticV0Html html;
+        private final ApiV0CatalogsLinks links;
+        private final ApiV0CipherAes cipher;
+
+        private Handlers(
+                StaticV0Json json,
+                StaticV0Images images,
+                StaticV0Html html,
+                ApiV0CatalogsLinks links,
+                ApiV0CipherAes cipher) {
+            this.json = json;
+            this.images = images;
+            this.html = html;
+            this.links = links;
+            this.cipher = cipher;
+        }
     }
 }

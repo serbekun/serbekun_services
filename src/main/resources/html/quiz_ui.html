@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -121,7 +121,7 @@
         }
 
         .option::before {
-            content: "✦";
+            content: "*";
             color: var(--accent);
             font-size: 1.4rem;
             flex-shrink: 0;
@@ -139,7 +139,7 @@
             flex: 1;
         }
 
-        /* Цвета ответов */
+        /* Answer colors */
         .option.correct {
             background: rgba(0, 255, 170, 0.18) !important;
             border-color: var(--success) !important;
@@ -158,7 +158,7 @@
             color: var(--text);
         }
 
-        /* Результаты */
+        /* Results */
         #results-screen {
             display: none;
             text-align: center;
@@ -223,18 +223,19 @@
     </style>
 </head>
 <body>
+    <a href="/" style="position:fixed;top:16px;left:16px;z-index:9999;background:rgba(20,20,20,0.9);color:#aaa;border:1px solid #444;border-radius:999px;padding:6px 14px;font-size:0.85rem;text-decoration:none;box-shadow:0 4px 12px #000;">← Back</a>
     <div class="container">
-        <!-- Заголовок -->
+        <!-- Header section with title and subtitle -->
         <header>
             <div class="logo">QUIZ</div>
             <div class="subtitle">Serbekun Service</div>
         </header>
 
-        <!-- Основной контейнер викторины -->
+        <!-- Main quiz container -->
         <div id="quiz-container">
-            <div id="loading" class="loading">QUestion loading...</div>
+            <div id="loading" class="loading">Question loading...</div>
 
-            <!-- Экран вопросов -->
+            <!-- Question screen - displays questions and options -->
             <div id="question-screen">
                 <div id="progress">
                     Question <span id="current-q">1</span> / <span id="total-q">10</span>
@@ -243,7 +244,7 @@
                 <div id="options" class="options-grid"></div>
             </div>
 
-            <!-- Экран результатов -->
+            <!-- Results screen - displays final score and restart option -->
             <div id="results-screen">
                 <h2>GAME END!</h2>
                 <p style="font-size:1.3rem;color:#acacac;margin-bottom:10px;">SCORE COUNT</p>
@@ -256,116 +257,88 @@
     </div>
 
     <script>
-        // === ДАННЫЕ ===
+        /* =================================
+         * GLOBAL STATE VARIABLES
+         * =================================
+         * questions: Array of quiz question objects fetched from API
+         * currentIndex: Tracks current question position (0-based indexing)
+         * score: Counts the number of correct answers given by the user
+         * answered: Boolean flag to prevent multiple answer clicks per question
+         * =================================
+         */
         let questions = [];
         let currentIndex = 0;
         let score = 0;
         let answered = false;
 
-        // Тестовые вопросы (на случай, если API недоступен)
-        const sampleQuestions = [
-            {
-                "question": "В каком году Россия принимала Чемпионат мира по футболу?",
-                "options": {
-                    "A": "2014",
-                    "B": "2018",
-                    "C": "2022",
-                    "D": "2010"
-                },
-                "correct": "B"
-            },
-            {
-                "question": "Сколько колец на олимпийском флаге?",
-                "options": {
-                    "A": "4",
-                    "B": "5",
-                    "C": "6",
-                    "D": "7"
-                },
-                "correct": "B"
-            },
-            {
-                "question": "Какой вид спорта называют «королём спорта»?",
-                "options": {
-                    "A": "Футбол",
-                    "B": "Лёгкая атлетика",
-                    "C": "Баскетбол",
-                    "D": "Теннис"
-                },
-                "correct": "B"
-            },
-            {
-                "question": "Сколько игроков одной команды на площадке в баскетболе?",
-                "options": {
-                    "A": "5",
-                    "B": "6",
-                    "C": "7",
-                    "D": "4"
-                },
-                "correct": "A"
-            },
-            {
-                "question": "В каком году сборная России выиграла золото Олимпиады в хоккее?",
-                "options": {
-                    "A": "2014",
-                    "B": "2018",
-                    "C": "2022",
-                    "D": "2010"
-                },
-                "correct": "B"
-            }
-        ];
-
-        // === ЗАГРУЗКА ВОПРОСОВ ===
+        /* =================================
+         * LOAD QUESTIONS FROM API
+         * Fetches quiz data from server
+         * Shows loading indicator during fetch operation
+         * Displays error if API is unavailable
+         * ================================= */
         async function loadQuestions() {
             const loadingEl = document.getElementById('loading');
             const questionScreen = document.getElementById('question-screen');
             
+            // Show loading indicator and hide question screen
             loadingEl.style.display = 'block';
             questionScreen.style.display = 'none';
 
             try {
+                // Attempt to fetch questions from server API
                 const response = await fetch('/static/v0/json/sports_quiz', {
                     method: 'GET',
                     headers: { 'Accept': 'application/json' }
                 });
                 
-                if (!response.ok) throw new Error('API вернул ошибку');
+                // Check if API response is successful
+                if (!response.ok) throw new Error('API returned error');
                 
+                // Parse JSON response and store questions
                 questions = await response.json();
-                console.log('%c✅ Вопросы загружены с сервера', 'color:#00ff9f');
+                console.log('Questions loaded from server');
             } catch (err) {
-                console.log('%c Используем тестовые вопросы (сервер недоступен)', 'color:#ff2a6d');
-                questions = sampleQuestions;
+                // Display error message if API fails
+                console.log('Failed to load questions');
+                loadingEl.textContent = 'Failed to load questions. Please try again later.';
+                loadingEl.style.display = 'block';
+                return;
             }
 
+            // Hide loading indicator and show question screen
             loadingEl.style.display = 'none';
             questionScreen.style.display = 'block';
 
-            // Запускаем викторину
+            // Reset game state and start the quiz
             currentIndex = 0;
             score = 0;
             showQuestion();
         }
 
-        // === ПОКАЗ ВОПРОСА ===
+        /* =================================
+         * DISPLAY CURRENT QUESTION
+         * Renders the current question text and answer options on the screen
+         * Resets the "answered" flag to allow new answer selection
+         * ================================= */
         function showQuestion() {
             answered = false;
             
             const q = questions[currentIndex];
-            if (!q) {
+             if (!q) {
+                // All questions completed, show results screen
                 showResults();
                 return;
             }
 
-            // Обновляем прогресс
+            // Update progress display with current question number and total count
             document.getElementById('current-q').textContent = currentIndex + 1;
             document.getElementById('total-q').textContent = questions.length;
 
-            // Текст вопроса
+            // Display current question text
             document.getElementById('question-text').textContent = q.question;
 
-            // Очищаем и создаём кнопки
+            // Clear existing options and generate new answer buttons dynamically
             const optionsContainer = document.getElementById('options');
             optionsContainer.innerHTML = '';
 
@@ -384,48 +357,61 @@
             });
         }
 
-        // === ОБРАБОТКА ОТВЕТА ===
+        /* =================================
+         * HANDLE ANSWER SELECTION
+         * Processes user's answer click, validates against correct answer,
+         * provides visual feedback, and schedules next question
+         * ================================= */
         function handleAnswerClick(e) {
             if (answered) return;
             answered = true;
 
+            // Get the selected answer letter (A, B, C, or D)
             const selectedLetter = e.currentTarget.dataset.letter;
             const correctLetter = questions[currentIndex].correct;
 
-            // Отключаем все кнопки
+            // Disable all option buttons to prevent multiple clicks
             const allOptions = document.querySelectorAll('.option');
             allOptions.forEach(opt => {
                 opt.style.pointerEvents = 'none';
                 opt.style.transition = 'all 0.4s';
             });
 
-            // Подсвечиваем выбранный
+            // Highlight selected answer - correct or wrong
             const selectedBtn = e.currentTarget;
             if (selectedLetter === correctLetter) {
+                // Correct answer - highlight in green and increment score
                 selectedBtn.classList.add('correct');
                 score++;
             } else {
+                // Wrong answer - highlight in red and show correct answer
                 selectedBtn.classList.add('wrong');
                 
-                // Подсвечиваем правильный
+                // Find and highlight the correct answer
                 const correctBtn = Array.from(allOptions).find(
                     opt => opt.dataset.letter === correctLetter
                 );
                 if (correctBtn) correctBtn.classList.add('correct');
             }
 
-            // Переход к следующему вопросу
+            // Delay before moving to next question
             setTimeout(() => {
                 currentIndex++;
                 if (currentIndex < questions.length) {
+                    // Load next question
                     showQuestion();
                 } else {
+                    // All questions completed, show results
                     showResults();
                 }
             }, 1800);
         }
 
-        // === ПОКАЗ РЕЗУЛЬТАТОВ ===
+        /* =================================
+         * DISPLAY RESULTS SCREEN
+         * Calculates final score, percentage, and displays appropriate message
+         * switch from question screen to results screen
+         * ================================= */
         function showResults() {
             document.getElementById('question-screen').style.display = 'none';
             const resultsScreen = document.getElementById('results-screen');
@@ -434,16 +420,20 @@
             const percent = Math.round((score / questions.length) * 100);
             document.getElementById('score').textContent = `${score}/${questions.length}`;
 
-            let message = '';
-            if (percent === 100) message = 'legend! 🔥';
-            else if (percent >= 80) message = 'nice! 🏆';
-            else if (percent >= 60) message = 'not bad! 👍';
-            else message = 'try again 💪';
+            // Determine feedback message based on performance percentage
+            // Display performance message with appropriate emoji
+            if (percent === 100) message = 'legend!';
+            else if (percent >= 80) message = 'nice!';
+            else if (percent >= 60) message = 'not bad!';
+            else message = 'try again';
 
-            document.getElementById('result-message').textContent = message;
+            // Show the feedback message on screen
         }
 
-        // === ПЕРЕЗАПУСК ===
+        /* =================================
+         * RESTART QUIZ
+         * Resets game state, switches back to question screen, and starts over
+         * ================================= */
         function restartQuiz() {
             document.getElementById('results-screen').style.display = 'none';
             document.getElementById('question-screen').style.display = 'block';
@@ -452,7 +442,10 @@
             showQuestion();
         }
 
-        // === ЗАПУСК ===
+        /* =================================
+         * INITIALIZATION
+         * Starts the quiz when page finishes loading
+         * ================================= */
         window.onload = function() {
             loadQuestions();
         };

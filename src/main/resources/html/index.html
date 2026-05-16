@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,17 +7,9 @@
     <link rel="icon" href="/icon" type="image/svg+xml">
     
     <style>
+        /* Clean black background without extra effects */
         html {
-            background: 
-                linear-gradient(
-                    rgba(0, 0, 0, 0.7), 
-                    rgba(0, 0, 0, 0.5)
-                ),
-                url('/static/v0/images/black_hole.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+            background: #000000;
             min-height: 100%;
         }
 
@@ -214,7 +206,7 @@
 </head>
 <body>
     <h1 class="page_title">Serbekun Services</h1>
-    <h1 class="page_tittle_japanese">セルビクン サービス</h1>
+    <h1 class="page_tittle_japanese">Serbekun Service</h1>
 
     <div class="">
 
@@ -228,7 +220,16 @@
                 </div>
             </a>
         </div>
-        
+
+        <div class="service-section">
+            <div class="section-heading">4. Links Catalog</div>
+            <a href="/static/v0/html/links" class="catalog-link" style="text-decoration: none; color: inherit;">
+                <div class="catalog-item" style="background: #0e0e0e;">
+                    1. Links Manager
+                </div>
+            </a>
+        </div>
+
         <a href="/static/v0/html/quiz_ui" class="catalog-link" style="text-decoration: none; color: inherit;">
             <div class="catalog-item" style="background: #0e0e0e;">
                 1. QUIZ

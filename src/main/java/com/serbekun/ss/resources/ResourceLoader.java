@@ -8,6 +8,13 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.stream.Collectors;
+import java.net.URL;
 
 /**
  * Responsible for loading resources from disk first, then classpath/JAR.
@@ -76,11 +83,10 @@ public class ResourceLoader {
     }
 
     /**
-     * 
-     * Help function for check exist resource on disk.
-     * 
-     * @param path path to resource
-     * @return true file exist on disk. false don't exist.
+     * Checks if a resource exists on disk.
+     *
+     * @param path path to the resource
+     * @return true if the file exists on disk, false otherwise
      */
     private boolean existsOnDisk(String path) {
         Path file = Path.of(path);
@@ -88,11 +94,10 @@ public class ResourceLoader {
     }
 
     /**
-     * 
-     * Read resource binary data from disk by path
-     * 
-     * @param path path to resource
-     * @return reded from disk resource binary data.
+     * Reads binary data of a resource from disk.
+     *
+     * @param path path to the resource
+     * @return binary data read from disk, or null if not found or error
      */
     private byte[] loadFromDisk(String path) {
         Path file = Path.of(path);
@@ -107,8 +112,136 @@ public class ResourceLoader {
         }
     }
 
+    /**
+     * Gets an InputStream for a resource using the class loader.
+     *
+     * @param name resource name
+     * @return InputStream or null if not found
+     */
     private InputStream getResourceAsStream(String name) {
         // Use class loader of this class (important in JAR / module path)
         return ResourceLoader.class.getClassLoader().getResourceAsStream(name);
+    }
+
+    /**
+     * Returns a list of all resources at the specified basePath (e.g. "html/", "images/", etc.)
+     *
+     * @param basePath path inside classpath ( must end with '/')
+     * @return list of path to files (example: "html/index.html", "images/logo.png")
+     */
+    public List<String> listResources(String basePath) {
+        if (!basePath.endsWith("/")) {
+            basePath += "/";
+        }
+
+        // in first check on disk
+        List<String> fromDisk = listFromDisk(basePath);
+        if (!fromDisk.isEmpty()) {
+            return fromDisk;
+        }
+
+        // Searching in Jar / classpath
+        return listFromClasspath(basePath);
+    }
+
+    /**
+     * Lists all files in the specified directory on disk.
+     *
+     * @param basePath path to the directory
+     * @return list of resource paths found on disk
+     */
+    private List<String> listFromDisk(String basePath) {
+        java.nio.file.Path dir = java.nio.file.Path.of(basePath);
+        if (!java.nio.file.Files.exists(dir) || !java.nio.file.Files.isDirectory(dir)) {
+            return List.of();
+        }
+
+        try (var stream = java.nio.file.Files.walk(dir, 1)) { // Only 1 level
+            return stream
+                    .filter(java.nio.file.Files::isRegularFile)
+                    .map(p -> basePath + p.getFileName().toString())
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            log.error("Failed to list files from disk: {}", basePath, e);
+            return List.of();
+        }
+    }
+
+    /**
+     * Lists all resources from classpath (JAR or directory).
+     *
+     * @param basePath base path to search under
+     * @return distinct sorted list of resource paths
+     */
+    private List<String> listFromClasspath(String basePath) {
+        List<String> result = new ArrayList<>();
+
+        try {
+            Enumeration<URL> urls = ResourceLoader.class.getClassLoader().getResources(basePath);
+            
+            while (urls.hasMoreElements()) {
+                URL url = urls.nextElement();
+                String protocol = url.getProtocol().toLowerCase();
+
+                if ("jar".equals(protocol)) {
+                    result.addAll(listFromJar(url, basePath));
+                } else if ("file".equals(protocol)) {
+                    java.nio.file.Path path = java.nio.file.Paths.get(url.toURI());
+                    result.addAll(listFromDirectory(path, basePath));
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to list resources from classpath: {}", basePath, e);
+        }
+
+        return result.stream().distinct().sorted().collect(Collectors.toList());
+    }
+
+    /**
+     * Lists resources inside a JAR file under the given base path.
+     *
+     * @param jarUrl  URL to the JAR
+     * @param basePath base directory path inside the JAR
+     * @return list of matching resource names
+     */
+    private List<String> listFromJar(URL jarUrl, String basePath) {
+        List<String> result = new ArrayList<>();
+        String jarPath = jarUrl.getPath().substring(5, jarUrl.getPath().indexOf("!"));
+
+        try (JarFile jarFile = new JarFile(jarPath)) {
+            Enumeration<JarEntry> entries = jarFile.entries();
+
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                String name = entry.getName();
+
+                if (name.startsWith(basePath) && !entry.isDirectory()) {
+                    result.add(name);
+                }
+            }
+        } catch (IOException e) {
+            log.error("Failed to read JAR file", e);
+        }
+
+        return result;
+    }
+
+    /**
+     * Lists files in a directory on the filesystem.
+     *
+     * @param dir      directory path
+     * @param basePath base path prefix to use for results
+     * @return list of resource paths
+     */
+    private List<String> listFromDirectory(java.nio.file.Path dir, String basePath) {
+        try (var stream = java.nio.file.Files.walk(dir, 1)) {
+            return stream
+                    .filter(java.nio.file.Files::isRegularFile)
+                    .map(p -> basePath + p.getFileName().toString())
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            log.error("Failed to list directory {}", dir, e);
+            return List.of();
+        }
     }
 }

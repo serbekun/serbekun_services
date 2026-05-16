@@ -1,6 +1,7 @@
 package com.serbekun.ss.resources;
 
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -91,5 +92,10 @@ public class ResourceCache {
      */
     public boolean exists(String path) {
         return loader.exists(path);
+    }
+    
+    // В ResourceCache
+    public List<String> listResources(String basePath) {
+        return loader.listResources(basePath);
     }
 }

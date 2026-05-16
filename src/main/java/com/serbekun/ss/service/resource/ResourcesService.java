@@ -8,6 +8,7 @@ import com.serbekun.ss.resources.ResourceLoader;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -70,6 +71,17 @@ public class ResourcesService {
             return "";
         }
         return filename.substring(lastDot + 1).toLowerCase();
+    }
+
+    /**
+     * 
+     * Return list of available files in directory
+     * 
+     * @param basePath path to folder
+     * @return list of available files in directory
+     */
+    public List<String> listResources(String basePath) {
+        return cache.listResources(basePath);
     }
 
     private static final Map<String, String> MIME_TYPES = Map.ofEntries(

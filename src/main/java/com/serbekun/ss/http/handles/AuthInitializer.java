@@ -1,0 +1,94 @@
+package com.serbekun.ss.http.handles;
+
+import com.serbekun.ss.service.auth.AuthService;
+import com.serbekun.ss.service.auth.api.Endpoint;
+import com.serbekun.ss.service.auth.api.EndpointRegistrar;
+
+import io.javalin.Javalin;
+import io.javalin.http.UnauthorizedResponse;
+
+/**
+ * Authorization and endpoint registrar initializer.
+ * Contains all logic from EndpointAuthInitializer.
+ */
+public class AuthInitializer {
+
+    /**
+     * Initializes endpoints, registers them and sets up auth before-filters.
+     */
+    public void init(Javalin svr, EndpointRegistrar endpointRegistrar, AuthService authService) {
+        // SINGLE instances
+        Endpoint endpointIndex = new Endpoint("/index");
+        Endpoint endpointStaticV0Images = new Endpoint("/static/v0/images");
+        Endpoint endpointStaticV0Json = new Endpoint("/static/v0/json");
+        Endpoint endpointStaticV0Html = new Endpoint("/static/v0/html/");
+        Endpoint endpointApiV0CipherAes = new Endpoint("/api/v0/cipher");
+        Endpoint endpointApiV0CatalogsLinks = new Endpoint("/api/v0/catalogs/links");
+
+        // register
+        endpointRegistrar.register(endpointIndex, false);
+        endpointRegistrar.register(endpointStaticV0Images, false);
+        endpointRegistrar.register(endpointStaticV0Json, false);
+        endpointRegistrar.register(endpointStaticV0Html, false);
+        endpointRegistrar.register(endpointApiV0CipherAes, false);
+        endpointRegistrar.register(endpointApiV0CatalogsLinks, false);
+
+        svr.before("/", ctx -> ctx.attribute("endpoint", endpointIndex));
+        svr.before("/static/v0/images/{name}", ctx -> ctx.attribute("endpoint", endpointStaticV0Images));
+        svr.before("/static/v0/json", ctx -> ctx.attribute("endpoint", endpointStaticV0Json));
+        svr.before("/static/v0/json/", ctx -> ctx.attribute("endpoint", endpointStaticV0Json));
+        svr.before("/static/v0/json/{name}", ctx -> ctx.attribute("endpoint", endpointStaticV0Json));
+        svr.before("/static/v0/html/{name}", ctx -> ctx.attribute("endpoint", endpointStaticV0Html));
+        svr.before("/api/v0/cipher/aes", ctx -> ctx.attribute("endpoint", endpointApiV0CipherAes));
+        svr.before("/api/v0/cipher/aes/encrypt", ctx -> ctx.attribute("endpoint", endpointApiV0CipherAes));
+        svr.before("/api/v0/cipher/aes/decrypt", ctx -> ctx.attribute("endpoint", endpointApiV0CipherAes));
+        svr.before("/api/v0/catalogs/links", ctx -> ctx.attribute("endpoint", endpointApiV0CatalogsLinks));
+        svr.before("/api/v0/catalogs/links/{uuid}", ctx -> ctx.attribute("endpoint", endpointApiV0CatalogsLinks));
+
+        // auth gate
+        svr.before(ctx -> {
+            Endpoint endpoint = ctx.attribute("endpoint");
+
+            if (endpoint == null) {
+                return;
+            }
+
+            String token = null;
+
+            // Authorization header
+            String authHeader = ctx.header("Authorization");
+            if (authHeader != null) {
+                if (authHeader.startsWith("Bearer ")) {
+                    token = authHeader.substring(7).trim();
+                } else {
+                    token = authHeader.trim();
+                }
+            }
+
+            // query ?token=
+            if (token == null) {
+                token = ctx.queryParam("token");
+            }
+
+            // query ?Authorization=Bearer ...
+            if (token == null) {
+                String authInQuery = ctx.queryParam("Authorization");
+                if (authInQuery != null && authInQuery.startsWith("Bearer ")) {
+                    token = authInQuery.substring(7).trim();
+                }
+            }
+
+            boolean authorized = authService.checkAuth(endpoint, token);
+            if (!authorized) {
+                if (token == null || token.isBlank()) {
+                    throw new UnauthorizedResponse("Missing or invalid token");
+                }
+                throw new UnauthorizedResponse("Unauthorized");
+            }
+
+            if (token != null && !token.isBlank()) {
+                ctx.attribute("userToken", token);
+            }
+        });
+    }
+}

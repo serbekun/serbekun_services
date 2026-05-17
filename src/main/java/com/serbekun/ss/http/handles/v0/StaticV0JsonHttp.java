@@ -14,9 +14,16 @@ public class StaticV0JsonHttp {
     }
 
     public void main(Context ctx) {
+        main(ctx, ctx.pathParam("name"));
+    }
+
+    public void main(Context ctx, String name) {
         ctx.contentType("application/json");
-        
-        String name = ctx.pathParam("name");
+
+        if (name == null) {
+            name = "";
+        }
+
         String json = staticV0Json.run(name);
 
         if (json == null) {

@@ -13,28 +13,37 @@ public class LocalTokens {
 
     private final Map<String, String> tokens;
     private final Supplier<String> tokenSupplier;
+    private final String prefix;
 
     /**
      * Creates a token manager with the default token generator (UUID)
      */
-    public LocalTokens() {
-        this(new ConcurrentHashMap<>(), LocalTokens::defaultToken);
+    public LocalTokens(String prefix) {
+        this(new ConcurrentHashMap<>(), LocalTokens::defaultToken, prefix);
     }
 
     /**
      * Creates a token manager with an already existing map (e.g. loaded from database)
      */
     public LocalTokens(Map<String, String> initialTokens) {
-        this(initialTokens, LocalTokens::defaultToken);
+        this(initialTokens, LocalTokens::defaultToken, "");
+    }
+
+    /**
+     * Creates a token manager with an already existing map and a token prefix
+     */
+    public LocalTokens(Map<String, String> initialTokens, String prefix) {
+        this(initialTokens, LocalTokens::defaultToken, prefix);
     }
 
     /**
      * Most flexible constructor — allows passing a custom map and a custom token generator
      */
-    public LocalTokens(Map<String, String> initialTokens, Supplier<String> tokenSupplier) {
+    public LocalTokens(Map<String, String> initialTokens, Supplier<String> tokenSupplier, String prefix) {
         Map<String, String> safeInitial = (initialTokens == null) ? Map.of() : initialTokens;
         this.tokens = new ConcurrentHashMap<>(safeInitial);
         this.tokenSupplier = (tokenSupplier == null) ? LocalTokens::defaultToken : tokenSupplier;
+        this.prefix = (prefix == null) ? "" : prefix;
     }
 
     /**
@@ -50,7 +59,7 @@ public class LocalTokens {
         }
         String token;
         do {
-            token = tokenSupplier.get();
+            token = prefix + tokenSupplier.get();
         } while (tokens.putIfAbsent(token, resourceId) != null);
         return token;
     }

@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.serbekun.ss.config.core.CoreConfig;
-import com.serbekun.ss.core.*;
+import com.serbekun.ss.core.Config;
 import com.serbekun.ss.http.handles.InitHandles;
 import com.serbekun.ss.infrastructure.fs.ServerStorageInitializer;
 import com.serbekun.ss.repository.*;
@@ -35,11 +35,19 @@ public class Main {
     public static void main(String[] args) {
         log.info("Starting Serbekun server...");
 
+        // 0. Config
+        Config config = loadConfig();
+
         ServerContext context = initializeApplication();
 
-        startServer(context);
+        startServer(context, config);
 
-        log.info("Server started successfully on port 8080");
+        log.info("Server started successfully on port {}", config.getPort());
+    }
+
+    private static Config loadConfig() {
+        log.info("Loading server config");
+        return Config.load(Path.of(CoreConfig.Infrastructure.Fs.getServerStorageFolder(), "config.json"));
     }
 
     private static ServerContext initializeApplication() {
@@ -119,7 +127,7 @@ public class Main {
         );
     }
 
-    private static void startServer(ServerContext ctx) {
+    private static void startServer(ServerContext ctx, Config config) {
         log.info("Initializing Javalin server");
         Javalin server = Javalin.create();
 
@@ -142,7 +150,7 @@ public class Main {
         addShutdownHook(server, autosaveService);
 
         // Run
-        server.start(8080);
+        server.start(config.getPort());
     }
 
     private static AutosaveService createAndStartAutosave(Repositories repos) {

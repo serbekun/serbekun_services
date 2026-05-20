@@ -1,11 +1,11 @@
-package com.serbekun.ss.config.core;
+package com.serbekun.ss.core;
 
 import java.nio.file.Path;
 
 /**
- * class that contain core config
+ * class that contain paths to files that can be used in server
  */
-public class CoreConfig {
+public class Paths {
     
     /**
      * class for contain configuration for {@link com.serbekun.ss.infrastructure}
@@ -26,20 +26,11 @@ public class CoreConfig {
      * class that contain configuration for {@link com.serbekun.ss.core.Links}
      */
     public static class LinksConfig {
-        private static final Path linksStorageFile = Path.of("repository/links.json");
-        private static final Path linksLocalTokensStorageFile = Path.of("repository/links_local_tokens.json");
+        private static final Path linksStorageFile = Path.of("repository/catalogs/links.json");
+        private static final Path linksLocalTokensStorageFile = Path.of("repository/tokens/links_local_tokens.json");
 
         public static Path getLinksStorageFile() { return linksStorageFile; }
         public static Path getLinksLocalTokensStorageFile() { return linksLocalTokensStorageFile; }
-    }
-
-    /**
-     * class that contain configuration for {}
-     */
-    public static class ProgramsConfig {
-        private static final Path programsStorageFolder = Path.of("repository/programs/");
-
-        public static Path getProgramsStorageFolder() { return programsStorageFolder; }
     }
 
     /**

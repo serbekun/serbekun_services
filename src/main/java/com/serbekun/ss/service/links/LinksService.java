@@ -7,8 +7,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serbekun.ss.core.Links;
 import com.serbekun.ss.core.Links.Link;
-import com.serbekun.ss.service.json.ProgramsJson;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +16,7 @@ public class LinksService {
     private final Links links;
 
     private static final Logger log = 
-        LoggerFactory.getLogger(ProgramsJson.class);
+        LoggerFactory.getLogger(LinksService.class);
 
     public LinksService(Links links) {
         this.links = links;

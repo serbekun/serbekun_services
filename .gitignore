@@ -3,4 +3,8 @@
 
 # Ignore Gradle build output directory
 build
+
+# Ignore compiled class files
+bin/
+
 gradle

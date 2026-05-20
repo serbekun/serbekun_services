@@ -5,8 +5,8 @@ import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.serbekun.ss.config.core.CoreConfig;
 import com.serbekun.ss.core.Config;
+import com.serbekun.ss.core.Paths;
 import com.serbekun.ss.http.handles.InitHandles;
 import com.serbekun.ss.infrastructure.fs.ServerStorageInitializer;
 import com.serbekun.ss.repository.*;
@@ -47,7 +47,7 @@ public class Main {
 
     private static Config loadConfig() {
         log.info("Loading server config");
-        return Config.load(Path.of(CoreConfig.Infrastructure.Fs.getServerStorageFolder(), "config.json"));
+        return Config.load(Path.of(Paths.Infrastructure.Fs.getServerStorageFolder(), "config.json"));
     }
 
     private static ServerContext initializeApplication() {
@@ -72,17 +72,17 @@ public class Main {
     private static void initializeStorage() {
         log.info("Initializing server storage folders");
         new ServerStorageInitializer()
-            .initialize(Path.of(CoreConfig.Infrastructure.Fs.getServerStorageFolder()));
+            .initialize(Path.of(Paths.Infrastructure.Fs.getServerStorageFolder()));
     }
 
     private static Repositories initializeRepositories() {
         log.info("Initializing repositories");
 
-        var linksRepo = new LinksRepository(CoreConfig.LinksConfig.getLinksStorageFile());
+        var linksRepo = new LinksRepository(Paths.LinksConfig.getLinksStorageFile());
         var tokensRepo = new EndpointAccessTokensRepository(
-            CoreConfig.TokensConfig.getTokensStorageFolder());
+            Paths.TokensConfig.getTokensStorageFolder());
         var linksLocalTokensRepo = new LocalTokensRepository(
-            CoreConfig.LinksConfig.getLinksLocalTokensStorageFile(),
+            Paths.LinksConfig.getLinksLocalTokensStorageFile(),
             "ss_links-");
 
         return new Repositories(

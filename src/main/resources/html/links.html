@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>LINKS CATALOG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            background: #0a0a0a;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #ffffff;
+            background: #0a0a0a;
+            position: relative;
+            padding: 1.5rem 1rem 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(2px 2px at 15px 60px, #fff, rgba(0, 0, 0, 0)),
+                radial-gradient(2px 2px at 75px 340px, #ccc, rgba(0, 0, 0, 0)),
+                radial-gradient(3px 3px at 280px 80px, #fff, rgba(0, 0, 0, 0)),
+                radial-gradient(2px 2px at 420px 520px, #aaa, rgba(0, 0, 0, 0)),
+                radial-gradient(4px 4px at 650px 150px, #ddd, rgba(0, 0, 0, 0)),
+                radial-gradient(2px 2px at 820px 380px, #bbb, rgba(0, 0, 0, 0)),
+                radial-gradient(3px 3px at 120px 720px, #ffffff, rgba(0, 0, 0, 0)),
+                radial-gradient(2px 2px at 560px 640px, #eee, rgba(0, 0, 0, 0)),
+                radial-gradient(4px 4px at 90% 20%, #ccc, rgba(0, 0, 0, 0)),
+                radial-gradient(2px 2px at 20% 90%, #fff, rgba(0, 0, 0, 0));
+            background-repeat: no-repeat;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2.5rem 2.2rem;
+            background: rgba(20, 20, 20, 0.9);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 42px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.85);
+            position: relative;
+            z-index: 10;
+            transition: box-shadow 0.4s ease, border-color 0.3s;
+        }
+
+        .container:hover {
+            box-shadow: 0 30px 55px -12px #000000cc;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            font-size: 2.7rem;
+            letter-spacing: 2px;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .subhead {
+            text-align: center;
+            color: #aaaaaa;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            word-spacing: 6px;
+        }
+
+        /* Token input area */
+        .token-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 1.8rem;
+            flex-wrap: wrap;
+        }
+
+        .token-section label {
+            margin: 0;
+            color: #ccc;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .token-input-wrap {
+            display: flex;
+            flex: 1;
+            min-width: 250px;
+            max-width: 500px;
+            gap: 8px;
+        }
+
+        .token-input-wrap input {
+            flex: 1;
+            padding: 12px 16px;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1.8px solid rgba(255, 255, 255, 0.2);
+            border-radius: 40px;
+            color: #f0f0f0;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.95rem;
+            transition: all 0.25s ease;
+            box-shadow: 0 8px 12px -6px #00000080;
+        }
+
+        .token-input-wrap input:focus {
+            outline: none;
+            border-color: #ffffff;
+            box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.1);
+            background: rgba(20, 20, 20, 0.9);
+        }
+
+        .token-input-wrap input::placeholder {
+            color: #888888;
+            opacity: 0.8;
+        }
+
+        .token-apply-btn {
+            padding: 12px 24px;
+            background: rgba(40, 40, 40, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            color: #dddddd;
+            border-radius: 40px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.25s;
+            box-shadow: 0 4px 12px #00000060;
+            white-space: nowrap;
+        }
+
+        .token-apply-btn:hover {
+            background: rgba(70, 70, 70, 0.8);
+            border-color: #ffffff;
+            box-shadow: 0 6px 14px #000;
+            transform: scale(1.02);
+        }
+
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 42px;
+            background: rgba(40, 40, 40, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            color: #cccccc;
+            border-radius: 60px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .tab-btn:hover::before {
+            opacity: 1;
+        }
+
+        .tab-btn.active {
+            background: rgba(60, 60, 60, 0.8);
+            color: #ffffff;
+            border-color: #ffffff;
+            box-shadow: 0 8px 18px #00000060;
+            transform: scale(1.02);
+        }
+
+        label {
+            display: block;
+            margin: 24px 0 8px 8px;
+            color: #cccccc;
+            font-weight: 500;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+
+        textarea,
+        input[type="url"],
+        input[type="text"] {
+            width: 100%;
+            padding: 16px 18px;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1.8px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            color: #f0f0f0;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 1rem;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: all 0.25s ease;
+            box-shadow: 0 8px 12px -6px #00000080;
+            line-height: 1.5;
+        }
+
+        textarea {
+            min-height: 80px;
+        }
+
+        textarea:focus,
+        input:focus {
+            outline: none;
+            border-color: #ffffff;
+            box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.1);
+            background: rgba(20, 20, 20, 0.9);
+        }
+
+        textarea::placeholder,
+        input::placeholder {
+            color: #888888;
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px 20px;
+            margin-top: 28px;
+            background: rgba(40, 40, 40, 0.8);
+            color: #ffffff;
+            border: 1.5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 60px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px -5px #000000b0;
+            text-transform: uppercase;
+            backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s;
+            transform: rotate(25deg);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 30px -8px #000;
+            border-color: #ffffff;
+            background: rgba(60, 60, 60, 0.9);
+        }
+
+        .btn-primary:hover::after {
+            opacity: 0.5;
+        }
+
+        .btn-primary:active {
+            transform: translateY(2px);
+            box-shadow: 0 5px 15px #000000;
+        }
+
+        .btn-secondary {
+            background: rgba(50, 50, 50, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            color: #dddddd;
+            padding: 12px 32px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 1.2px;
+            cursor: pointer;
+            transition: 0.25s;
+            box-shadow: 0 4px 12px #00000060;
+            margin-bottom: 10px;
+            width: auto;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(70, 70, 70, 0.8);
+            border-color: #ffffff;
+            box-shadow: 0 6px 14px #000;
+            transform: scale(1.02);
+        }
+
+        .links-list {
+            margin-top: 30px;
+        }
+
+        .link-item {
+            background: rgba(15, 15, 15, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 28px;
+            border-left: 6px solid #ffffff;
+            box-shadow: 0 10px 25px -5px #000000;
+            padding: 20px 22px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+
+        .link-item:hover {
+            border-left-color: #cccccc;
+            box-shadow: 0 15px 35px -5px #000000;
+        }
+
+        .link-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .link-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 0;
+            flex: 1;
+        }
+
+        .link-url {
+            color: #cccccc;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .link-url a {
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .link-url a:hover {
+            color: #cccccc;
+            text-decoration: underline;
+        }
+
+        .link-description-wrapper {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin-top 0.3s ease;
+            opacity: 0;
+            margin-top: 0;
+        }
+
+        .link-description-wrapper.open {
+            max-height: 300px;
+            opacity: 1;
+            margin-top: 12px;
+        }
+
+        .link-description {
+            color: #aaaaaa;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            line-height: 1.5;
+        }
+
+        .toggle-arrow {
+            font-size: 1.8rem;
+            color: #cccccc;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-block;
+            margin-left: 12px;
+            font-weight: 300;
+            line-height: 1;
+        }
+
+        .toggle-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .link-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .link-actions button {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #cccccc;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .link-actions button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            min-height: 28px;
+            color: #cccccc;
+            transition: 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .result.error {
+            border-left-color: #ff5555;
+            box-shadow: 0 0 0 1px #ff5555 inset, 0 10px 20px #300;
+        }
+        .result.error strong {
+            color: #ff8888;
+        }
+
+        #addTab,
+        #editTab {
+            display: none;
+        }
+
+        /* ---------- MODAL STYLES ---------- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal {
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            border-radius: 36px;
+            padding: 2.5rem 2rem;
+            max-width: 550px;
+            width: 90%;
+            box-shadow: 0 35px 65px rgba(0, 0, 0, 0.9);
+            text-align: center;
+            animation: scaleIn 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.8rem;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+
+        .modal .token-display {
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 18px;
+            padding: 16px 18px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 1rem;
+            word-break: break-all;
+            color: #ffd966;
+            margin: 1.5rem 0;
+            text-align: left;
+            user-select: all;
+            line-height: 1.5;
+        }
+
+        .modal .copy-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.25s;
+            margin: 0 8px 10px;
+        }
+
+        .modal .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #fff;
+            box-shadow: 0 8px 18px #00000080;
+        }
+
+        .modal .close-modal-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ccc;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.25s;
+            margin: 0 8px 10px;
+        }
+
+        .modal .close-modal-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #fff;
+            color: #fff;
+        }
+
+        .modal .warning-text {
+            color: #ff8888;
+            font-size: 0.9rem;
+            margin: 1rem 0 0.5rem;
+        }
+
+        @media (max-width: 550px) {
+            .container {
+                padding: 1.8rem 1.2rem;
+                border-radius: 32px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .tab-btn {
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+            .btn-primary {
+                font-size: 1.1rem;
+                padding: 14px;
+            }
+            .token-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .token-input-wrap {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" style="position:fixed;top:16px;left:16px;z-index:9999;background:rgba(20,20,20,0.9);color:#aaa;border:1px solid #444;border-radius:999px;padding:6px 14px;font-size:0.85rem;text-decoration:none;box-shadow:0 4px 12px #000;">← Back</a>
+    <div class="container">
+        <h1>LINKS CATALOG</h1>
+        <div class="subhead">manage your links collection</div>
+
+        <!-- TOKEN INPUT SECTION -->
+        <div class="token-section">
+            <label for="manualToken">Access Token:</label>
+            <div class="token-input-wrap">
+                <input type="text" id="manualToken" placeholder="Paste your token here..." spellcheck="false">
+                <button class="token-apply-btn" onclick="applyToken()">Apply</button>
+            </div>
+        </div>
+
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab(0)">View Links</button>
+            <button class="tab-btn" onclick="switchTab(1)">Add Link</button>
+            <button class="tab-btn" onclick="switchTab(2)" id="editBtn" style="display:none;">Edit Link</button>
+        </div>
+
+        <div id="viewTab">
+            <div class="links-list" id="linksList">
+                <!-- Links will be loaded here -->
+            </div>
+        </div>
+
+        <div id="addTab">
+            <label>Link URL</label>
+            <input type="url" id="addUrl" placeholder="https://example.com" spellcheck="false">
+
+            <label>Link Name</label>
+            <input type="text" id="addName" placeholder="My Awesome Link" spellcheck="false">
+
+            <label>Description</label>
+            <textarea id="addDescription" placeholder="Brief description of the link..."></textarea>
+
+            <button class="btn-primary" onclick="addLink()">Add Link</button>
+        </div>
+
+        <div id="editTab">
+            <input type="hidden" id="editUuid">
+
+            <label>Link URL</label>
+            <input type="url" id="editUrl" placeholder="https://example.com" spellcheck="false">
+
+            <label>Link Name</label>
+            <input type="text" id="editName" placeholder="My Awesome Link" spellcheck="false">
+
+            <label>Description</label>
+            <textarea id="editDescription" placeholder="Brief description of the link..."></textarea>
+
+            <button class="btn-primary" onclick="updateLink()">Update Link</button>
+            <button class="btn-secondary" onclick="switchTab(0)">Cancel</button>
+        </div>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <!-- TOKEN MODAL (hidden by default) -->
+    <div id="tokenModal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <h2>Your Access Token</h2>
+            <p style="color:#ccc; margin-bottom:0.5rem;">This token grants access to edit or delete your link.<br>Keep it safe - it won't be shown again.</p>
+            <div class="token-display" id="modalTokenText"></div>
+            <div>
+                <button class="copy-btn" onclick="copyModalToken()">Copy Token</button>
+                <button class="close-modal-btn" onclick="closeTokenModal()">Close</button>
+            </div>
+            <p class="warning-text" id="modalCopyFeedback"></p>
+        </div>
+    </div>
+
+    <script>
+        let currentToken = null;
+        let editingUuid = null;
+
+        function getTokenFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('token') || urlParams.get('auth') || '';
+        }
+
+        function getAuthHeaders() {
+            const headers = { 'Content-Type': 'application/json' };
+            if (currentToken) {
+                headers['Authorization'] = 'Bearer ' + currentToken;
+            }
+            return headers;
+        }
+
+        async function loadLinks() {
+            try {
+                showStatus('Loading links...');
+                const response = await fetch('/api/v0/catalogs/links', {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load links: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayLinks(data);
+                showStatus('Links loaded successfully');
+            } catch (error) {
+                showStatus('Error loading links: ' + error.message);
+                document.getElementById('linksList').innerHTML =
+                    '<div class="link-item error"><strong>Failed to load links</strong></div>';
+            }
+        }
+
+        function displayLinks(links) {
+            const container = document.getElementById('linksList');
+            container.innerHTML = '';
+
+            const linkArray = Object.values(links || {});
+            if (linkArray.length === 0) {
+                container.innerHTML =
+                    '<div class="link-item"><strong>No links found</strong><br><small>Add your first link using the "Add Link" tab</small></div>';
+                return;
+            }
+
+            linkArray.forEach(link => {
+                const item = document.createElement('div');
+                item.className = 'link-item';
+
+                const descHtml = escapeHtml(link.description || '');
+                const hasDescription = descHtml.trim().length > 0;
+
+                item.innerHTML = `
+                    <div class="link-header" onclick="toggleDescription(this)" role="button" aria-expanded="false">
+                        <div>
+                            <div class="link-title">${escapeHtml(link.name)}</div>
+                            <div class="link-url"><a href="${escapeHtml(link.url)}" target="_blank" onclick="event.stopPropagation();">${escapeHtml(link.url)}</a></div>
+                        </div>
+                        <span class="toggle-arrow ${hasDescription ? '' : 'rotated'}" style="${hasDescription ? '' : 'visibility: hidden;'}">></span>
+                    </div>
+                    <div class="link-description-wrapper ${hasDescription ? '' : 'open'}">
+                        <div class="link-description">${hasDescription ? descHtml : '<em style="color:#666;">No description</em>'}</div>
+                    </div>
+                    <div class="link-actions">
+                        <button onclick="event.stopPropagation(); editLink('${link.uuid}', '${escapeHtml(link.url)}', '${escapeHtml(link.name)}', '${escapeHtml(link.description || '')}')">Edit</button>
+                        <button onclick="event.stopPropagation(); deleteLink('${link.uuid}')">Delete</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function toggleDescription(headerElement) {
+            const wrapper = headerElement.nextElementSibling;
+            const arrow = headerElement.querySelector('.toggle-arrow');
+            if (!wrapper || !arrow) return;
+
+            const isOpen = wrapper.classList.contains('open');
+            if (isOpen) {
+                wrapper.classList.remove('open');
+                arrow.classList.remove('rotated');
+            } else {
+                wrapper.classList.add('open');
+                arrow.classList.add('rotated');
+            }
+        }
+
+        async function addLink() {
+            const url = document.getElementById('addUrl').value.trim();
+            const name = document.getElementById('addName').value.trim();
+            const description = document.getElementById('addDescription').value.trim();
+
+            if (!url || !name) {
+                showStatus('URL and Name are required');
+                return;
+            }
+
+            try {
+                showStatus('Adding link...');
+                const response = await fetch('/api/v0/catalogs/links', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ url, name, description })
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || `Failed to add link: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const newToken = result.token;
+
+                // Clear form
+                document.getElementById('addUrl').value = '';
+                document.getElementById('addName').value = '';
+                document.getElementById('addDescription').value = '';
+
+                // Show token in modal
+                if (newToken) {
+                    openTokenModal(newToken);
+                    // Optionally apply it automatically
+                    currentToken = newToken;
+                    document.getElementById('manualToken').value = newToken;
+                }
+
+                showStatus('Link added successfully');
+                switchTab(0);
+                loadLinks();
+            } catch (error) {
+                showStatus('Error adding link: ' + error.message);
+            }
+        }
+
+        function editLink(uuid, url, name, description) {
+            editingUuid = uuid;
+            document.getElementById('editUuid').value = uuid;
+            document.getElementById('editUrl').value = unescapeHtml(url);
+            document.getElementById('editName').value = unescapeHtml(name);
+            document.getElementById('editDescription').value = unescapeHtml(description);
+            switchTab(2);
+        }
+
+        async function updateLink() {
+            const uuid = document.getElementById('editUuid').value;
+            const url = document.getElementById('editUrl').value.trim();
+            const name = document.getElementById('editName').value.trim();
+            const description = document.getElementById('editDescription').value.trim();
+
+            if (!uuid || !url || !name) {
+                showStatus('UUID, URL and Name are required');
+                return;
+            }
+
+            if (!currentToken) {
+                showStatus('No token available. Please paste your access token above.');
+                return;
+            }
+
+            try {
+                showStatus('Updating link...');
+                const response = await fetch(`/api/v0/catalogs/links/${uuid}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ uuid, token: currentToken, url, name, description })
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || `Failed to update link: ${response.status}`);
+                }
+
+                showStatus('Link updated successfully');
+                switchTab(0);
+                loadLinks();
+            } catch (error) {
+                showStatus('Error updating link: ' + error.message);
+            }
+        }
+
+        async function deleteLink(uuid) {
+            if (!confirm('Are you sure you want to delete this link?')) {
+                return;
+            }
+
+            if (!currentToken) {
+                showStatus('No token available. Please paste your access token above.');
+                return;
+            }
+
+            try {
+                showStatus('Deleting link...');
+                const response = await fetch(`/api/v0/catalogs/links/${uuid}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ uuid, token: currentToken })
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || `Failed to delete link: ${response.status}`);
+                }
+
+                showStatus('Link deleted successfully');
+                loadLinks();
+            } catch (error) {
+                showStatus('Error deleting link: ' + error.message);
+            }
+        }
+
+        function switchTab(tabIndex) {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const viewTab = document.getElementById('viewTab');
+            const addTab = document.getElementById('addTab');
+            const editTab = document.getElementById('editTab');
+            const editBtn = document.getElementById('editBtn');
+
+            tabs.forEach((btn, idx) => {
+                btn.classList.toggle('active', idx === tabIndex);
+            });
+
+            if (tabIndex === 0) {
+                viewTab.style.display = 'block';
+                addTab.style.display = 'none';
+                editTab.style.display = 'none';
+                editBtn.style.display = 'none';
+                loadLinks();
+            } else if (tabIndex === 1) {
+                viewTab.style.display = 'none';
+                addTab.style.display = 'block';
+                editTab.style.display = 'none';
+                editBtn.style.display = 'none';
+            } else if (tabIndex === 2) {
+                viewTab.style.display = 'none';
+                addTab.style.display = 'none';
+                editTab.style.display = 'block';
+                editBtn.style.display = 'inline-block';
+                editBtn.classList.add('active');
+            }
+            document.getElementById('status').textContent = '';
+        }
+
+        function showStatus(message) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            if (message.includes('Error') || message.includes('Failed')) {
+                statusEl.style.color = '#ff8888';
+            } else if (message.includes('success')) {
+                statusEl.style.color = '#ffffff';
+            } else {
+                statusEl.style.color = '#cccccc';
+            }
+
+            if (message !== 'Loading links...' && message !== 'Links loaded successfully') {
+                setTimeout(() => {
+                    if (statusEl.textContent === message) {
+                        statusEl.textContent = '';
+                    }
+                }, 5000);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function unescapeHtml(text) {
+            const div = document.createElement('div');
+            div.innerHTML = text;
+            return div.textContent;
+        }
+
+        // ---- TOKEN MODAL LOGIC ----
+        function openTokenModal(token) {
+            document.getElementById('modalTokenText').textContent = token;
+            document.getElementById('tokenModal').style.display = 'flex';
+            document.getElementById('modalCopyFeedback').textContent = '';
+        }
+
+        function closeTokenModal() {
+            document.getElementById('tokenModal').style.display = 'none';
+        }
+
+        function copyToClipboard(text) {
+            return new Promise((resolve, reject) => {
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text).then(resolve).catch(() => {
+                        fallbackCopy(text, resolve, reject);
+                    });
+                } else {
+                    fallbackCopy(text, resolve, reject);
+                }
+            });
+        }
+
+        function fallbackCopy(text, resolve, reject) {
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                textarea.style.top = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textarea);
+                if (successful) {
+                    resolve();
+                } else {
+                    reject(new Error('execCommand failed'));
+                }
+            } catch (err) {
+                reject(err);
+            }
+        }
+
+        function copyModalToken() {
+            const token = document.getElementById('modalTokenText').textContent;
+            if (!token) return;
+            copyToClipboard(token).then(() => {
+                const feedback = document.getElementById('modalCopyFeedback');
+                feedback.textContent = 'Token copied to clipboard!';
+                setTimeout(() => {
+                    if (feedback.textContent === 'Token copied to clipboard!') {
+                        feedback.textContent = '';
+                    }
+                }, 2500);
+            }).catch(() => {
+                document.getElementById('modalCopyFeedback').textContent = 
+                    'Could not copy automatically. Please select and copy manually.';
+            });
+        }
+
+        // Close modal when clicking overlay background
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'tokenModal') {
+                closeTokenModal();
+            }
+        });
+
+        // ---- MANUAL TOKEN APPLICATION ----
+        function applyToken() {
+            const input = document.getElementById('manualToken');
+            const token = input.value.trim();
+            if (token) {
+                currentToken = token;
+                showStatus('Token applied successfully');
+                // Reload links with new token
+                if (document.getElementById('viewTab').style.display !== 'none') {
+                    loadLinks();
+                }
+            } else {
+                showStatus('Please enter a valid token');
+            }
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', function() {
+            const urlToken = getTokenFromUrl();
+            if (urlToken) {
+                currentToken = urlToken;
+                document.getElementById('manualToken').value = urlToken;
+                showStatus('Token loaded from URL');
+            } else {
+                showStatus('No token found. You can paste one above or create a new link to get a token.');
+            }
+            switchTab(0); // Load links by default
+        });
+    </script>
+</body>
+</html>

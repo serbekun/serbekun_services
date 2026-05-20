@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUIZ</title>
+    <style>
+        :root {
+            --panel: rgba(20, 20, 20, 0.85);
+            --text: #ffffff;
+            --muted: #cccccc;
+            --accent: #c0fffc;
+            --accent-strong: #7b61ff;
+            --success: #00ffaa;
+            --error: #ff5555;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            background-color: black;
+        }
+        body {
+            margin: 0;
+            padding: 0 0 3rem 0;
+            color: var(--text);
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            background:
+                linear-gradient(
+                    rgba(0, 0, 0, 0.85),
+                    rgba(0, 0, 0, 0.75)
+                ),
+                url('/v0/api/images/static/black_hole.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--panel);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.08);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .logo {
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-shadow: 0 0 15px rgba(140, 235, 235, 0.3);
+        }
+        .subtitle {
+            font-size: 0.95rem;
+            color: var(--muted);
+        }
+
+        #quiz-container {
+            background: rgba(12, 12, 12, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            padding: 32px 24px;
+        }
+
+        #progress {
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        #question-text {
+            font-size: 1.8rem;
+            line-height: 1.45;
+            text-align: center;
+            min-height: 120px;
+            margin-bottom: 40px;
+            color: var(--text);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 14px;
+            padding: 18px 16px;
+            font-size: 1.05rem;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-align: left;
+        }
+
+        .option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(123, 97, 255, 0.35);
+            border-color: rgba(123, 97, 255, 0.6);
+        }
+
+        .option::before {
+            content: "*";
+            color: var(--accent);
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .option .letter {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--accent);
+            min-width: 36px;
+            text-align: center;
+        }
+
+        .option .text {
+            flex: 1;
+        }
+
+        /* Answer colors */
+        .option.correct {
+            background: rgba(0, 255, 170, 0.18) !important;
+            border-color: var(--success) !important;
+            color: var(--text);
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.35);
+        }
+
+        .option.wrong {
+            background: rgba(255, 85, 85, 0.18) !important;
+            border-color: var(--error) !important;
+            box-shadow: 0 0 20px rgba(255, 85, 85, 0.35);
+        }
+
+        .option.correct .letter,
+        .option.wrong .letter {
+            color: var(--text);
+        }
+
+        /* Results */
+        #results-screen {
+            display: none;
+            text-align: center;
+            padding: 32px 24px;
+            background: rgba(12, 12, 12, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+        }
+
+        #results-screen h2 {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+        }
+
+        #score {
+            font-size: 3.5rem;
+            margin: 20px 0;
+            color: var(--success);
+        }
+
+        .restart-btn {
+            margin-top: 30px;
+            padding: 14px 40px;
+            font-size: 1.05rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: var(--text);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(123, 97, 255, 0.45);
+            border-color: rgba(123, 97, 255, 0.6);
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--muted);
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .logo {
+                font-size: 2.1rem;
+            }
+            #question-text {
+                font-size: 1.4rem;
+            }
+            .option {
+                font-size: 0.98rem;
+                padding: 16px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" style="position:fixed;top:16px;left:16px;z-index:9999;background:rgba(20,20,20,0.9);color:#aaa;border:1px solid #444;border-radius:999px;padding:6px 14px;font-size:0.85rem;text-decoration:none;box-shadow:0 4px 12px #000;">← Back</a>
+    <div class="container">
+        <!-- Header section with title and subtitle -->
+        <header>
+            <div class="logo">QUIZ</div>
+            <div class="subtitle">Serbekun Service</div>
+        </header>
+
+        <!-- Main quiz container -->
+        <div id="quiz-container">
+            <div id="loading" class="loading">Question loading...</div>
+
+            <!-- Question screen - displays questions and options -->
+            <div id="question-screen">
+                <div id="progress">
+                    Question <span id="current-q">1</span> / <span id="total-q">10</span>
+                </div>
+                <div id="question-text"></div>
+                <div id="options" class="options-grid"></div>
+            </div>
+
+            <!-- Results screen - displays final score and restart option -->
+            <div id="results-screen">
+                <h2>GAME END!</h2>
+                <p style="font-size:1.3rem;color:#acacac;margin-bottom:10px;">SCORE COUNT</p>
+                <div id="score">8/10</div>
+                <p id="result-message" style="font-size:1.4rem;margin:15px 0;color:#00ff9f;"></p>
+                
+                <button onclick="restartQuiz()" class="restart-btn">PLAY AGAIN</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* =================================
+         * GLOBAL STATE VARIABLES
+         * =================================
+         * questions: Array of quiz question objects fetched from API
+         * currentIndex: Tracks current question position (0-based indexing)
+         * score: Counts the number of correct answers given by the user
+         * answered: Boolean flag to prevent multiple answer clicks per question
+         * =================================
+         */
+        let questions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        /* =================================
+         * LOAD QUESTIONS FROM API
+         * Fetches quiz data from server
+         * Shows loading indicator during fetch operation
+         * Displays error if API is unavailable
+         * ================================= */
+        async function loadQuestions() {
+            const loadingEl = document.getElementById('loading');
+            const questionScreen = document.getElementById('question-screen');
+            
+            // Show loading indicator and hide question screen
+            loadingEl.style.display = 'block';
+            questionScreen.style.display = 'none';
+
+            try {
+                // Attempt to fetch questions from server API
+                const response = await fetch('/static/v0/json/sports_quiz', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                // Check if API response is successful
+                if (!response.ok) throw new Error('API returned error');
+                
+                // Parse JSON response and store questions
+                questions = await response.json();
+                console.log('Questions loaded from server');
+            } catch (err) {
+                // Display error message if API fails
+                console.log('Failed to load questions');
+                loadingEl.textContent = 'Failed to load questions. Please try again later.';
+                loadingEl.style.display = 'block';
+                return;
+            }
+
+            // Hide loading indicator and show question screen
+            loadingEl.style.display = 'none';
+            questionScreen.style.display = 'block';
+
+            // Reset game state and start the quiz
+            currentIndex = 0;
+            score = 0;
+            showQuestion();
+        }
+
+        /* =================================
+         * DISPLAY CURRENT QUESTION
+         * Renders the current question text and answer options on the screen
+         * Resets the "answered" flag to allow new answer selection
+         * ================================= */
+        function showQuestion() {
+            answered = false;
+            
+            const q = questions[currentIndex];
+             if (!q) {
+                // All questions completed, show results screen
+                showResults();
+                return;
+            }
+
+            // Update progress display with current question number and total count
+            document.getElementById('current-q').textContent = currentIndex + 1;
+            document.getElementById('total-q').textContent = questions.length;
+
+            // Display current question text
+            document.getElementById('question-text').textContent = q.question;
+
+            // Clear existing options and generate new answer buttons dynamically
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+
+            Object.keys(q.options).forEach(key => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.dataset.letter = key;
+                
+                optionDiv.innerHTML = `
+                    <span class="letter">${key}</span>
+                    <span class="text">${q.options[key]}</span>
+                `;
+
+                optionDiv.addEventListener('click', handleAnswerClick);
+                optionsContainer.appendChild(optionDiv);
+            });
+        }
+
+        /* =================================
+         * HANDLE ANSWER SELECTION
+         * Processes user's answer click, validates against correct answer,
+         * provides visual feedback, and schedules next question
+         * ================================= */
+        function handleAnswerClick(e) {
+            if (answered) return;
+            answered = true;
+
+            // Get the selected answer letter (A, B, C, or D)
+            const selectedLetter = e.currentTarget.dataset.letter;
+            const correctLetter = questions[currentIndex].correct;
+
+            // Disable all option buttons to prevent multiple clicks
+            const allOptions = document.querySelectorAll('.option');
+            allOptions.forEach(opt => {
+                opt.style.pointerEvents = 'none';
+                opt.style.transition = 'all 0.4s';
+            });
+
+            // Highlight selected answer - correct or wrong
+            const selectedBtn = e.currentTarget;
+            if (selectedLetter === correctLetter) {
+                // Correct answer - highlight in green and increment score
+                selectedBtn.classList.add('correct');
+                score++;
+            } else {
+                // Wrong answer - highlight in red and show correct answer
+                selectedBtn.classList.add('wrong');
+                
+                // Find and highlight the correct answer
+                const correctBtn = Array.from(allOptions).find(
+                    opt => opt.dataset.letter === correctLetter
+                );
+                if (correctBtn) correctBtn.classList.add('correct');
+            }
+
+            // Delay before moving to next question
+            setTimeout(() => {
+                currentIndex++;
+                if (currentIndex < questions.length) {
+                    // Load next question
+                    showQuestion();
+                } else {
+                    // All questions completed, show results
+                    showResults();
+                }
+            }, 1800);
+        }
+
+        /* =================================
+         * DISPLAY RESULTS SCREEN
+         * Calculates final score, percentage, and displays appropriate message
+         * switch from question screen to results screen
+         * ================================= */
+        function showResults() {
+            document.getElementById('question-screen').style.display = 'none';
+            const resultsScreen = document.getElementById('results-screen');
+            resultsScreen.style.display = 'block';
+
+            const percent = Math.round((score / questions.length) * 100);
+            document.getElementById('score').textContent = `${score}/${questions.length}`;
+
+            // Determine feedback message based on performance percentage
+            // Display performance message with appropriate emoji
+            if (percent === 100) message = 'legend!';
+            else if (percent >= 80) message = 'nice!';
+            else if (percent >= 60) message = 'not bad!';
+            else message = 'try again';
+
+            // Show the feedback message on screen
+        }
+
+        /* =================================
+         * RESTART QUIZ
+         * Resets game state, switches back to question screen, and starts over
+         * ================================= */
+        function restartQuiz() {
+            document.getElementById('results-screen').style.display = 'none';
+            document.getElementById('question-screen').style.display = 'block';
+            currentIndex = 0;
+            score = 0;
+            showQuestion();
+        }
+
+        /* =================================
+         * INITIALIZATION
+         * Starts the quiz when page finishes loading
+         * ================================= */
+        window.onload = function() {
+            loadQuestions();
+        };
+    </script>
+</body>
+</html>

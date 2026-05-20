@@ -1,0 +1,56 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+version = '1.0.0'
+group = 'com.serbekun'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.javalin:javalin:6.7.0'
+    implementation 'io.javalin.community.ssl:ssl-plugin:6.7.0'
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2'
+
+    implementation 'org.flywaydb:flyway-core:10.14.0'
+    implementation 'com.h2database:h2:2.2.224'
+
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation 'ch.qos.logback:logback-classic:1.4.14'
+
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+
+    implementation 'com.google.guava:guava:32.1.2-jre'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testImplementation 'io.javalin:javalin-testtools:6.7.0'
+    testImplementation 'org.assertj:assertj-core:3.24.2'
+    testImplementation 'org.mockito:mockito-core:5.10.0'
+}
+
+application {
+    mainClass = 'com.serbekun.Main'
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['-parameters']
+}

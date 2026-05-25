@@ -5,8 +5,9 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.serbekun.ss.core.Links;
-import com.serbekun.ss.core.Links.Link;
+import com.serbekun.ss.domain.models.Links;
+import com.serbekun.ss.domain.models.Link;
+import com.serbekun.ss.domain.models.LocalTokens;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,12 +15,18 @@ public class LinksService {
 
     private static final ObjectMapper mapper = new ObjectMapper();
     private final Links links;
+    private final LocalTokens linkTokens;
 
     private static final Logger log = 
         LoggerFactory.getLogger(LinksService.class);
 
     public LinksService(Links links) {
+        this(links, null);
+    }
+
+    public LinksService(Links links, LocalTokens linkTokens) {
         this.links = links;
+        this.linkTokens = linkTokens;
     }
 
      /**
@@ -95,5 +102,59 @@ public class LinksService {
      */
     public synchronized Link removeLink(UUID uuid) {
         return links.removeLink(uuid);
+    }
+
+    // === Business operations with link-specific access tokens ===
+
+    public synchronized String createLink(String url, String name, String description) {
+        if (linkTokens == null) {
+            throw new IllegalStateException("Link token manager not configured");
+        }
+        UUID uuid = UUID.randomUUID();
+        Link link = new Link(uuid, url, name, description);
+        links.addLink(link);
+        return linkTokens.generateToken(uuid);
+    }
+
+    public synchronized int updateLink(String uuidStr, String token, String url, String name, String description) {
+        if (linkTokens == null) {
+            return 500;
+        }
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(uuidStr);
+        } catch (Exception e) {
+            return 400;
+        }
+        if (!links.existsLink(uuid)) {
+            return 404;
+        }
+        if (!linkTokens.hasAccess(token, uuid)) {
+            return 403;
+        }
+        Link newLink = new Link(uuid, url, name, description);
+        links.updateLink(uuid, newLink);
+        return 200;
+    }
+
+    public synchronized int deleteLink(String uuidStr, String token) {
+        if (linkTokens == null) {
+            return 500;
+        }
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(uuidStr);
+        } catch (Exception e) {
+            return 400;
+        }
+        if (!links.existsLink(uuid)) {
+            return 404;
+        }
+        if (!linkTokens.hasAccess(token, uuid)) {
+            return 403;
+        }
+        linkTokens.removeToken(token);
+        links.removeLink(uuid);
+        return 200;
     }
 }

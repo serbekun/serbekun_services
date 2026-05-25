@@ -14,30 +14,47 @@ No lint, typecheck, or codegen tasks exist. No CI/CD.
 
 ## Project structure
 
-| Layer | Package | Role |
-|-------|---------|------|
-| Bootstrap | `com.serbekun.Main` | Entry point. Builds dependency graph via inner `ServerContext`/`Repositories`/`Services`/`Resources`/`Handlers` classes. No DI framework. |
-| Config | `com.serbekun.ss.config.core.CoreConfig` | Hardcoded static paths under `repository/` dir. No env vars or external config files. |
-| Domain | `com.serbekun.ss.core` | `Config`, `Links`, `EndpointsAccessTokens`, `LocalTokens`, `Programs` — plain data holders with `synchronized` methods. |
-| Repository | `com.serbekun.ss.repository` | JSON-file persistence via Jackson. All implement `AutoSavable`. |
-| Service | `com.serbekun.ss.service.*` | Business logic (auth, autosave, cipher, links, resource, tokens). |
-| HTTP handlers | `com.serbekun.ss.http.handles.*` | Javalin route registration + request/response handling. |
-| Service handlers | `com.serbekun.ss.service.http.handles.*` | Pure logic wrappers called by HTTP handlers (split exists but both are active). |
-| Resources | `com.serbekun.ss.resources.*` | Load/cache static files from classpath (`src/main/resources/`). |
+| Layer          | Package                              | Role |
+|----------------|--------------------------------------|------|
+| Bootstrap      | `com.serbekun.Main`                  | Entry point. Manual dependency wiring via inner `ServerContext` / `Repositories` / `Services` / `Resources` / `Handlers` classes. No DI framework. |
+| Config         | `com.serbekun.ss.config`             | `Config` (port), `Paths` — hardcoded static configuration. |
+| Domain         | `com.serbekun.ss.domain.models`      | Pure domain entities: `Link`, `Links`, `LocalTokens`, `EndpointsAccessTokens`. No framework dependencies. |
+| Repository     | `com.serbekun.ss.repository`         | Repository **interfaces** + JSON-file implementations (Jackson). All implement `AutoSavable`. |
+| Service        | `com.serbekun.ss.service.*`          | Business logic and orchestration only (auth, cipher, links, resources, tokens, autosave). |
+| HTTP (thin)    | `com.serbekun.ss.http.handles.*`     | Javalin route registration, DTOs (Request/Response), validation, mapping, and service calls. **No business logic**. |
+| Infrastructure | `com.serbekun.ss.infrastructure.*`   | Low-level technical components (FS initialization, autosave scheduler). |
+| Resources      | `com.serbekun.ss.resources.*`        | Load and cache static files from classpath (`src/main/resources/`). |
 
 ## Architecture notes
 
-- **No DI framework** — manual wiring in `Main.java` through inner context holder classes.
+- **Clean Layered Architecture** — full refactoring completed in 2026. The previous anti-pattern `service/http/handles/` (business logic mixed with HTTP) has been completely removed.
+- **Domain** is isolated (`domain/models/`). All domain models are plain Java classes with Jackson annotations only where needed for persistence.
+- **Repository interfaces** exist for all data access (`LinksRepository`, `LocalTokensRepository`, `EndpointAccessTokensRepository`). Implementations are in `*Impl` classes.
+- **Services** contain all business rules and orchestration. They depend only on repository interfaces and other services.
+- **HTTP layer is thin** — only handles routing, DTO mapping, basic validation, and delegates to services.
+- **No DI framework** — manual constructor injection via inner context classes in `Main.java`.
 - **File-based storage** — all data persists as JSON under `repository/` (auto-created on startup). The file `repository/endpoint_access_tokens.json` holds auth tokens.
-- **Auth model** — endpoints are registered as `Endpoint("/path")` objects via `EndpointRegistry`. Javalin `before` handler checks `Authorization` header or `?token=`/`?Authorization=Bearer ...` query param. `requiresAuth` is currently set to `false` for all endpoints.
-- **Autosave** — `ScheduledExecutorService` calls `save()` on all registered repositories every **20 seconds**.
-- **Server port** — read from `repository/config.json` at startup. Defaults to `8080` if file does not exist (auto-created).
+- **Auth model** — endpoints registered via `EndpointRegistry`. Javalin `before` handler supports `Authorization` header and `?token=` / `?Authorization=Bearer ...` query params. `requiresAuth` is currently `false` for all endpoints.
+- **Autosave** — `ScheduledExecutorService` calls `save()` on all `AutoSavable` repositories every **20 seconds**.
+- **Server port** — loaded from `repository/config.json` at startup (defaults to `8080`).
 - **Java 21** with `-parameters` compiler flag (method parameter names preserved for Jackson).
-- **Dead dependencies in `build.gradle`**: H2, Flyway, Hibernate Validator, Guava are declared but unused in source code.
+- **Dead dependencies in `build.gradle`**: H2, Flyway, Hibernate Validator, Guava are declared but unused.
+
+## Current state after refactoring
+
+The project now strictly follows **Clean Layered Architecture** with clear separation of concerns:
+
+- `domain/models` — core business objects
+- `repository` — data access (interfaces + impl)
+- `service` — business logic
+- `http/handles` — thin HTTP adapters
+- `infrastructure` + `config` + `resources` — supporting technical layers
+
+All previous violations (business logic in HTTP-related packages) have been eliminated.
 
 ## URLs
 
-For example, the project is a Javalin 6 server with token-based auth, JSON-file persistence, and static resource serving. There are 56 source files, 1 test, and no CI/CD.
+The project is a Javalin 6 server with token-based auth, JSON-file persistence, and static resource serving.
 
 ## Tests
 
@@ -45,7 +62,7 @@ Single unit test at `src/test/java/com/serbekun/ss/service/resource/ResourceServ
 
 ## API endpoints (v0)
 
-All registered in `ss.http.handles.*Routes` classes:
+All registered in `http/handles/*Routes` classes:
 
 - `GET /` — index page
 - `GET /static/v0/images/{name}` — static images

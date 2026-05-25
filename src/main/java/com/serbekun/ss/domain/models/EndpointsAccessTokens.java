@@ -1,4 +1,4 @@
-package com.serbekun.ss.core;
+package com.serbekun.ss.domain.models;
 
 import java.util.List;
 import java.util.Map;

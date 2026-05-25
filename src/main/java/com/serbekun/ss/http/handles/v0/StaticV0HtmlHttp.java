@@ -1,16 +1,16 @@
 package com.serbekun.ss.http.handles.v0;
 
-import com.serbekun.ss.service.http.handles.v0.StaticV0Html;
+import com.serbekun.ss.service.resource.ResourcesService;
 
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
 public class StaticV0HtmlHttp {
     
-    private final StaticV0Html staticV0Html;
+    private final ResourcesService resourcesService;
 
-    public StaticV0HtmlHttp(StaticV0Html staticV0Html) {
-        this.staticV0Html = staticV0Html;
+    public StaticV0HtmlHttp(ResourcesService resourcesService) {
+        this.resourcesService = resourcesService;
     } 
 
     public void main(Context ctx) {
@@ -28,7 +28,7 @@ public class StaticV0HtmlHttp {
             ctx.contentType("text/html");
         }
 
-        String html = staticV0Html.run(name);
+        String html = resourcesService.getHtml(name);
 
         if (html == null) {
             ctx.status(HttpStatus.NOT_FOUND);

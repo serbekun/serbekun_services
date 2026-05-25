@@ -5,8 +5,8 @@ import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.serbekun.ss.core.Config;
-import com.serbekun.ss.core.Paths;
+import com.serbekun.ss.config.Config;
+import com.serbekun.ss.config.Paths;
 import com.serbekun.ss.http.handles.InitHandles;
 import com.serbekun.ss.infrastructure.fs.ServerStorageInitializer;
 import com.serbekun.ss.repository.*;
@@ -15,7 +15,7 @@ import com.serbekun.ss.resources.ResourceLoader;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.EndpointRegistry;
 import com.serbekun.ss.service.autosave.*;
-import com.serbekun.ss.service.http.handles.v0.*;
+
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.tokens.EndpointAccessTokensService;
@@ -78,10 +78,10 @@ public class Main {
     private static Repositories initializeRepositories() {
         log.info("Initializing repositories");
 
-        var linksRepo = new LinksRepository(Paths.LinksConfig.getLinksStorageFile());
-        var tokensRepo = new EndpointAccessTokensRepository(
+        var linksRepo = new LinksRepositoryImpl(Paths.LinksConfig.getLinksStorageFile());
+        var tokensRepo = new EndpointAccessTokensRepositoryImpl(
             Paths.TokensConfig.getTokensStorageFolder());
-        var linksLocalTokensRepo = new LocalTokensRepository(
+        var linksLocalTokensRepo = new LocalTokensRepositoryImpl(
             Paths.LinksConfig.getLinksLocalTokensStorageFile(),
             "ss_links-");
 
@@ -100,7 +100,7 @@ public class Main {
 
         var endpointRegistry = new EndpointRegistry();
         var tokensService = new EndpointAccessTokensService(repos.endpointTokens);
-        var linksService = new LinksService(repos.links);
+        var linksService = new LinksService(repos.links, repos.linksLocalTokens);
         var authService = new AuthService(tokensService, endpointRegistry);
 
         return new Services(endpointRegistry, tokensService, linksService, authService);
@@ -119,11 +119,9 @@ public class Main {
         log.info("Initializing HTTP handlers");
 
         return new Handlers(
-            new StaticV0Json(resources.resourcesService),
-            new StaticV0Images(resources.resourcesService),
-            new StaticV0Html(resources.resourcesService),
-            new ApiV0CatalogsLinks(services.linksService, repos.linksLocalTokens),
-            new ApiV0CipherAes()
+            resources.resourcesService,
+            services.linksService,
+            new com.serbekun.ss.service.cipher.CipherService()
         );
     }
 
@@ -137,11 +135,9 @@ public class Main {
             ctx.resources.resourcesService,
             ctx.services.authService,
             ctx.services.endpointRegistry,
-            ctx.handlers.json,
-            ctx.handlers.images,
-            ctx.handlers.html,
-            ctx.handlers.links,
-            ctx.handlers.cipher
+            ctx.handlers.resourcesService,
+            ctx.handlers.linksService,
+            ctx.handlers.cipherService
         );
 
         // Autosave
@@ -189,17 +185,17 @@ public class Main {
         private final LinksRepository linksRepo;
         private final EndpointAccessTokensRepository endpointTokensRepo;
         private final LocalTokensRepository linksLocalTokensRepo;
-        private final com.serbekun.ss.core.Links links;
-        private final com.serbekun.ss.core.EndpointsAccessTokens endpointTokens;
-        private final com.serbekun.ss.core.LocalTokens linksLocalTokens;
+        private final com.serbekun.ss.domain.models.Links links;
+        private final com.serbekun.ss.domain.models.EndpointsAccessTokens endpointTokens;
+        private final com.serbekun.ss.domain.models.LocalTokens linksLocalTokens;
 
         private Repositories(
                 LinksRepository linksRepo,
                 EndpointAccessTokensRepository endpointTokensRepo,
                 LocalTokensRepository linksLocalTokensRepo,
-                com.serbekun.ss.core.Links links,
-                com.serbekun.ss.core.EndpointsAccessTokens endpointTokens,
-                com.serbekun.ss.core.LocalTokens linksLocalTokens) {
+                com.serbekun.ss.domain.models.Links links,
+                com.serbekun.ss.domain.models.EndpointsAccessTokens endpointTokens,
+                com.serbekun.ss.domain.models.LocalTokens linksLocalTokens) {
             this.linksRepo = linksRepo;
             this.endpointTokensRepo = endpointTokensRepo;
             this.linksLocalTokensRepo = linksLocalTokensRepo;
@@ -243,23 +239,17 @@ public class Main {
     }
 
     private static final class Handlers {
-        private final StaticV0Json json;
-        private final StaticV0Images images;
-        private final StaticV0Html html;
-        private final ApiV0CatalogsLinks links;
-        private final ApiV0CipherAes cipher;
+        private final com.serbekun.ss.service.resource.ResourcesService resourcesService;
+        private final com.serbekun.ss.service.links.LinksService linksService;
+        private final com.serbekun.ss.service.cipher.CipherService cipherService;
 
         private Handlers(
-                StaticV0Json json,
-                StaticV0Images images,
-                StaticV0Html html,
-                ApiV0CatalogsLinks links,
-                ApiV0CipherAes cipher) {
-            this.json = json;
-            this.images = images;
-            this.html = html;
-            this.links = links;
-            this.cipher = cipher;
+                com.serbekun.ss.service.resource.ResourcesService resourcesService,
+                com.serbekun.ss.service.links.LinksService linksService,
+                com.serbekun.ss.service.cipher.CipherService cipherService) {
+            this.resourcesService = resourcesService;
+            this.linksService = linksService;
+            this.cipherService = cipherService;
         }
     }
 }

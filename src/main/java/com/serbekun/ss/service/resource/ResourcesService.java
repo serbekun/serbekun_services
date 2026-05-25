@@ -84,6 +84,63 @@ public class ResourcesService {
         return cache.listResources(basePath);
     }
 
+    // === Static resource helpers (moved from deprecated service/http layer) ===
+
+    public byte[] getImage(String name) {
+        if (name == null) name = "";
+        if (name.isEmpty()) {
+            return null; // listing is handled separately
+        }
+        String path = com.serbekun.ss.resources.ResourcesBasePath.resolveImagePath(name);
+        return getBinaryData(path);
+    }
+
+    public String getJson(String name) {
+        if (name == null) name = "";
+        if (name.isEmpty()) {
+            String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_JSON_PATH;
+            List<String> filesList = listResources(path).stream()
+                .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
+                .toList();
+            try {
+                return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        String path = com.serbekun.ss.resources.ResourcesBasePath.resolveJsonPath(name);
+        return getTextData(path);
+    }
+
+    public String getHtml(String name) {
+        if (name == null) name = "";
+        if (name.isEmpty()) {
+            String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_HTML_PATH;
+            List<String> filesList = listResources(path).stream()
+                .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
+                .toList();
+            try {
+                return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        String path = com.serbekun.ss.resources.ResourcesBasePath.resolveHtmlPath(name);
+        return getTextData(path);
+    }
+
+    public String listImagesAsJson() {
+        String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_IMAGES_PATH;
+        List<String> filesList = listResources(path).stream()
+            .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
+            .toList();
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private static final Map<String, String> MIME_TYPES = Map.ofEntries(
         Map.entry("html", "text/html"),
         Map.entry("htm", "text/html"),

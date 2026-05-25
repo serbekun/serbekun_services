@@ -40,6 +40,7 @@ dependencies {
     testImplementation 'io.javalin:javalin-testtools:6.7.0'
     testImplementation 'org.assertj:assertj-core:3.24.2'
     testImplementation 'org.mockito:mockito-core:5.10.0'
+
 }
 
 application {

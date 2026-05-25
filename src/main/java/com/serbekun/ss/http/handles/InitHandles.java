@@ -3,7 +3,8 @@ package com.serbekun.ss.http.handles;
 import com.serbekun.ss.http.handles.v0.*;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.api.*;
-import com.serbekun.ss.service.http.handles.v0.*;
+
+import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
 
 import io.javalin.Javalin;
@@ -12,23 +13,19 @@ public class InitHandles {
 
     public void initHandles(Javalin svr, ResourcesService resourcesService,
         AuthService authService, EndpointRegistrar endpointRegistrar,
-
-        // API handles services
-        StaticV0Json staticV0Json,
-        StaticV0Images staticV0Images,
-        StaticV0Html staticV0Html,
-        ApiV0CatalogsLinks apiV0CatalogsLinks,
-        ApiV0CipherAes apiV0CipherAes
+        ResourcesService staticResourcesService,
+        LinksService linksService,
+        com.serbekun.ss.service.cipher.CipherService cipherService
 
     ) {
 
         // init handles objects
         IndexHttp index = new IndexHttp(resourcesService);
-        StaticV0ImagesHttp staticV0ImagesHttp = new StaticV0ImagesHttp(resourcesService, staticV0Images);
-        StaticV0JsonHttp staticV0JsonHttp = new StaticV0JsonHttp(staticV0Json);
-        StaticV0HtmlHttp staticV0HtmlHttp = new StaticV0HtmlHttp(staticV0Html);
-        ApiV0CipherAesHttp apiV0CipherAesHttp = new ApiV0CipherAesHttp(apiV0CipherAes);
-        ApiV0CatalogsLinksHttp apiV0CatalogsLinksHttp = new ApiV0CatalogsLinksHttp(apiV0CatalogsLinks);
+        StaticV0ImagesHttp staticV0ImagesHttp = new StaticV0ImagesHttp(staticResourcesService);
+        StaticV0JsonHttp staticV0JsonHttp = new StaticV0JsonHttp(staticResourcesService);
+        StaticV0HtmlHttp staticV0HtmlHttp = new StaticV0HtmlHttp(staticResourcesService);
+        ApiV0CipherAesHttp apiV0CipherAesHttp = new ApiV0CipherAesHttp(cipherService);
+        ApiV0CatalogsLinksHttp apiV0CatalogsLinksHttp = new ApiV0CatalogsLinksHttp(linksService);
 
         EndpointAuthInitializer.initHandlesAuthSetting(svr, endpointRegistrar, authService);
 

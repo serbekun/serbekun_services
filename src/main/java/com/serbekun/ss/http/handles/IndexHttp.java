@@ -1,3 +1,4 @@
+/** HTTP handler for the index page (GET /). */
 package com.serbekun.ss.http.handles;
 
 import com.serbekun.ss.resources.ResourcesBasePath;

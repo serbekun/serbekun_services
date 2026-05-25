@@ -1,4 +1,5 @@
-package com.serbekun.ss.core;
+/** Configuration loaded from repository/config.json with server port settings. */
+package com.serbekun.ss.config;
 
 import java.io.File;
 import java.io.IOException;

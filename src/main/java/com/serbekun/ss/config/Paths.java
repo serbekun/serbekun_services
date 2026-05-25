@@ -1,4 +1,4 @@
-package com.serbekun.ss.core;
+package com.serbekun.ss.config;
 
 import java.nio.file.Path;
 
@@ -23,7 +23,7 @@ public class Paths {
     }
 
     /**
-     * class that contain configuration for {@link com.serbekun.ss.core.Links}
+     * class that contain configuration for {@link com.serbekun.ss.domain.models.Links}
      */
     public static class LinksConfig {
         private static final Path linksStorageFile = Path.of("repository/catalogs/links.json");
@@ -34,7 +34,7 @@ public class Paths {
     }
 
     /**
-     * class that contain configuration for {@link com.serbekun.ss.core.EndpointsAccessTokens}
+     * class that contain configuration for {@link com.serbekun.ss.domain.models.EndpointsAccessTokens}
      */
     public static class TokensConfig {
         private static final Path tokensStorageFolder = Path.of("repository/endpoint_access_tokens.json");

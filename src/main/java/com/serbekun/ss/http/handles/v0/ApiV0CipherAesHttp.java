@@ -1,7 +1,7 @@
 package com.serbekun.ss.http.handles.v0;
 
 import com.serbekun.ss.http.handles.v0.dto.cipher.aes.*;
-import com.serbekun.ss.service.http.handles.v0.ApiV0CipherAes;
+import com.serbekun.ss.service.cipher.CipherService;
 
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
@@ -9,10 +9,10 @@ import io.javalin.http.HttpStatus;
 
 public class ApiV0CipherAesHttp {
     
-    private ApiV0CipherAes apiV0CipherAes;
+    private final CipherService cipherService;
 
-    public ApiV0CipherAesHttp(ApiV0CipherAes apiV0CipherAes) {
-        this.apiV0CipherAes = apiV0CipherAes;
+    public ApiV0CipherAesHttp(CipherService cipherService) {
+        this.cipherService = cipherService;
     }
 
     public void main(Context ctx) {
@@ -44,13 +44,13 @@ public class ApiV0CipherAesHttp {
     private void handleGet(Context ctx) {
         ctx.contentType("application/json");
 
-        String json = apiV0CipherAes.get();
-        if (json == null) {
+        String key = cipherService.generateAesKey();
+        if (key == null) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             return;
         }
 
-        ctx.result(json);
+        ctx.result("{\"key\":\"" + key + "\"}");
     }
 
     private void handlePostEncrypt(Context ctx) {
@@ -58,7 +58,6 @@ public class ApiV0CipherAesHttp {
 
         V0CipherPostEncrypt v0CipherPostEncrypt = ctx.bodyAsClass(V0CipherPostEncrypt.class);
 
-        // check data is valid
         if (v0CipherPostEncrypt.data() == null || v0CipherPostEncrypt.data().isBlank() ||
             v0CipherPostEncrypt.key() == null || v0CipherPostEncrypt.key().isBlank()) {
             
@@ -66,14 +65,15 @@ public class ApiV0CipherAesHttp {
             return;
         }
 
-    
-        String json = apiV0CipherAes.postEncrypt(v0CipherPostEncrypt.data(), v0CipherPostEncrypt.key());
-        if (json == null) {
+        String encrypted;
+        try {
+            encrypted = cipherService.encrypt(v0CipherPostEncrypt.data(), v0CipherPostEncrypt.key());
+        } catch (Exception e) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             return;
-        }      
-        
-        ctx.result(json);
+        }
+
+        ctx.result("{\"data\":\"" + encrypted + "\"}");
     }
 
     private void handlePostDecrypt(Context ctx) {
@@ -81,7 +81,6 @@ public class ApiV0CipherAesHttp {
 
         V0CipherPostDecrypt v0CipherPostDecrypt = ctx.bodyAsClass(V0CipherPostDecrypt.class);
 
-        // check data is valid
         if (v0CipherPostDecrypt.data() == null || v0CipherPostDecrypt.data().isBlank() ||
             v0CipherPostDecrypt.key() == null || v0CipherPostDecrypt.key().isBlank()) {
             
@@ -89,13 +88,15 @@ public class ApiV0CipherAesHttp {
             return;
         }
 
-        String json = apiV0CipherAes.postDecrypt(v0CipherPostDecrypt.data(), v0CipherPostDecrypt.key());
-        if (json == null) {
+        String decrypted;
+        try {
+            decrypted = cipherService.decrypt(v0CipherPostDecrypt.data(), v0CipherPostDecrypt.key());
+        } catch (Exception e) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             return;
         }
 
-        ctx.result(json);
+        ctx.result("{\"data\":\"" + decrypted + "\"}");
     }
 
 }

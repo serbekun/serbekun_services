@@ -3,20 +3,18 @@ package com.serbekun.ss.http.handles.v0;
 import com.serbekun.ss.http.handles.v0.dto.links.V0LinksDeleteRequest;
 import com.serbekun.ss.http.handles.v0.dto.links.V0LinksPostRequest;
 import com.serbekun.ss.http.handles.v0.dto.links.V0LinksPutRequest;
-import com.serbekun.ss.service.http.handles.v0.ApiV0CatalogsLinks;
+import com.serbekun.ss.service.links.LinksService;
 
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 import io.javalin.http.HttpStatus;
 
-// TODO move json string writeing to V0Links
-
 public class ApiV0CatalogsLinksHttp {
     
-    private final ApiV0CatalogsLinks apiV0CatalogsLinks;
+    private final LinksService linksService;
 
-    public ApiV0CatalogsLinksHttp(ApiV0CatalogsLinks apiV0CatalogsLinks) {
-        this.apiV0CatalogsLinks = apiV0CatalogsLinks;
+    public ApiV0CatalogsLinksHttp(LinksService linksService) {
+        this.linksService = linksService;
     }
 
     public void main(Context ctx) {
@@ -45,7 +43,7 @@ public class ApiV0CatalogsLinksHttp {
     private void handleGet(Context ctx) {
         ctx.contentType("application/json");
 
-        String json = apiV0CatalogsLinks.get();
+        String json = linksService.getAllLinksAsJson();
         if (json == null) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             return;
@@ -63,14 +61,7 @@ public class ApiV0CatalogsLinksHttp {
             return;
         }
 
-        com.serbekun.ss.service.http.handles.v0.dto.links.V0LinksPostRequest request =
-            new com.serbekun.ss.service.http.handles.v0.dto.links.V0LinksPostRequest(
-                body.url(),
-                body.name(),
-                body.description()
-            );
-
-        String token = apiV0CatalogsLinks.post(request);
+        String token = linksService.createLink(body.url(), body.name(), body.description());
         ctx.status(HttpStatus.CREATED);
         ctx.result("{\"token\":\"" + token + "\"}");
     }
@@ -90,22 +81,17 @@ public class ApiV0CatalogsLinksHttp {
             return;
         }
 
-        com.serbekun.ss.service.http.handles.v0.dto.links.V0LinksPutRequest request =
-            new com.serbekun.ss.service.http.handles.v0.dto.links.V0LinksPutRequest(
-                uuid,
-                body.token(),
-                body.url(),
-                body.name(),
-                body.description()
-            );
-
-        int status = apiV0CatalogsLinks.put(request);
+        int status = linksService.updateLink(uuid, body.token(), body.url(), body.name(), body.description());
         if (status == 404) {
             ctx.status(HttpStatus.NOT_FOUND);
             return;
         }
         if (status == 403) {
             ctx.status(HttpStatus.FORBIDDEN);
+            return;
+        }
+        if (status == 400) {
+            ctx.status(HttpStatus.BAD_REQUEST);
             return;
         }
 
@@ -127,19 +113,17 @@ public class ApiV0CatalogsLinksHttp {
             return;
         }
 
-        com.serbekun.ss.service.http.handles.v0.dto.links.V0LinksDeleteRequest request =
-            new com.serbekun.ss.service.http.handles.v0.dto.links.V0LinksDeleteRequest(
-                uuid,
-                token
-            );
-
-        int status = apiV0CatalogsLinks.delete(request);
+        int status = linksService.deleteLink(uuid, token);
         if (status == 404) {
             ctx.status(HttpStatus.NOT_FOUND);
             return;
         }
         if (status == 403) {
             ctx.status(HttpStatus.FORBIDDEN);
+            return;
+        }
+        if (status == 400) {
+            ctx.status(HttpStatus.BAD_REQUEST);
             return;
         }
 

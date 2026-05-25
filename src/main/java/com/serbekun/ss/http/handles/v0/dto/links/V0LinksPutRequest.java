@@ -1,3 +1,4 @@
+/** Record for updating an existing link via PUT request. */
 package com.serbekun.ss.http.handles.v0.dto.links;
 
 public record V0LinksPutRequest(

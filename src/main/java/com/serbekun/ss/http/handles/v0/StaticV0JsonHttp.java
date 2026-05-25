@@ -1,16 +1,16 @@
 package com.serbekun.ss.http.handles.v0;
 
-import com.serbekun.ss.service.http.handles.v0.StaticV0Json;
+import com.serbekun.ss.service.resource.ResourcesService;
 
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
 public class StaticV0JsonHttp {
 
-    private final StaticV0Json staticV0Json;
+    private final ResourcesService resourcesService;
 
-    public StaticV0JsonHttp(StaticV0Json staticV0Json) {
-        this.staticV0Json = staticV0Json;
+    public StaticV0JsonHttp(ResourcesService resourcesService) {
+        this.resourcesService = resourcesService;
     }
 
     public void main(Context ctx) {
@@ -24,7 +24,7 @@ public class StaticV0JsonHttp {
             name = "";
         }
 
-        String json = staticV0Json.run(name);
+        String json = resourcesService.getJson(name);
 
         if (json == null) {
             ctx.status(HttpStatus.NOT_FOUND);

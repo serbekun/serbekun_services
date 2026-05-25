@@ -1,56 +1,9 @@
-package com.serbekun.ss.core;
+package com.serbekun.ss.domain.models;
 
 import java.util.UUID;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-/** 
- * Core class that manage links catalog on server 
- */
 public class Links {
-
-    public static final class Link {
-    private final UUID uuid;
-    private final String url;
-    private final String name;
-    private final String description;
-
-    @JsonCreator
-    public Link(
-            @JsonProperty("uuid") UUID uuid,
-            @JsonProperty("url") String url,
-            @JsonProperty("name") String name,
-            @JsonProperty("description") String description
-        ) {
-            if (uuid == null) throw new IllegalArgumentException("uuid is required");
-            this.uuid = uuid;
-            this.url = url;
-            this.name = name;
-            this.description = description;
-        }
-
-        @JsonProperty("uuid")
-        public UUID uuid() { return uuid; }
-
-        @JsonProperty("url")
-        public String url() { return url; }
-
-        @JsonProperty("name")
-        public String name() { return name; }
-
-        @JsonProperty("description")
-        public String description() { return description; }
-
-        @Override public boolean equals(Object o) {
-            return (o instanceof Link) && uuid.equals(((Link) o).uuid);
-        }
-
-        @Override public int hashCode() {
-            return uuid.hashCode();
-        }
-    }
 
     private final Map<UUID, Link> linksByUuid;
 
@@ -74,10 +27,10 @@ public class Links {
      * @param link {@link Link} object which will be added to catalog
      */
     public synchronized void addLink(Link link) {
-        if (link == null || link.uuid == null) {
+        if (link == null || link.uuid() == null) {
             return;
         }
-        linksByUuid.put(link.uuid, link);
+        linksByUuid.put(link.uuid(), link);
     }
 
     /**

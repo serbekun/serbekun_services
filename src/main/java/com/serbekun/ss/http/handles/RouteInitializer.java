@@ -7,7 +7,8 @@ import com.serbekun.ss.http.handles.v0.StaticV0ImagesHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0JsonHttp;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.api.EndpointRegistrar;
-import com.serbekun.ss.service.http.handles.v0.*;
+
+import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
 
 import io.javalin.Javalin;
@@ -32,12 +33,10 @@ public class RouteInitializer {
      * @param apiV0CipherAes AES cipher service
      */
     public void init(Javalin svr, ResourcesService resourcesService,
-                     AuthService authService, EndpointRegistrar endpointRegistrar,
-                     StaticV0Json staticV0Json,
-                     StaticV0Images staticV0Images,
-                     StaticV0Html staticV0Html,
-                     ApiV0CatalogsLinks apiV0CatalogsLinks,
-                     ApiV0CipherAes apiV0CipherAes) {
+                      AuthService authService, EndpointRegistrar endpointRegistrar,
+                      ResourcesService staticResourcesService,
+                      LinksService linksService,
+                      com.serbekun.ss.service.cipher.CipherService cipherService) {
 
         // First initialize auth and endpoints
         AuthInitializer authInitializer = new AuthInitializer();
@@ -45,11 +44,11 @@ public class RouteInitializer {
 
         // Create handlers
         IndexHttp index = new IndexHttp(resourcesService);
-        StaticV0ImagesHttp staticV0ImagesHttp = new StaticV0ImagesHttp(resourcesService, staticV0Images);
-        StaticV0JsonHttp staticV0JsonHttp = new StaticV0JsonHttp(staticV0Json);
-        StaticV0HtmlHttp staticV0HtmlHttp = new StaticV0HtmlHttp(staticV0Html);
-        ApiV0CipherAesHttp apiV0CipherAesHttp = new ApiV0CipherAesHttp(apiV0CipherAes);
-        ApiV0CatalogsLinksHttp apiV0CatalogsLinksHttp = new ApiV0CatalogsLinksHttp(apiV0CatalogsLinks);
+        StaticV0ImagesHttp staticV0ImagesHttp = new StaticV0ImagesHttp(staticResourcesService);
+        StaticV0JsonHttp staticV0JsonHttp = new StaticV0JsonHttp(staticResourcesService);
+        StaticV0HtmlHttp staticV0HtmlHttp = new StaticV0HtmlHttp(staticResourcesService);
+        ApiV0CipherAesHttp apiV0CipherAesHttp = new ApiV0CipherAesHttp(cipherService);
+        ApiV0CatalogsLinksHttp apiV0CatalogsLinksHttp = new ApiV0CatalogsLinksHttp(linksService);
 
         // Register routes
         StaticRoutes staticRoutes = new StaticRoutes(index, staticV0ImagesHttp, staticV0JsonHttp, staticV0HtmlHttp);

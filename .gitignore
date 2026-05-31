@@ -8,3 +8,7 @@ build
 bin/
 
 gradle
+
+# Ignore Files that creating when test is running
+
+test_tmp/

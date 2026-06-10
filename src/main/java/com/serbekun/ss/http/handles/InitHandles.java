@@ -6,6 +6,7 @@ import com.serbekun.ss.service.auth.api.*;
 
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
+import com.serbekun.ss.service.youtube.YoutubeService;
 
 import io.javalin.Javalin;
 
@@ -15,7 +16,8 @@ public class InitHandles {
         AuthService authService, EndpointRegistrar endpointRegistrar,
         ResourcesService staticResourcesService,
         LinksService linksService,
-        com.serbekun.ss.service.cipher.CipherService cipherService
+        com.serbekun.ss.service.cipher.CipherService cipherService,
+        YoutubeService youtubeService
 
     ) {
 
@@ -26,6 +28,7 @@ public class InitHandles {
         StaticV0HtmlHttp staticV0HtmlHttp = new StaticV0HtmlHttp(staticResourcesService);
         ApiV0CipherAesHttp apiV0CipherAesHttp = new ApiV0CipherAesHttp(cipherService);
         ApiV0CatalogsLinksHttp apiV0CatalogsLinksHttp = new ApiV0CatalogsLinksHttp(linksService);
+        ApiV0YoutubeHttp apiV0YoutubeHttp = new ApiV0YoutubeHttp(youtubeService);
 
         EndpointAuthInitializer.initHandlesAuthSetting(svr, endpointRegistrar, authService);
 
@@ -36,7 +39,8 @@ public class InitHandles {
         // API
         ApiV0Routes apiV0Routes = new ApiV0Routes(
             new CipherRoutes(apiV0CipherAesHttp),
-            new LinkCatalogRoutes(apiV0CatalogsLinksHttp)
+            new LinkCatalogRoutes(apiV0CatalogsLinksHttp),
+            new YoutubeRoutes(apiV0YoutubeHttp)
         );
         apiV0Routes.register(svr);
     }

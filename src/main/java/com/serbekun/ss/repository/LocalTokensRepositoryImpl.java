@@ -4,7 +4,6 @@ package com.serbekun.ss.repository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serbekun.ss.domain.models.LocalTokens;
-import com.serbekun.ss.service.autosave.interfaces.AutoSavable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

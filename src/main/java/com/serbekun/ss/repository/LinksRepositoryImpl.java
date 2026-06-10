@@ -13,7 +13,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serbekun.ss.domain.models.Links;
 import com.serbekun.ss.domain.models.Link;
-import com.serbekun.ss.service.autosave.interfaces.AutoSavable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

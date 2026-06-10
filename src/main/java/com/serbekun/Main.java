@@ -19,6 +19,7 @@ import com.serbekun.ss.service.autosave.*;
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.tokens.EndpointAccessTokensService;
+import com.serbekun.ss.service.youtube.YoutubeService;
 
 import io.javalin.Javalin;
 
@@ -102,8 +103,9 @@ public class Main {
         var tokensService = new EndpointAccessTokensService(repos.endpointTokens);
         var linksService = new LinksService(repos.links, repos.linksLocalTokens);
         var authService = new AuthService(tokensService, endpointRegistry);
+        var youtubeService = new YoutubeService();
 
-        return new Services(endpointRegistry, tokensService, linksService, authService);
+        return new Services(endpointRegistry, tokensService, linksService, authService, youtubeService);
     }
 
     private static Resources initializeResources() {
@@ -121,7 +123,8 @@ public class Main {
         return new Handlers(
             resources.resourcesService,
             services.linksService,
-            new com.serbekun.ss.service.cipher.CipherService()
+            new com.serbekun.ss.service.cipher.CipherService(),
+            services.youtubeService
         );
     }
 
@@ -137,7 +140,8 @@ public class Main {
             ctx.services.endpointRegistry,
             ctx.handlers.resourcesService,
             ctx.handlers.linksService,
-            ctx.handlers.cipherService
+            ctx.handlers.cipherService,
+            ctx.handlers.youtubeService
         );
 
         // Autosave
@@ -210,16 +214,19 @@ public class Main {
         private final EndpointAccessTokensService tokensService;
         private final LinksService linksService;
         private final AuthService authService;
+        private final YoutubeService youtubeService;
 
         private Services(
                 EndpointRegistry endpointRegistry,
                 EndpointAccessTokensService tokensService,
                 LinksService linksService,
-                AuthService authService) {
+                AuthService authService,
+                YoutubeService youtubeService) {
             this.endpointRegistry = endpointRegistry;
             this.tokensService = tokensService;
             this.linksService = linksService;
             this.authService = authService;
+            this.youtubeService = youtubeService;
         }
     }
 
@@ -242,14 +249,17 @@ public class Main {
         private final com.serbekun.ss.service.resource.ResourcesService resourcesService;
         private final com.serbekun.ss.service.links.LinksService linksService;
         private final com.serbekun.ss.service.cipher.CipherService cipherService;
+        private final YoutubeService youtubeService;
 
         private Handlers(
                 com.serbekun.ss.service.resource.ResourcesService resourcesService,
                 com.serbekun.ss.service.links.LinksService linksService,
-                com.serbekun.ss.service.cipher.CipherService cipherService) {
+                com.serbekun.ss.service.cipher.CipherService cipherService,
+                YoutubeService youtubeService) {
             this.resourcesService = resourcesService;
             this.linksService = linksService;
             this.cipherService = cipherService;
+            this.youtubeService = youtubeService;
         }
     }
 }

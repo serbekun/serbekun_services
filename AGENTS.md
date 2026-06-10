@@ -1,13 +1,17 @@
 # serbekun-service
 
+## Instructions for AI agents
+
+When the user states any preferences about coding style, architecture, conventions, or project direction, **append them to this file** so the information persists across chat sessions. If something is unclear or contradicts existing content, ask the user for clarification before changing code. This file is the canonical reference for project conventions — keep it up to date.
+
 ## Quick start
 
 ```sh
-./gradlew build                 # compile + test
-./gradlew shadowJar             # fat JAR → build/libs/serbekun-service-1.0.0-all.jar
+gradle build                 # compile + test
+gradle shadowJar             # fat JAR → build/libs/serbekun-service-1.0.0-all.jar
 java -jar build/libs/serbekun-service-1.0.0-all.jar  # server on :8080
-./gradlew test                  # JUnit 5
-./gradlew compileJava           # compile only
+gradle test                  # JUnit 5
+gradle compileJava           # compile only
 ```
 
 No lint, typecheck, or codegen tasks exist. No CI/CD.
@@ -20,7 +24,7 @@ No lint, typecheck, or codegen tasks exist. No CI/CD.
 | Config         | `com.serbekun.ss.config`             | `Config` (port), `Paths` — hardcoded static configuration. |
 | Domain         | `com.serbekun.ss.domain.models`      | Pure domain entities: `Link`, `Links`, `LocalTokens`, `EndpointsAccessTokens`. No framework dependencies. |
 | Repository     | `com.serbekun.ss.repository`         | Repository **interfaces** + JSON-file implementations (Jackson). All implement `AutoSavable`. |
-| Service        | `com.serbekun.ss.service.*`          | Business logic and orchestration only (auth, cipher, links, resources, tokens, autosave). |
+| Service        | `com.serbekun.ss.service.*`          | Business logic and orchestration only (auth, cipher, links, resources, tokens, autosave, youtube). |
 | HTTP (thin)    | `com.serbekun.ss.http.handles.*`     | Javalin route registration, DTOs (Request/Response), validation, mapping, and service calls. **No business logic**. |
 | Infrastructure | `com.serbekun.ss.infrastructure.*`   | Low-level technical components (FS initialization, autosave scheduler). |
 | Resources      | `com.serbekun.ss.resources.*`        | Load and cache static files from classpath (`src/main/resources/`). |
@@ -30,7 +34,7 @@ No lint, typecheck, or codegen tasks exist. No CI/CD.
 - **Clean Layered Architecture** — full refactoring completed in 2026. The previous anti-pattern `service/http/handles/` (business logic mixed with HTTP) has been completely removed.
 - **Domain** is isolated (`domain/models/`). All domain models are plain Java classes with Jackson annotations only where needed for persistence.
 - **Repository interfaces** exist for all data access (`LinksRepository`, `LocalTokensRepository`, `EndpointAccessTokensRepository`). Implementations are in `*Impl` classes.
-- **Services** contain all business rules and orchestration. They depend only on repository interfaces and other services.
+- **Services** contain all business rules and orchestration. They depend only on repository interfaces and other services. `Youtube` is a utility service (not wired into the DI context).
 - **HTTP layer is thin** — only handles routing, DTO mapping, basic validation, and delegates to services.
 - **No DI framework** — manual constructor injection via inner context classes in `Main.java`.
 - **File-based storage** — all data persists as JSON under `repository/` (auto-created on startup). The file `repository/endpoint_access_tokens.json` holds auth tokens.
@@ -38,7 +42,7 @@ No lint, typecheck, or codegen tasks exist. No CI/CD.
 - **Autosave** — `ScheduledExecutorService` calls `save()` on all `AutoSavable` repositories every **20 seconds**.
 - **Server port** — loaded from `repository/config.json` at startup (defaults to `8080`).
 - **Java 21** with `-parameters` compiler flag (method parameter names preserved for Jackson).
-- **Dead dependencies in `build.gradle`**: H2, Flyway, Hibernate Validator, Guava are declared but unused.
+- **Dead dependencies in `build.gradle`**: H2, Flyway, Hibernate Validator, Guava, Javalin SSL plugin, Jakarta Validation API are declared but unused.
 
 ## Current state after refactoring
 

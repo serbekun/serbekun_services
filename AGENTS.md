@@ -85,5 +85,14 @@ All registered in `http/handles/*Routes` classes:
 ## YouTube functionality
 
 - **Requires**: `yt-dlp` command-line tool installed and in PATH
-- **Cookies**: Uses `repository/www.youtube.com_cookies.txt` (auto-created if needed)
-- **Note (2026-06-12)**: Removed `--js-runtimes deno` requirement from yt-dlp commands as deno is not installed and causes download failures. yt-dlp now uses fallback extraction methods.
+- **Cookies**: Uses `repository/www.youtube.com_cookies.txt` for YouTube authentication
+- **Current limitations**:
+  - Age-restricted videos require authenticated cookies from a logged-in browser
+  - Playlist URLs (with `&list=` parameters) are skipped (`--no-playlist` flag)
+  - Videos with complex signature validation may require JavaScript runtime (deno/node) and yt-dlp-ejs package
+  
+### Implementation notes (2026-06-12)
+- Added 120-second timeout to prevent yt-dlp processes from hanging indefinitely
+- Uses `--no-playlist` flag to ignore playlist parameters in URLs
+- Process timeout with `waitFor(timeout, TimeUnit.SECONDS)` and `destroyForcibly()` on timeout
+- yt-dlp can work without explicit JS runtime for many videos, falls back to basic extraction

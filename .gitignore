@@ -14,4 +14,4 @@ gradle
 test_tmp/
 
 # Ignore repository data folder
-repository/
+/repository/

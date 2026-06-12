@@ -1,6 +1,7 @@
 package com.serbekun.ss.service.youtube;
 
 import java.io.IOException;
+import com.serbekun.ss.config.Paths;
 
 public class Youtube {
     
@@ -18,6 +19,7 @@ public class Youtube {
         ProcessBuilder pb = new ProcessBuilder(
             "yt-dlp",
             "-f", "best",
+            "--cookies", Paths.YoutubeConfig.getCookiesPath().toString(),
             "-o", "-",
             url
         );
@@ -59,6 +61,7 @@ public class Youtube {
         ProcessBuilder pb = new ProcessBuilder(
             "yt-dlp",
             "--dump-json",
+            "--cookies", Paths.YoutubeConfig.getCookiesPath().toString(),
             url
         );
         

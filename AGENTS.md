@@ -79,3 +79,11 @@ All registered in `http/handles/*Routes` classes:
 - `POST /api/v0/catalogs/links` — create link
 - `PUT /api/v0/catalogs/links/{uuid}` — update link
 - `DELETE /api/v0/catalogs/links/{uuid}` — delete link
+- `GET /api/v0/youtube/info?url=...` — get video metadata as JSON
+- `GET /api/v0/youtube/download?url=...` — download video and return MP4 bytes
+
+## YouTube functionality
+
+- **Requires**: `yt-dlp` command-line tool installed and in PATH
+- **Cookies**: Uses `repository/www.youtube.com_cookies.txt` (auto-created if needed)
+- **Note (2026-06-12)**: Removed `--js-runtimes deno` requirement from yt-dlp commands as deno is not installed and causes download failures. yt-dlp now uses fallback extraction methods.

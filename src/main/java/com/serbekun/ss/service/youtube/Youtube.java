@@ -8,28 +8,19 @@ import com.serbekun.ss.config.Paths;
 public class Youtube {
     
     private static final long PROCESS_TIMEOUT_SECONDS = 120;
+    private static final String YT_DLP = "/home/sergei/.local/bin/yt-dlp";
     private static final String DENO_PATH = "/home/sergei/.deno/bin";
-    private static final String LOCAL_BIN_PATH = "/home/sergei/.local/bin";
-    
+
     private static void setupEnvironment(ProcessBuilder pb) {
         Map<String, String> env = pb.environment();
         String existingPath = env.getOrDefault("PATH", "");
-        env.put("PATH", DENO_PATH + ":" + LOCAL_BIN_PATH + ":" + existingPath);
+        env.put("PATH", DENO_PATH + ":" + existingPath);
     }
-    
-    /**
-     * 
-     * Download video from Youtube by url
-     * 
-     * @param url youtube video url
-     * @return video bytes, or null if download failed
-     * @throws IOException if process cannot be started or interrupted
-     * @throws IllegalStateException if yt-dlp command fails
-     */
+
     public static byte[] DownloadVideoByUrl(String url) throws IOException {
 
         ProcessBuilder pb = new ProcessBuilder(
-            "yt-dlp",
+            YT_DLP,
             "-f", "best",
             "--no-playlist",
             "--js-runtimes", "deno",
@@ -37,10 +28,10 @@ public class Youtube {
             "-o", "-",
             url
         );
-        
+
         // Add required paths for yt-dlp process
         setupEnvironment(pb);
-        
+
         Process process = pb.start();
         
         try {
@@ -82,7 +73,7 @@ public class Youtube {
     public static String GetVideoInfo(String url) throws IOException {
 
         ProcessBuilder pb = new ProcessBuilder(
-            "yt-dlp",
+            YT_DLP,
             "--dump-json",
             "--no-playlist",
             "--js-runtimes", "deno",

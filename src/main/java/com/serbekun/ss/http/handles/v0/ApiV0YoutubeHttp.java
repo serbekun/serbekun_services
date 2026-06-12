@@ -30,7 +30,7 @@ public class ApiV0YoutubeHttp {
             ctx.result("{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}");
         } catch (Exception e) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
-            ctx.result("{\"error\": \"Failed to fetch video info\"}");
+            ctx.result("{\"error\": \"" + e.getClass().getSimpleName() + ": " + e.getMessage().replace("\"", "'") + "\"}");
         }
     }
 
@@ -51,7 +51,7 @@ public class ApiV0YoutubeHttp {
             ctx.result("{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}");
         } catch (Exception e) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
-            ctx.result("{\"error\": \"Failed to download video\"}");
+            ctx.result("{\"error\": \"" + e.getClass().getSimpleName() + ": " + e.getMessage().replace("\"", "'") + "\"}");
         }
     }
 }

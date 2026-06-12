@@ -6,6 +6,8 @@ import com.serbekun.ss.http.handles.v0.StaticV0HtmlHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0ImagesHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0JsonHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0PdfHttp;
+import com.serbekun.ss.http.handles.v0.StaticV0CssHttp;
+import com.serbekun.ss.http.handles.v0.StaticV0JsHttp;
 
 /**
  * Registration of all static routes.
@@ -17,15 +19,20 @@ public class StaticRoutes {
     private final StaticV0JsonHttp staticV0JsonHttp;
     private final StaticV0HtmlHttp staticV0HtmlHttp;
     private final StaticV0PdfHttp staticV0PdfHttp;
+    private final StaticV0CssHttp staticV0CssHttp;
+    private final StaticV0JsHttp staticV0JsHttp;
 
     public StaticRoutes(IndexHttp index, StaticV0ImagesHttp staticV0ImagesHttp,
                         StaticV0JsonHttp staticV0JsonHttp, StaticV0HtmlHttp staticV0HtmlHttp,
-                        StaticV0PdfHttp staticV0PdfHttp) {
+                        StaticV0PdfHttp staticV0PdfHttp, StaticV0CssHttp staticV0CssHttp,
+                        StaticV0JsHttp staticV0JsHttp) {
         this.index = index;
         this.staticV0ImagesHttp = staticV0ImagesHttp;
         this.staticV0JsonHttp = staticV0JsonHttp;
         this.staticV0HtmlHttp = staticV0HtmlHttp;
         this.staticV0PdfHttp = staticV0PdfHttp;
+        this.staticV0CssHttp = staticV0CssHttp;
+        this.staticV0JsHttp = staticV0JsHttp;
     }
 
     /**
@@ -48,6 +55,16 @@ public class StaticRoutes {
         svr.get("/static/v0/html", ctx -> staticV0HtmlHttp.main(ctx, ""));
         svr.get("/static/v0/html/", ctx -> staticV0HtmlHttp.main(ctx, ""));
         svr.get("/static/v0/html/{name}", ctx -> staticV0HtmlHttp.main(ctx));
+
+        // CSS
+        svr.get("/static/v0/css", ctx -> staticV0CssHttp.main(ctx, ""));
+        svr.get("/static/v0/css/", ctx -> staticV0CssHttp.main(ctx, ""));
+        svr.get("/static/v0/css/{name}", ctx -> staticV0CssHttp.main(ctx));
+
+        // JS
+        svr.get("/static/v0/js", ctx -> staticV0JsHttp.main(ctx, ""));
+        svr.get("/static/v0/js/", ctx -> staticV0JsHttp.main(ctx, ""));
+        svr.get("/static/v0/js/{name}", ctx -> staticV0JsHttp.main(ctx));
 
         // PDF
         svr.get("/static/v0/pdf", ctx -> staticV0PdfHttp.main(ctx, ""));

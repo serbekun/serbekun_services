@@ -1,0 +1,153 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+    background: #000;
+    min-height: 100%;
+}
+
+body {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+    background: transparent;
+    color: #c8c8c8;
+    min-height: 100vh;
+    padding: 3rem 1rem 4rem;
+    line-height: 1.6;
+}
+
+/* ─── Header ─── */
+.header {
+    max-width: 680px;
+    margin: 0 auto 2.5rem;
+    border-bottom: 1px solid #222;
+    padding-bottom: 1.5rem;
+}
+
+.header-title {
+    font-size: 1.6rem;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+}
+
+.header-sub {
+    font-size: 0.75rem;
+    color: #555;
+    letter-spacing: 0.12em;
+}
+
+/* ─── Prompt line ─── */
+.prompt-line {
+    max-width: 680px;
+    margin: 0 auto 2rem;
+    font-size: 0.8rem;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.prompt-line .cwd { color: #888; }
+
+.prompt-cursor {
+    display: inline-block;
+    width: 7px;
+    height: 13px;
+    background: #777;
+    animation: blink 1.1s step-end infinite;
+    vertical-align: -2px;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ─── Sections ─── */
+.container {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.section { margin-bottom: 2rem; }
+
+.section-label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #444;
+    margin-bottom: 10px;
+    padding-left: 2px;
+}
+
+/* ─── Items ─── */
+.item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 11px 16px;
+    background: #0b0b0b;
+    border: 1px solid #1e1e1e;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    text-decoration: none;
+    color: #c8c8c8;
+    font-family: inherit;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.item:hover {
+    background: #111;
+    border-color: #333;
+    color: #fff;
+}
+
+.item-num {
+    font-size: 0.7rem;
+    color: #444;
+    min-width: 18px;
+}
+
+.item-icon {
+    font-size: 0.9rem;
+    color: #666;
+    width: 16px;
+    text-align: center;
+}
+
+/* Simple inline SVG icons via data-icon attribute for pure HTML */
+.item-icon svg {
+    width: 15px;
+    height: 15px;
+    stroke: #666;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vertical-align: -2px;
+    transition: stroke 0.15s;
+}
+
+.item:hover .item-icon svg { stroke: #999; }
+
+.item-name { flex: 1; letter-spacing: 0.02em; }
+
+.item-arrow {
+    color: #333;
+    font-size: 0.85rem;
+    transition: color 0.15s;
+}
+
+.item:hover .item-arrow { color: #666; }
+
+/* ─── Footer ─── */
+.footer {
+    max-width: 680px;
+    margin: 3rem auto 0;
+    padding-top: 1rem;
+    border-top: 1px solid #1a1a1a;
+    font-size: 0.72rem;
+    color: #333;
+    letter-spacing: 0.1em;
+    text-align: right;
+}

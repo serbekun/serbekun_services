@@ -129,6 +129,41 @@ public class ResourcesService {
         return getTextData(path);
     }
 
+    public String getCss(String name) {
+        if (name == null) name = "";
+        if (name.isEmpty()) {
+            String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_CSS_PATH;
+            List<String> filesList = listResources(path).stream()
+                .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
+                .toList();
+            try {
+                return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        String path = com.serbekun.ss.resources.ResourcesBasePath.resolveCssPath(name);
+        return getTextData(path);
+    }
+
+    public String getJs(String name) {
+        if (name == null) name = "";
+        if (name.isEmpty()) {
+            String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_JS_PATH;
+            List<String> filesList = listResources(path).stream()
+                .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
+                .toList();
+            try {
+                return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        String path = com.serbekun.ss.resources.ResourcesBasePath.resolveJsPath(name);
+        return getTextData(path);
+    }
+
+
     public byte[] getPdf(String name) {
         if (name == null) name = "";
         if (name.isEmpty()) {

@@ -2,6 +2,7 @@ package com.serbekun.ss.http.handles.v0;
 
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
+import io.javalin.http.ContentType;
 
 import com.serbekun.ss.service.resource.ResourcesService;
 
@@ -23,7 +24,7 @@ public class StaticV0ImagesHttp {
         }
 
         if (name.isEmpty()) {
-            ctx.contentType("application/json");
+            ctx.contentType(ContentType.IMAGE_JPEG);
             String files = resourcesService.listImagesAsJson();
 
             if (files == null) {

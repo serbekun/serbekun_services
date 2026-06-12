@@ -8,7 +8,7 @@ import com.serbekun.ss.service.resource.ResourcesService;
 
 public class IndexHttp {
 
-    private static final String HTML_NAME = "index";
+    private static final String HTML_NAME = "index.html";
 
     private final ResourcesService resourcesService;
 

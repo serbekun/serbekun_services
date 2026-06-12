@@ -5,6 +5,9 @@ public final class ResourcesBasePath {
     private ResourcesBasePath() {}
 
     public static final String BASE_HTML_PATH = "html/";
+    public static final String BASE_CSS_PATH = "css/";
+    public static final String BASE_JS_PATH = "js/";
+
     public static final String BASE_IMAGES_PATH = "images/";
     public static final String BASE_JSON_PATH = "json/";
     public static final String BASE_PDF_PATH = "pdf/";
@@ -16,9 +19,17 @@ public final class ResourcesBasePath {
      * @return the full path
      */
     public static String resolveHtmlPath(String name) {
-        return resolve(BASE_HTML_PATH, name) + ".html";
+        return resolve(BASE_HTML_PATH, name);
     }
 
+    public static String resolveCssPath(String filename) {
+        return resolve(BASE_CSS_PATH, filename);
+    }
+
+    public static String resolveJsPath(String filename) {
+        return resolve(BASE_JS_PATH, filename);
+    }
+    
     /**
      * Resolves the full path for an image resource.
      *
@@ -34,8 +45,9 @@ public final class ResourcesBasePath {
     }
 
     public static String resolveJsonPath(String filename) {
-        return resolve(BASE_JSON_PATH, filename) + ".json";
+        return resolve(BASE_JSON_PATH, filename);
     }
+
 
     /**
      * 

@@ -85,14 +85,17 @@ All registered in `http/handles/*Routes` classes:
 ## YouTube functionality
 
 - **Requires**: `yt-dlp` command-line tool installed and in PATH
+- **JavaScript Runtime**: Requires Deno for signature solving on modern YouTube videos
+  - Install: `curl -fsSL https://deno.land/x/install/install.sh | sh`
+  - Default location: `~/.deno/bin/deno`
 - **Cookies**: Uses `repository/www.youtube.com_cookies.txt` for YouTube authentication
 - **Current limitations**:
   - Age-restricted videos require authenticated cookies from a logged-in browser
   - Playlist URLs (with `&list=` parameters) are skipped (`--no-playlist` flag)
-  - Videos with complex signature validation may require JavaScript runtime (deno/node) and yt-dlp-ejs package
   
 ### Implementation notes (2026-06-12)
 - Added 120-second timeout to prevent yt-dlp processes from hanging indefinitely
 - Uses `--no-playlist` flag to ignore playlist parameters in URLs
+- Uses Deno JavaScript runtime for signature solving (`--js-runtimes deno`)
+- Dynamically adds Deno to PATH when starting yt-dlp process
 - Process timeout with `waitFor(timeout, TimeUnit.SECONDS)` and `destroyForcibly()` on timeout
-- yt-dlp can work without explicit JS runtime for many videos, falls back to basic extraction

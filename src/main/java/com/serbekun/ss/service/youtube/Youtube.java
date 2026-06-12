@@ -1,12 +1,14 @@
 package com.serbekun.ss.service.youtube;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import com.serbekun.ss.config.Paths;
 
 public class Youtube {
     
     private static final long PROCESS_TIMEOUT_SECONDS = 120;
+    private static final String DENO_PATH = "/home/sergei/.deno/bin";
     
     /**
      * 
@@ -23,10 +25,16 @@ public class Youtube {
             "yt-dlp",
             "-f", "best",
             "--no-playlist",
+            "--js-runtimes", "deno",
             "--cookies", Paths.YoutubeConfig.getCookiesPath().toString(),
             "-o", "-",
             url
         );
+        
+        // Add deno to PATH for the yt-dlp process
+        Map<String, String> env = pb.environment();
+        String existingPath = env.getOrDefault("PATH", "");
+        env.put("PATH", DENO_PATH + ":" + existingPath);
         
         Process process = pb.start();
         
@@ -72,9 +80,15 @@ public class Youtube {
             "yt-dlp",
             "--dump-json",
             "--no-playlist",
+            "--js-runtimes", "deno",
             "--cookies", Paths.YoutubeConfig.getCookiesPath().toString(),
             url
         );
+        
+        // Add deno to PATH for the yt-dlp process
+        Map<String, String> env = pb.environment();
+        String existingPath = env.getOrDefault("PATH", "");
+        env.put("PATH", DENO_PATH + ":" + existingPath);
         
         Process process = pb.start();
         

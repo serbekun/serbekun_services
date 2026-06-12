@@ -2,12 +2,12 @@ package com.serbekun.ss.service.auth;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.serbekun.ss.service.auth.api.Endpoint;
 import com.serbekun.ss.service.auth.api.EndpointAuthProvider;
 import com.serbekun.ss.service.tokens.EndpointAccessTokensService;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * class that check need the endpoint token in request and check that

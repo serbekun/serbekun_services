@@ -1,9 +1,11 @@
 package com.serbekun.ss.service.auth;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
-import com.serbekun.ss.service.auth.api.*;
+import com.serbekun.ss.service.auth.api.Endpoint;
+import com.serbekun.ss.service.auth.api.EndpointAuthProvider;
+import com.serbekun.ss.service.auth.api.EndpointRegistrar;
 
 /**
  * class for contain Map of <endpoint, requires auth>

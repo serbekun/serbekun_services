@@ -1,16 +1,14 @@
-/** Configuration loaded from repository/config.json with server port settings. */
 package com.serbekun.ss.config;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Config {
 

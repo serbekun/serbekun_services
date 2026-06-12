@@ -1,11 +1,11 @@
 package com.serbekun.ss.http.handles;
 
-import com.serbekun.ss.service.auth.AuthService;
+import io.javalin.http.UnauthorizedResponse;
+import io.javalin.Javalin;
+
 import com.serbekun.ss.service.auth.api.Endpoint;
 import com.serbekun.ss.service.auth.api.EndpointRegistrar;
-
-import io.javalin.Javalin;
-import io.javalin.http.UnauthorizedResponse;
+import com.serbekun.ss.service.auth.AuthService;
 
 /**
  * Authorization and endpoint registrar initializer.

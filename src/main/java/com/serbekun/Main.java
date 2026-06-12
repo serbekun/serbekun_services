@@ -4,9 +4,11 @@ import java.nio.file.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.javalin.Javalin;
 
 import com.serbekun.ss.config.Config;
 import com.serbekun.ss.config.Paths;
+import com.serbekun.ss.domain.models.LinksRepository;
 import com.serbekun.ss.http.handles.InitHandles;
 import com.serbekun.ss.infrastructure.fs.ServerStorageInitializer;
 import com.serbekun.ss.repository.*;
@@ -15,17 +17,11 @@ import com.serbekun.ss.resources.ResourceLoader;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.EndpointRegistry;
 import com.serbekun.ss.service.autosave.*;
-
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.tokens.EndpointAccessTokensService;
 import com.serbekun.ss.service.youtube.YoutubeService;
-import com.serbekun.ss.domain.models.EndpointsAccessTokens;
-import com.serbekun.ss.domain.models.LinksRepository;
-import com.serbekun.ss.domain.models.LinksRepositoryReadInterface;
-import com.serbekun.ss.domain.models.LocalTokens;
 
-import io.javalin.Javalin;
 
 public class Main {
     

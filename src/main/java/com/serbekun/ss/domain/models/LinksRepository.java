@@ -1,7 +1,7 @@
 package com.serbekun.ss.domain.models;
 
-import java.util.UUID;
 import java.util.Map;
+import java.util.UUID;
 
 public class LinksRepository implements LinksRepositoryReadInterface {
 

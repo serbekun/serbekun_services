@@ -1,7 +1,8 @@
 package com.serbekun.ss.http.handles;
 
-import com.serbekun.ss.http.handles.v0.ApiV0CatalogsLinksHttp;
 import io.javalin.Javalin;
+
+import com.serbekun.ss.http.handles.v0.ApiV0CatalogsLinksHttp;
 
 /**
  * Routes for working with link catalog.

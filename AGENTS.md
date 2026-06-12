@@ -14,6 +14,8 @@ gradle test                  # JUnit 5
 gradle compileJava           # compile only
 ```
 
+> **Important**: `gradlew` wrapper is broken (missing `gradle/wrapper/`). Always use system `gradle` from `/opt/gradle/bin/gradle`.
+
 No lint, typecheck, or codegen tasks exist. No CI/CD.
 
 ## Project structure
@@ -62,7 +64,7 @@ The project is a Javalin 6 server with token-based auth, JSON-file persistence, 
 
 ## Tests
 
-Single unit test at `src/test/java/com/serbekun/ss/service/resource/ResourceServiceTest.java` — uses Mockito + AssertJ. No integration tests. Run with `./gradlew test`.
+Single unit test at `src/test/java/com/serbekun/ss/service/resource/ResourceServiceTest.java` — uses Mockito + AssertJ. No integration tests. Run with `gradle test`.
 
 ## API endpoints (v0)
 

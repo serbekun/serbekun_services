@@ -1,5 +1,7 @@
 package com.serbekun.ss.http.handles;
 
+import io.javalin.Javalin;
+
 import com.serbekun.ss.http.handles.v0.ApiV0CatalogsLinksHttp;
 import com.serbekun.ss.http.handles.v0.ApiV0CipherAesHttp;
 import com.serbekun.ss.http.handles.v0.ApiV0YoutubeHttp;
@@ -7,14 +9,11 @@ import com.serbekun.ss.http.handles.v0.StaticV0HtmlHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0ImagesHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0JsonHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0PdfHttp;
-import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.api.EndpointRegistrar;
-
+import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.youtube.YoutubeService;
-
-import io.javalin.Javalin;
 
 /**
  * Main Javalin routes initializer.

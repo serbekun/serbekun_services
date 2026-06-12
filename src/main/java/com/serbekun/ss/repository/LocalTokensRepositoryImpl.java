@@ -1,11 +1,4 @@
-/** Repository for persisting local token data to a JSON file. */
 package com.serbekun.ss.repository;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.serbekun.ss.domain.models.LocalTokens;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +6,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.serbekun.ss.domain.models.LocalTokens;
 
 public class LocalTokensRepositoryImpl implements LocalTokensRepository {
 

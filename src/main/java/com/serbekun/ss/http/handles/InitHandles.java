@@ -1,14 +1,13 @@
 package com.serbekun.ss.http.handles;
 
-import com.serbekun.ss.http.handles.v0.*;
-import com.serbekun.ss.service.auth.AuthService;
-import com.serbekun.ss.service.auth.api.*;
+import io.javalin.Javalin;
 
+import com.serbekun.ss.http.handles.v0.*;
+import com.serbekun.ss.service.auth.api.*;
+import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.youtube.YoutubeService;
-
-import io.javalin.Javalin;
 
 public class InitHandles {
 

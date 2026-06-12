@@ -1,11 +1,11 @@
 package com.serbekun.ss.http.handles;
 
+import io.javalin.Javalin;
+
 import com.serbekun.ss.http.handles.v0.StaticV0HtmlHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0ImagesHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0JsonHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0PdfHttp;
-
-import io.javalin.Javalin;
 
 /**
  * Registration of all static routes.

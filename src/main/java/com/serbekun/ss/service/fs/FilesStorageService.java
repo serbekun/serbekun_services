@@ -1,11 +1,10 @@
 package com.serbekun.ss.service.fs;
 
-import java.util.UUID;
-
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.io.IOException;
+import java.util.UUID;
 
 /**
  * Class that provide lo level IO to uploaded files.

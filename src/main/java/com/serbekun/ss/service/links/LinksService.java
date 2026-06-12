@@ -5,11 +5,12 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.serbekun.ss.domain.models.LinksRepository;
-import com.serbekun.ss.domain.models.Link;
-import com.serbekun.ss.domain.models.LocalTokens;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.serbekun.ss.domain.models.Link;
+import com.serbekun.ss.domain.models.LinksRepository;
+import com.serbekun.ss.domain.models.LocalTokens;
 
 public class LinksService {
 

@@ -1,9 +1,9 @@
 package com.serbekun.ss.http.handles.v0;
 
-import com.serbekun.ss.service.resource.ResourcesService;
-
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
+
+import com.serbekun.ss.service.resource.ResourcesService;
 
 public class StaticV0JsonHttp {
 

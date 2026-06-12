@@ -1,11 +1,10 @@
-/** HTTP handler for the index page (GET /). */
 package com.serbekun.ss.http.handles;
-
-import com.serbekun.ss.resources.ResourcesBasePath;
-import com.serbekun.ss.service.resource.ResourcesService;
 
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
+
+import com.serbekun.ss.resources.ResourcesBasePath;
+import com.serbekun.ss.service.resource.ResourcesService;
 
 public class IndexHttp {
 

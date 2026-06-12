@@ -20,6 +20,10 @@ import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.tokens.EndpointAccessTokensService;
 import com.serbekun.ss.service.youtube.YoutubeService;
+import com.serbekun.ss.domain.models.EndpointsAccessTokens;
+import com.serbekun.ss.domain.models.LinksRepository;
+import com.serbekun.ss.domain.models.LinksRepositoryReadInterface;
+import com.serbekun.ss.domain.models.LocalTokens;
 
 import io.javalin.Javalin;
 
@@ -79,33 +83,28 @@ public class Main {
     private static Repositories initializeRepositories() {
         log.info("Initializing repositories");
 
-        var linksRepo = new LinksRepositoryImpl(Paths.LinksConfig.getLinksStorageFile());
-        var tokensRepo = new EndpointAccessTokensRepositoryImpl(
-            Paths.TokensConfig.getTokensStorageFolder());
-        var linksLocalTokensRepo = new LocalTokensRepositoryImpl(
-            Paths.LinksConfig.getLinksLocalTokensStorageFile(),
-            "ss_links-");
+        // Initialize FileRepos for read data from files
+        LinksFileRepository linksFileRepo = new LinksFileRepository(Paths.LinksConfig.getLinksStorageFile());
 
-        return new Repositories(
-            linksRepo,
-            tokensRepo,
-            linksLocalTokensRepo,
-            linksRepo.getLinks(),
-            tokensRepo.getEndpointAccessTokens(),
-            linksLocalTokensRepo.getTokens()
-        );
+        EndpointAccessTokensRepositoryImpl endpointAccessTokensRepo = new EndpointAccessTokensRepositoryImpl(Paths.TokensConfig.getTokensStorageFolder());
+        LocalTokensRepositoryImpl linksLocalTokensRepo = new LocalTokensRepositoryImpl(Paths.LinksConfig.getLinksLocalTokensStorageFile(),"ss_links-");
+
+        // Load data to repository
+        LinksRepository linksRepository = new LinksRepository(linksFileRepo.load());
+
+        // Give Interface to read repos data
+        linksFileRepo.setLinksRepositoryReadInterface(linksRepository);
+
+        return new Repositories(linksRepository, endpointAccessTokensRepo, linksLocalTokensRepo, linksFileRepo);
     }
 
     private static Services initializeServices(Repositories repos) {
-        log.info("Initializing services");
-
         var endpointRegistry = new EndpointRegistry();
-        var tokensService = new EndpointAccessTokensService(repos.endpointTokens);
-        var linksService = new LinksService(repos.links, repos.linksLocalTokens);
-        var authService = new AuthService(tokensService, endpointRegistry);
+        var endpointAccessTokensService = new EndpointAccessTokensService(repos.endpointTokensRepo.getEndpointAccessTokens());
+            var linksService = new LinksService(repos.linksRepo, repos.linksLocalTokensRepo.getTokens());
+        var authService = new AuthService(endpointAccessTokensService, endpointRegistry);
         var youtubeService = new YoutubeService();
-
-        return new Services(endpointRegistry, tokensService, linksService, authService, youtubeService);
+        return new Services(endpointRegistry, endpointAccessTokensService, linksService, authService, youtubeService);
     }
 
     private static Resources initializeResources() {
@@ -156,7 +155,7 @@ public class Main {
     private static AutosaveService createAndStartAutosave(Repositories repos) {
         log.info("Initializing autosave service");
         var autosave = new AutosaveService();
-        autosave.register(repos.linksRepo);
+        autosave.register(repos.linksFileRepo);
         autosave.register(repos.endpointTokensRepo);
         autosave.register(repos.linksLocalTokensRepo);
         autosave.start();
@@ -189,23 +188,17 @@ public class Main {
         private final LinksRepository linksRepo;
         private final EndpointAccessTokensRepository endpointTokensRepo;
         private final LocalTokensRepository linksLocalTokensRepo;
-        private final com.serbekun.ss.domain.models.Links links;
-        private final com.serbekun.ss.domain.models.EndpointsAccessTokens endpointTokens;
-        private final com.serbekun.ss.domain.models.LocalTokens linksLocalTokens;
+        private final LinksFileRepository linksFileRepo;
 
         private Repositories(
                 LinksRepository linksRepo,
                 EndpointAccessTokensRepository endpointTokensRepo,
                 LocalTokensRepository linksLocalTokensRepo,
-                com.serbekun.ss.domain.models.Links links,
-                com.serbekun.ss.domain.models.EndpointsAccessTokens endpointTokens,
-                com.serbekun.ss.domain.models.LocalTokens linksLocalTokens) {
+                LinksFileRepository linksFileRepo) {
             this.linksRepo = linksRepo;
             this.endpointTokensRepo = endpointTokensRepo;
             this.linksLocalTokensRepo = linksLocalTokensRepo;
-            this.links = links;
-            this.endpointTokens = endpointTokens;
-            this.linksLocalTokens = linksLocalTokens;
+            this.linksFileRepo = linksFileRepo;
         }
     }
 

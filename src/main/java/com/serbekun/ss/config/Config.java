@@ -18,10 +18,13 @@ public class Config {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private final int port;
+    private final int uploadFileMaxSize;
 
     @JsonCreator
-    public Config(@JsonProperty("port") int port) {
+    public Config(@JsonProperty("port") int port,
+    @JsonProperty("upload_file_max_size") int uploadFileMaxSize) {
         this.port = port;
+        this.uploadFileMaxSize = uploadFileMaxSize;
     }
 
     @JsonProperty("port")
@@ -29,12 +32,17 @@ public class Config {
         return port;
     }
 
+    @JsonProperty("upload_file_max_size")
+    public int getUploadFileMaxSize() {
+        return uploadFileMaxSize;
+    }
+
     public static Config load(Path file) {
         File f = file.toFile();
 
         if (!f.exists()) {
             log.info("Config file not found, creating default config at {}", file);
-            Config defaults = new Config(8080);
+            Config defaults = new Config(8080, 20971520); // 20MB
             save(defaults, f);
             return defaults;
         }
@@ -44,7 +52,7 @@ public class Config {
         } catch (IOException e) {
             log.error("Error reading config file: {}", e.getMessage());
             log.info("Falling back to default config");
-            return new Config(8080);
+            return new Config(8080, 20971520);  // 20MB
         }
     }
 

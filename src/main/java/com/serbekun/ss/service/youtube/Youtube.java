@@ -9,6 +9,13 @@ public class Youtube {
     
     private static final long PROCESS_TIMEOUT_SECONDS = 120;
     private static final String DENO_PATH = "/home/sergei/.deno/bin";
+    private static final String LOCAL_BIN_PATH = "/home/sergei/.local/bin";
+    
+    private static void setupEnvironment(ProcessBuilder pb) {
+        Map<String, String> env = pb.environment();
+        String existingPath = env.getOrDefault("PATH", "");
+        env.put("PATH", DENO_PATH + ":" + LOCAL_BIN_PATH + ":" + existingPath);
+    }
     
     /**
      * 
@@ -31,10 +38,8 @@ public class Youtube {
             url
         );
         
-        // Add deno to PATH for the yt-dlp process
-        Map<String, String> env = pb.environment();
-        String existingPath = env.getOrDefault("PATH", "");
-        env.put("PATH", DENO_PATH + ":" + existingPath);
+        // Add required paths for yt-dlp process
+        setupEnvironment(pb);
         
         Process process = pb.start();
         
@@ -85,10 +90,8 @@ public class Youtube {
             url
         );
         
-        // Add deno to PATH for the yt-dlp process
-        Map<String, String> env = pb.environment();
-        String existingPath = env.getOrDefault("PATH", "");
-        env.put("PATH", DENO_PATH + ":" + existingPath);
+        // Add required paths for yt-dlp process
+        setupEnvironment(pb);
         
         Process process = pb.start();
         

@@ -5,7 +5,7 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.serbekun.ss.domain.models.Links;
+import com.serbekun.ss.domain.models.LinksRepository;
 import com.serbekun.ss.domain.models.Link;
 import com.serbekun.ss.domain.models.LocalTokens;
 import org.slf4j.Logger;
@@ -14,17 +14,17 @@ import org.slf4j.LoggerFactory;
 public class LinksService {
 
     private static final ObjectMapper mapper = new ObjectMapper();
-    private final Links links;
+    private final LinksRepository links;
     private final LocalTokens linkTokens;
 
     private static final Logger log = 
         LoggerFactory.getLogger(LinksService.class);
 
-    public LinksService(Links links) {
+    public LinksService(LinksRepository links) {
         this(links, null);
     }
 
-    public LinksService(Links links, LocalTokens linkTokens) {
+    public LinksService(LinksRepository links, LocalTokens linkTokens) {
         this.links = links;
         this.linkTokens = linkTokens;
     }
@@ -59,7 +59,7 @@ public class LinksService {
     }
 
     /**
-     * return all {@link Links#links}
+     * return all {@link LinksRepository#links}
      *
      * @return immutable copy of links map
      */
@@ -69,7 +69,7 @@ public class LinksService {
 
     /**
      * 
-     * return json string of {@link Links#links}
+     * return json string of {@link LinksRepository#links}
      * 
      * @return json format String
      */
@@ -96,7 +96,7 @@ public class LinksService {
 
     /**
      * 
-     * remove link from {@link Links#links}
+     * remove link from {@link LinksRepository#links}
      * 
      * @param uuid UUID of link
      */

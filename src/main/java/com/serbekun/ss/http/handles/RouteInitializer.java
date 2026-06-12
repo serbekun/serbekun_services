@@ -6,6 +6,7 @@ import com.serbekun.ss.http.handles.v0.ApiV0YoutubeHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0HtmlHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0ImagesHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0JsonHttp;
+import com.serbekun.ss.http.handles.v0.StaticV0PdfHttp;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.api.EndpointRegistrar;
 
@@ -47,15 +48,25 @@ public class RouteInitializer {
 
         // Create handlers
         IndexHttp index = new IndexHttp(resourcesService);
+
+        // Static resources routes
         StaticV0ImagesHttp staticV0ImagesHttp = new StaticV0ImagesHttp(staticResourcesService);
         StaticV0JsonHttp staticV0JsonHttp = new StaticV0JsonHttp(staticResourcesService);
         StaticV0HtmlHttp staticV0HtmlHttp = new StaticV0HtmlHttp(staticResourcesService);
+        StaticV0PdfHttp staticV0PdfHttp = new StaticV0PdfHttp(staticResourcesService);
+
+        // API routes
         ApiV0CipherAesHttp apiV0CipherAesHttp = new ApiV0CipherAesHttp(cipherService);
         ApiV0CatalogsLinksHttp apiV0CatalogsLinksHttp = new ApiV0CatalogsLinksHttp(linksService);
         ApiV0YoutubeHttp apiV0YoutubeHttp = new ApiV0YoutubeHttp(youtubeService);
 
         // Register routes
-        StaticRoutes staticRoutes = new StaticRoutes(index, staticV0ImagesHttp, staticV0JsonHttp, staticV0HtmlHttp);
+        StaticRoutes staticRoutes = new StaticRoutes(index,
+            staticV0ImagesHttp,
+            staticV0JsonHttp,
+            staticV0HtmlHttp,
+            staticV0PdfHttp);
+            
         staticRoutes.register(svr);
 
         ApiV0Routes apiV0Routes = new ApiV0Routes(

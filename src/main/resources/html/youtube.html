@@ -325,6 +325,8 @@
     <script>
         let debounceTimer = null;
         let currentUrl = '';
+        let currentTitle = '';       // store the video title
+        let currentExt = 'mp4';      // default extension, may be overridden by API
 
         const urlInput = document.getElementById('urlInput');
         const videoInfo = document.getElementById('videoInfo');
@@ -401,6 +403,11 @@
             videoInfo.classList.remove('error');
             videoInfo.style.display = 'block';
 
+            // Store title and extension for later download
+            currentTitle = data.title || 'video';
+            // If your API returns the file extension (e.g., data.ext), use it; otherwise default to 'mp4'
+            currentExt = data.ext || 'mp4';
+
             videoTitle.textContent = data.title || 'Unknown Title';
 
             const metaParts = [];
@@ -442,11 +449,19 @@
                 return;
             }
 
+            // Sanitize the title for a safe filename
+            const safeTitle = currentTitle
+                .replace(/[\\/:\*\?"<>\|]/g, '_')   // replace forbidden characters with underscore
+                .replace(/\s+/g, ' ')               // collapse multiple spaces
+                .trim()
+                .substring(0, 200);                 // limit length
+
+            const filename = safeTitle + '.' + currentExt;
             const downloadUrl = '/api/v0/youtube/download?url=' + encodeURIComponent(currentUrl);
 
             const a = document.createElement('a');
             a.href = downloadUrl;
-            a.download = '';
+            a.download = filename;                  // this sets the suggested filename
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

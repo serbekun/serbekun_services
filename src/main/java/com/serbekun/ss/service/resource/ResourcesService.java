@@ -129,6 +129,27 @@ public class ResourcesService {
         return getTextData(path);
     }
 
+    public byte[] getPdf(String name) {
+        if (name == null) name = "";
+        if (name.isEmpty()) {
+            return null;
+        }
+        String path = com.serbekun.ss.resources.ResourcesBasePath.resolvePdfPath(name);
+        return getBinaryData(path);
+    }
+
+    public String listPdfsAsJson() {
+        String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_PDF_PATH;
+        List<String> filesList = listResources(path).stream()
+            .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
+            .toList();
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public String listImagesAsJson() {
         String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_IMAGES_PATH;
         List<String> filesList = listResources(path).stream()

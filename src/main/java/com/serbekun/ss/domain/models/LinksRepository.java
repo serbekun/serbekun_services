@@ -3,16 +3,16 @@ package com.serbekun.ss.domain.models;
 import java.util.UUID;
 import java.util.Map;
 
-public class Links {
+public class LinksRepository implements LinksRepositoryReadInterface {
 
     private final Map<UUID, Link> linksByUuid;
+    public int v;
 
-    public Links(Map<UUID, Link> linksByUID) {
+    public LinksRepository(Map<UUID, Link> linksByUID) {
         this.linksByUuid = linksByUID;
     }
 
     /**
-     * 
      * @param uuid Link UUID
      * @return true link exist false uuid don't exist
      */
@@ -44,12 +44,17 @@ public class Links {
     }
 
     /**
-     * return all {@link Links#links}
+     * Return all {@link LinksRepository#links}
      *
-     * @return immutable copy of links map
+     * @return Immutable copy of links map.
      */
     public synchronized Map<UUID, Link> getAllLinks() {
         return Map.copyOf(linksByUuid);
+    }
+
+    @Override
+    public synchronized Map<UUID, Link> getLinksData() {
+        return getAllLinks();
     }
 
     /**
@@ -66,7 +71,7 @@ public class Links {
 
     /**
      * 
-     * remove link from {@link Links#links}
+     * remove link from {@link LinksRepository#links}
      * 
      * @param uuid UUID of link
      */

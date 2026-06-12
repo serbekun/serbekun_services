@@ -56,7 +56,7 @@ public class ApiV0CatalogsLinksHttp {
         ctx.contentType("application/json");
 
         V0LinksPostRequest body = parseBody(ctx, V0LinksPostRequest.class);
-        if (body == null || isBlank(body.url()) || isBlank(body.name()) || isBlank(body.description())) {
+        if (body == null || isBlank(body.url())) {
             writeInvalidRequest(ctx);
             return;
         }
@@ -76,7 +76,7 @@ public class ApiV0CatalogsLinksHttp {
         }
 
         if (body == null || isBlank(uuid) || isBlank(body.token())
-            || isBlank(body.url()) || isBlank(body.name()) || isBlank(body.description())) {
+            || isBlank(body.url())) {
             writeInvalidRequest(ctx);
             return;
         }
@@ -151,6 +151,6 @@ public class ApiV0CatalogsLinksHttp {
 
     private void writeInvalidRequest(Context ctx) {
         ctx.status(HttpStatus.BAD_REQUEST);
-        ctx.result("{\"error\":\"INVALID_REQUEST\",\"message\":\"required fields are missing\"}");
+        ctx.result("{\"error\":\"INVALID_REQUEST\",\"message\":\"required field \"url\" are missing\"}");
     }
 }

@@ -12,3 +12,6 @@ gradle
 # Ignore Files that creating when test is running
 
 test_tmp/
+
+# Ignore repository data folder
+repository/

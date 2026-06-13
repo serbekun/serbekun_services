@@ -8,7 +8,7 @@ import io.javalin.Javalin;
 
 import com.serbekun.ss.config.Config;
 import com.serbekun.ss.config.Paths;
-import com.serbekun.ss.domain.models.LinksRepository;
+import com.serbekun.ss.domain.models.*;
 import com.serbekun.ss.http.handles.InitHandles;
 import com.serbekun.ss.infrastructure.fs.ServerStorageInitializer;
 import com.serbekun.ss.repository.*;
@@ -19,7 +19,7 @@ import com.serbekun.ss.service.auth.EndpointRegistry;
 import com.serbekun.ss.service.autosave.*;
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
-import com.serbekun.ss.service.tokens.EndpointAccessTokensService;
+import com.serbekun.ss.service.tokens.EndpointsAccessTokensService;
 import com.serbekun.ss.service.youtube.YoutubeService;
 
 
@@ -79,25 +79,42 @@ public class Main {
     private static Repositories initializeRepositories() {
         log.info("Initializing repositories");
 
-        // Initialize FileRepos for read data from files
-        LinksFileRepository linksFileRepo = new LinksFileRepository(Paths.LinksConfig.getLinksStorageFile());
+        // 1. Links
+        LinksFileRepo linksFileRepo = new LinksFileRepo(Paths.LinksConfig.getLinksStorageFile());
+        LinksRepo linksRepo = new LinksRepo(linksFileRepo.load());
+        linksFileRepo.setLinksRepositoryReadInterface(linksRepo);
 
-        EndpointAccessTokensRepositoryImpl endpointAccessTokensRepo = new EndpointAccessTokensRepositoryImpl(Paths.TokensConfig.getTokensStorageFolder());
-        LocalTokensRepositoryImpl linksLocalTokensRepo = new LocalTokensRepositoryImpl(Paths.LinksConfig.getLinksLocalTokensStorageFile(),"ss_links-");
+        // 2. Endpoint Access Tokens
+        EndpointsAccessTokensFileRepo endpointsAccessTokensFileRepo = new EndpointsAccessTokensFileRepo(Paths.TokensConfig.getTokensStorageFolder());
+        EndpointsAccessTokensRepo endpointsAccessTokensRepo = new EndpointsAccessTokensRepo(endpointsAccessTokensFileRepo.load());
+        endpointsAccessTokensFileRepo.setEndpointsAccessTokensFileRepository(endpointsAccessTokensRepo);
 
-        // Load data to repository
-        LinksRepository linksRepository = new LinksRepository(linksFileRepo.load());
+        // 3. Local Tokens (for links)
+        LocalTokensFileRepo linksLocalTokensFileRepo = new LocalTokensFileRepo(Paths.LinksConfig.getLinksLocalTokensStorageFile(), "ss_links-");
+        LocalTokens linkLocalTokens = new LocalTokens(linksLocalTokensFileRepo.load(), "ss_links-");
+        linksLocalTokensFileRepo.setLocalTokensReadInterface(linkLocalTokens);
 
-        // Give Interface to read repos data
-        linksFileRepo.setLinksRepositoryReadInterface(linksRepository);
+        // 4. Uploaded Files
+        UploadedFilesFileRepo uploadedFilesFileRepo = new UploadedFilesFileRepo(Paths.UploadedFilesConfig.getUploadedFilesStorageFile());
+        UploadedFilesRepo uploadedFilesRepo = new UploadedFilesRepo(uploadedFilesFileRepo.load());
+        uploadedFilesFileRepo.setUploadedFilesReadInterface(uploadedFilesRepo);
 
-        return new Repositories(linksRepository, endpointAccessTokensRepo, linksLocalTokensRepo, linksFileRepo);
+        return new Repositories(
+            linksRepo,
+            endpointsAccessTokensRepo,
+            endpointsAccessTokensFileRepo,
+            linkLocalTokens,
+            linksLocalTokensFileRepo,
+            linksFileRepo,
+            uploadedFilesRepo,
+            uploadedFilesFileRepo
+        );
     }
 
     private static Services initializeServices(Repositories repos) {
         var endpointRegistry = new EndpointRegistry();
-        var endpointAccessTokensService = new EndpointAccessTokensService(repos.endpointTokensRepo.getEndpointAccessTokens());
-            var linksService = new LinksService(repos.linksRepo, repos.linksLocalTokensRepo.getTokens());
+        var endpointAccessTokensService = new EndpointsAccessTokensService(repos.endpointsAccessTokensRepo);
+        var linksService = new LinksService(repos.linksRepo, repos.linkLocalTokens);
         var authService = new AuthService(endpointAccessTokensService, endpointRegistry);
         var youtubeService = new YoutubeService();
         return new Services(endpointRegistry, endpointAccessTokensService, linksService, authService, youtubeService);
@@ -152,8 +169,9 @@ public class Main {
         log.info("Initializing autosave service");
         var autosave = new AutosaveService();
         autosave.register(repos.linksFileRepo);
-        autosave.register(repos.endpointTokensRepo);
-        autosave.register(repos.linksLocalTokensRepo);
+        autosave.register(repos.endpointsAccessTokensFileRepo);
+        autosave.register(repos.linksLocalTokensFileRepo);
+        autosave.register(repos.uploadedFilesFileRepo);
         autosave.start();
         return autosave;
     }
@@ -181,33 +199,45 @@ public class Main {
     }
 
     private static final class Repositories {
-        private final LinksRepository linksRepo;
-        private final EndpointAccessTokensRepository endpointTokensRepo;
-        private final LocalTokensRepository linksLocalTokensRepo;
-        private final LinksFileRepository linksFileRepo;
+        private final LinksRepo linksRepo;
+        private final EndpointsAccessTokensRepo endpointsAccessTokensRepo;
+        private final EndpointsAccessTokensFileRepo endpointsAccessTokensFileRepo;
+        private final LocalTokens linkLocalTokens;
+        private final LocalTokensFileRepo linksLocalTokensFileRepo;
+        private final LinksFileRepo linksFileRepo;
+        private final UploadedFilesRepo uploadedFilesRepo;
+        private final UploadedFilesFileRepo uploadedFilesFileRepo;
 
         private Repositories(
-                LinksRepository linksRepo,
-                EndpointAccessTokensRepository endpointTokensRepo,
-                LocalTokensRepository linksLocalTokensRepo,
-                LinksFileRepository linksFileRepo) {
+                LinksRepo linksRepo,
+                EndpointsAccessTokensRepo endpointsAccessTokensRepo,
+                EndpointsAccessTokensFileRepo endpointsAccessTokensFileRepo,
+                LocalTokens linkLocalTokens,
+                LocalTokensFileRepo linksLocalTokensFileRepo,
+                LinksFileRepo linksFileRepo,
+                UploadedFilesRepo uploadedFilesRepo,
+                UploadedFilesFileRepo uploadedFilesFileRepo) {
             this.linksRepo = linksRepo;
-            this.endpointTokensRepo = endpointTokensRepo;
-            this.linksLocalTokensRepo = linksLocalTokensRepo;
+            this.endpointsAccessTokensRepo = endpointsAccessTokensRepo;
+            this.endpointsAccessTokensFileRepo = endpointsAccessTokensFileRepo;
+            this.linkLocalTokens = linkLocalTokens;
+            this.linksLocalTokensFileRepo = linksLocalTokensFileRepo;
             this.linksFileRepo = linksFileRepo;
+            this.uploadedFilesRepo = uploadedFilesRepo;
+            this.uploadedFilesFileRepo = uploadedFilesFileRepo;
         }
     }
 
     private static final class Services {
         private final EndpointRegistry endpointRegistry;
-        private final EndpointAccessTokensService tokensService;
+        private final EndpointsAccessTokensService tokensService;
         private final LinksService linksService;
         private final AuthService authService;
         private final YoutubeService youtubeService;
 
         private Services(
                 EndpointRegistry endpointRegistry,
-                EndpointAccessTokensService tokensService,
+                EndpointsAccessTokensService tokensService,
                 LinksService linksService,
                 AuthService authService,
                 YoutubeService youtubeService) {

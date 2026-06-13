@@ -3,14 +3,14 @@ package com.serbekun.ss.service.tokens;
 import java.util.List;
 import java.util.Map;
 
-import com.serbekun.ss.domain.models.EndpointsAccessTokens;
+import com.serbekun.ss.domain.models.EndpointsAccessTokensRepo;
 import com.serbekun.ss.service.auth.api.Endpoint;
 
-public class EndpointAccessTokensService {
+public class EndpointsAccessTokensService {
     
-    private final EndpointsAccessTokens tokens;
+    private final EndpointsAccessTokensRepo tokens;
 
-    public EndpointAccessTokensService(EndpointsAccessTokens tokens) {
+    public EndpointsAccessTokensService(EndpointsAccessTokensRepo tokens) {
         this.tokens = tokens;
     }
 
@@ -45,7 +45,7 @@ public class EndpointAccessTokensService {
      * @return immutable copy of tokens map
      */
     public synchronized Map<String, List<Endpoint>> getAllTokens() {
-        return tokens.getAllTokens();
+        return tokens.getEndpointsTokensData();
     }
 
     /**

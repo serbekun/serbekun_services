@@ -11,8 +11,9 @@ import java.util.LinkedHashMap;
 // jackson imports
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.serbekun.ss.domain.models.EndpointsAccessTokens;
+import com.serbekun.ss.domain.models.EndpointsAccessTokensReadInterface;
 import com.serbekun.ss.service.auth.api.Endpoint;
+import com.serbekun.ss.service.autosave.interfaces.AutoSavable;
 
 // slf4j logger imports
 import org.slf4j.Logger;
@@ -21,25 +22,21 @@ import org.slf4j.LoggerFactory;
 /**
  * class for manage EndpointsAccessTokens repository
  */
-public class EndpointAccessTokensRepositoryImpl implements EndpointAccessTokensRepository {
+public class EndpointsAccessTokensFileRepo implements AutoSavable {
 
     private final ObjectMapper mapper = new ObjectMapper();
-
-    private final EndpointsAccessTokens endpointsAccessTokens;
-
     private final Path file;
-
     private static final Logger log = 
-        LoggerFactory.getLogger(EndpointAccessTokensRepositoryImpl.class);
+        LoggerFactory.getLogger(EndpointsAccessTokensFileRepo.class);
 
-    public EndpointAccessTokensRepositoryImpl(Path file) {
+    private EndpointsAccessTokensReadInterface endpointsAccessTokensReadInterface;
+
+    public EndpointsAccessTokensFileRepo(Path file) {
         this.file = file;
-        this.endpointsAccessTokens = new EndpointsAccessTokens(load());
     }
 
-    @Override
-    public EndpointsAccessTokens getEndpointAccessTokens() {
-        return endpointsAccessTokens;
+    public void setEndpointsAccessTokensFileRepository(EndpointsAccessTokensReadInterface endpointsAccessTokensReadInterface) {
+        this.endpointsAccessTokensReadInterface = endpointsAccessTokensReadInterface;
     }
 
     /**
@@ -88,7 +85,7 @@ public class EndpointAccessTokensRepositoryImpl implements EndpointAccessTokensR
 
         try {
             mapper.writerWithDefaultPrettyPrinter()
-                  .writeValue(f, endpointsAccessTokens.getAllTokens());
+                  .writeValue(f, endpointsAccessTokensReadInterface.getEndpointsTokensData());
         
         } catch (IOException e) {
             log.error("Error save EndpointsAccessTokens: {}", e);

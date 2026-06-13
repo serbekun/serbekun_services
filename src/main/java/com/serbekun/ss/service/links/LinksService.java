@@ -9,23 +9,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.serbekun.ss.domain.models.Link;
-import com.serbekun.ss.domain.models.LinksRepository;
+import com.serbekun.ss.domain.models.LinksRepo;
 import com.serbekun.ss.domain.models.LocalTokens;
 
 public class LinksService {
 
     private static final ObjectMapper mapper = new ObjectMapper();
-    private final LinksRepository links;
+    private final LinksRepo links;
     private final LocalTokens linkTokens;
 
     private static final Logger log = 
         LoggerFactory.getLogger(LinksService.class);
 
-    public LinksService(LinksRepository links) {
+    public LinksService(LinksRepo links) {
         this(links, null);
     }
 
-    public LinksService(LinksRepository links, LocalTokens linkTokens) {
+    public LinksService(LinksRepo links, LocalTokens linkTokens) {
         this.links = links;
         this.linkTokens = linkTokens;
     }
@@ -60,7 +60,7 @@ public class LinksService {
     }
 
     /**
-     * return all {@link LinksRepository#links}
+     * return all {@link LinksRepo#links}
      *
      * @return immutable copy of links map
      */
@@ -70,7 +70,7 @@ public class LinksService {
 
     /**
      * 
-     * return json string of {@link LinksRepository#links}
+     * return json string of {@link LinksRepo#links}
      * 
      * @return json format String
      */
@@ -97,7 +97,7 @@ public class LinksService {
 
     /**
      * 
-     * remove link from {@link LinksRepository#links}
+     * remove link from {@link LinksRepo#links}
      * 
      * @param uuid UUID of link
      */

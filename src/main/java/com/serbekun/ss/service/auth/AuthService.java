@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.serbekun.ss.service.auth.api.Endpoint;
 import com.serbekun.ss.service.auth.api.EndpointAuthProvider;
-import com.serbekun.ss.service.tokens.EndpointAccessTokensService;
+import com.serbekun.ss.service.tokens.EndpointsAccessTokensService;
 
 /**
  * class that check need the endpoint token in request and check that
@@ -16,14 +16,11 @@ public class AuthService {
     
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
-    private EndpointAccessTokensService tokensService;
+    private EndpointsAccessTokensService tokensService;
     private EndpointAuthProvider endpointAuthProvider;
 
-    // public AuthService(EndpointAccessTokensService tokensService) {
-    //     this(tokensService, endpoint -> true);
-    // }
-
-    public AuthService(EndpointAccessTokensService tokensService, EndpointAuthProvider endpointAuthProvider) {
+    
+    public AuthService(EndpointsAccessTokensService tokensService, EndpointAuthProvider endpointAuthProvider) {
         this.tokensService = tokensService;
         this.endpointAuthProvider = endpointAuthProvider;
     }

@@ -3,12 +3,12 @@ package com.serbekun.ss.domain.models;
 import java.util.Map;
 import java.util.UUID;
 
-public class LinksRepository implements LinksRepositoryReadInterface {
+public class LinksRepo implements LinksRepositoryReadInterface {
 
     private final Map<UUID, Link> linksByUuid;
     public int v;
 
-    public LinksRepository(Map<UUID, Link> linksByUID) {
+    public LinksRepo(Map<UUID, Link> linksByUID) {
         this.linksByUuid = linksByUID;
     }
 
@@ -44,7 +44,7 @@ public class LinksRepository implements LinksRepositoryReadInterface {
     }
 
     /**
-     * Return all {@link LinksRepository#links}
+     * Return all {@link LinksRepo#links}
      *
      * @return Immutable copy of links map.
      */
@@ -71,7 +71,7 @@ public class LinksRepository implements LinksRepositoryReadInterface {
 
     /**
      * 
-     * remove link from {@link LinksRepository#links}
+     * remove link from {@link LinksRepo#links}
      * 
      * @param uuid UUID of link
      */

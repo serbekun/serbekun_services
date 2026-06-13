@@ -18,17 +18,17 @@ import com.serbekun.ss.domain.models.Link;
 import com.serbekun.ss.domain.models.LinksRepositoryReadInterface;
 import com.serbekun.ss.service.autosave.interfaces.AutoSavable;
 
-public class LinksFileRepository implements AutoSavable {
+public class LinksFileRepo implements AutoSavable {
 
     private final Path file;
     private final ObjectMapper mapper = new ObjectMapper();
     private LinksRepositoryReadInterface linksRepositoryReadInterface;
 
     private static final Logger log = 
-        LoggerFactory.getLogger(LinksFileRepository.class);
+        LoggerFactory.getLogger(LinksFileRepo.class);
 
 
-    public LinksFileRepository(Path file) {
+    public LinksFileRepo(Path file) {
         this.file = file;
     }
 
@@ -68,6 +68,12 @@ public class LinksFileRepository implements AutoSavable {
 
     @Override
     public void save() {
+        if (linksRepositoryReadInterface == null) {
+            log.error("linksRepositoryReadInterface object is null cannot save data");
+            log.error("Setup linksRepositoryReadInterface use setLinksRepositoryReadInterface()");
+            log.error("For setup linksRepositoryReadInterface");
+        }
+
         try {
             Path parent = file.getParent();
             if (parent != null && !Files.exists(parent)) {

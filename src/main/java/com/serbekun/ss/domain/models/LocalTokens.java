@@ -9,7 +9,7 @@ import java.util.UUID;
  * Token manager that binds a token to a resource identifier.
  * Each service/module should have its own instance of this class.
  */
-public class LocalTokens {
+public class LocalTokens implements LocalTokensReadInterface {
 
     private final Map<String, String> tokens;
     private final Supplier<String> tokenSupplier;
@@ -118,7 +118,7 @@ public class LocalTokens {
      * Returns a **copy** of all tokens (for logging, admin panel, debugging, etc.)
      * Important: returns a copy, not the original map
      */
-    public Map<String, String> getAllTokensSnapshot() {
+    public Map<String, String> getTokensData() {
         return new ConcurrentHashMap<>(tokens);
     }
 

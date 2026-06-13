@@ -6,11 +6,11 @@ import java.util.UUID;
 /**
  * 
  */
-public class UploadedFiles {
+public class UploadedFilesRepo implements UploadedFilesReadInterface {
     
     private final Map<UUID, UploadedFile> uploadedFiles;
 
-    public UploadedFiles(Map<UUID, UploadedFile> uploadedFiles) {
+    public UploadedFilesRepo(Map<UUID, UploadedFile> uploadedFiles) {
         this.uploadedFiles = uploadedFiles;
     }
 
@@ -41,7 +41,8 @@ public class UploadedFiles {
         return uploadedFiles.remove(uuid);
     }
 
-    public synchronized Map<UUID, UploadedFile> getAllUploadedFiles() {
+    @Override
+    public synchronized Map<UUID, UploadedFile> getUploadedFilesData() {
         return Map.copyOf(uploadedFiles);
     }
 }

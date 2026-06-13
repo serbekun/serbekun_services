@@ -23,7 +23,7 @@ public class Paths {
     }
 
     /**
-     * class that contain configuration for {@link com.serbekun.ss.domain.models.LinksRepository}
+     * class that contain configuration for {@link com.serbekun.ss.domain.models.LinksRepo}
      */
     public static class LinksConfig {
         private static final Path linksStorageFile = Path.of("repository/catalogs/links.json");
@@ -34,7 +34,7 @@ public class Paths {
     }
 
     /**
-     * class that contain configuration for {@link com.serbekun.ss.domain.models.EndpointsAccessTokens}
+     * class that contain configuration for {@link com.serbekun.ss.domain.models.EndpointsAccessTokensRepo}
      */
     public static class TokensConfig {
         private static final Path tokensStorageFolder = Path.of("repository/endpoint_access_tokens.json");
@@ -45,8 +45,10 @@ public class Paths {
 
     public static class UploadedFilesConfig {
         private static final Path UploadedFilesRAWFolder = Path.of("repository/uploaded_files_raw/");
+        private static final Path UploadedFilesStorageFile = Path.of("repository/uploaded_files/uploaded_files.json");
 
         public static Path getUploadedFilesRAWFolder() { return UploadedFilesRAWFolder; }
+        public static Path getUploadedFilesStorageFile() { return UploadedFilesStorageFile; }
     }
 
     public static class YoutubeConfig {

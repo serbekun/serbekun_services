@@ -8,11 +8,11 @@ import com.serbekun.ss.service.auth.api.Endpoint;
 /**
  * Holds endpoint-level access tokens and their allowed endpoints.
  */
-public class EndpointsAccessTokens {
+public class EndpointsAccessTokensRepo implements EndpointsAccessTokensReadInterface {
 
     private final Map<String, List<Endpoint>> tokens;
 
-    public EndpointsAccessTokens(Map<String, List<Endpoint>> tokens) {
+    public EndpointsAccessTokensRepo(Map<String, List<Endpoint>> tokens) {
         this.tokens = tokens;
     }
 
@@ -46,7 +46,7 @@ public class EndpointsAccessTokens {
      *
      * @return immutable copy of tokens map
      */
-    public synchronized Map<String, List<Endpoint>> getAllTokens() {
+    public synchronized Map<String, List<Endpoint>> getEndpointsTokensData() {
         return Map.copyOf(tokens);
     }
 

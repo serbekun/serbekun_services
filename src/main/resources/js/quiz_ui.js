@@ -28,7 +28,7 @@ async function loadQuestions() {
 
     try {
         // Attempt to fetch questions from server API
-        const response = await fetch('/static/v0/json/sports_quiz.js', {
+        const response = await fetch('/static/v0/json/sports_quiz.json', {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
         });

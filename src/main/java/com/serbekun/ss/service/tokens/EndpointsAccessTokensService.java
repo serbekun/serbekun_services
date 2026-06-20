@@ -3,7 +3,7 @@ package com.serbekun.ss.service.tokens;
 import java.util.List;
 import java.util.Map;
 
-import com.serbekun.ss.domain.models.EndpointsAccessTokensRepo;
+import com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensRepo;
 import com.serbekun.ss.service.auth.api.Endpoint;
 
 public class EndpointsAccessTokensService {

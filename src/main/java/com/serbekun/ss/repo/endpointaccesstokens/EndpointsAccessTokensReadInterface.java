@@ -1,4 +1,4 @@
-package com.serbekun.ss.domain.models;
+package com.serbekun.ss.repo.endpointaccesstokens;
 
 import java.util.List;
 import java.util.Map;
@@ -6,7 +6,7 @@ import java.util.Map;
 import com.serbekun.ss.service.auth.api.Endpoint;
 
 /**
- * Interface for provide to {@link com.serbekun.ss.repository.LinksFileRepo}
+ * Interface for provide to {@link com.com.serbekun.ss.repo.links.LinksFileRepo}
  * File Repository class only read access
  */
 public interface EndpointsAccessTokensReadInterface {

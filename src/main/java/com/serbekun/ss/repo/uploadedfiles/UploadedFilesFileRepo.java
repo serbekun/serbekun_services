@@ -1,4 +1,4 @@
-package com.serbekun.ss.repository;
+package com.serbekun.ss.repo.uploadedfiles;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.serbekun.ss.domain.models.UploadedFile;
-import com.serbekun.ss.domain.models.UploadedFilesReadInterface;
 import com.serbekun.ss.service.autosave.interfaces.AutoSavable;
 
 public class UploadedFilesFileRepo implements AutoSavable {

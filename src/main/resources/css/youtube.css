@@ -24,7 +24,7 @@ body {
     transition: color 0.15s;
 }
 .back-link:hover { color: #aaa; }
-.back-link::before { content: '←'; }
+.back-link::before { content: '<'; }
 
 /* ── Layout ── */
 .container { max-width: 680px; margin: 0 auto; }
@@ -188,7 +188,7 @@ input[type="url"]::placeholder { color: #3a3a3a; }
     gap: 8px;
     transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
-.run-btn::before { content: '↓'; font-size: 0.9rem; color: #555; }
+.run-btn::before { content: '>'; font-size: 0.9rem; color: #555; }
 .run-btn:hover:not(:disabled) { color: #fff; border-color: #555; background: #111; }
 .run-btn:active:not(:disabled) { background: #1a1a1a; }
 .run-btn:disabled { opacity: 0.35; cursor: not-allowed; }

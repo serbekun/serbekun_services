@@ -9,14 +9,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.serbekun.ss.domain.models.Link;
-import com.serbekun.ss.domain.models.LinksRepo;
-import com.serbekun.ss.domain.models.LocalTokens;
+import com.serbekun.ss.repo.links.LinksRepo;
+import com.serbekun.ss.repo.localtokens.LocalTokensRepo;
 
 public class LinksService {
 
     private static final ObjectMapper mapper = new ObjectMapper();
     private final LinksRepo links;
-    private final LocalTokens linkTokens;
+    private final LocalTokensRepo linkTokens;
 
     private static final Logger log = 
         LoggerFactory.getLogger(LinksService.class);
@@ -25,7 +25,7 @@ public class LinksService {
         this(links, null);
     }
 
-    public LinksService(LinksRepo links, LocalTokens linkTokens) {
+    public LinksService(LinksRepo links, LocalTokensRepo linkTokens) {
         this.links = links;
         this.linkTokens = linkTokens;
     }

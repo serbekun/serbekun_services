@@ -24,7 +24,7 @@ body {
     transition: color 0.15s;
 }
 .back-link:hover { color: #aaa; }
-.back-link::before { content: '←'; }
+.back-link::before { content: '<'; }
 
 /* ── Layout ── */
 .container {

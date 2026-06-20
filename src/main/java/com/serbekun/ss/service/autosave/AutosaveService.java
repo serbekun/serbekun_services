@@ -35,7 +35,7 @@ import com.serbekun.ss.service.autosave.interfaces.AutoSavable;
 public class AutosaveService {
 
     /**
-     * List of repository {@link com.serbekun.ss.repository} that implement {@link com.serbekun.ss.service.autosave.interfaces.AutoSavable}
+     * List of repository {@link com.serbekun.ss.repo} that implement {@link com.serbekun.ss.service.autosave.interfaces.AutoSavable}
      * and will be automatically saved by this thread
      */
     private final List<AutoSavable> savable = new CopyOnWriteArrayList<>();

@@ -11,7 +11,15 @@ import com.serbekun.ss.config.Paths;
 import com.serbekun.ss.domain.models.*;
 import com.serbekun.ss.http.handles.InitHandles;
 import com.serbekun.ss.infrastructure.fs.ServerStorageInitializer;
-import com.serbekun.ss.repository.*;
+import com.serbekun.ss.repo.*;
+import com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensFileRepo;
+import com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensRepo;
+import com.serbekun.ss.repo.links.LinksFileRepo;
+import com.serbekun.ss.repo.links.LinksRepo;
+import com.serbekun.ss.repo.localtokens.LocalTokensFileRepo;
+import com.serbekun.ss.repo.localtokens.LocalTokensRepo;
+import com.serbekun.ss.repo.uploadedfiles.UploadedFilesFileRepo;
+import com.serbekun.ss.repo.uploadedfiles.UploadedFilesRepo;
 import com.serbekun.ss.resources.ResourceCache;
 import com.serbekun.ss.resources.ResourceLoader;
 import com.serbekun.ss.service.auth.AuthService;
@@ -91,7 +99,7 @@ public class Main {
 
         // 3. Local Tokens (for links)
         LocalTokensFileRepo linksLocalTokensFileRepo = new LocalTokensFileRepo(Paths.LinksConfig.getLinksLocalTokensStorageFile(), "ss_links-");
-        LocalTokens linkLocalTokens = new LocalTokens(linksLocalTokensFileRepo.load(), "ss_links-");
+        LocalTokensRepo linkLocalTokens = new LocalTokensRepo(linksLocalTokensFileRepo.load(), "ss_links-");
         linksLocalTokensFileRepo.setLocalTokensReadInterface(linkLocalTokens);
 
         // 4. Uploaded Files
@@ -202,7 +210,7 @@ public class Main {
         private final LinksRepo linksRepo;
         private final EndpointsAccessTokensRepo endpointsAccessTokensRepo;
         private final EndpointsAccessTokensFileRepo endpointsAccessTokensFileRepo;
-        private final LocalTokens linkLocalTokens;
+        private final LocalTokensRepo linkLocalTokens;
         private final LocalTokensFileRepo linksLocalTokensFileRepo;
         private final LinksFileRepo linksFileRepo;
         private final UploadedFilesRepo uploadedFilesRepo;
@@ -212,7 +220,7 @@ public class Main {
                 LinksRepo linksRepo,
                 EndpointsAccessTokensRepo endpointsAccessTokensRepo,
                 EndpointsAccessTokensFileRepo endpointsAccessTokensFileRepo,
-                LocalTokens linkLocalTokens,
+                LocalTokensRepo linkLocalTokens,
                 LocalTokensFileRepo linksLocalTokensFileRepo,
                 LinksFileRepo linksFileRepo,
                 UploadedFilesRepo uploadedFilesRepo,

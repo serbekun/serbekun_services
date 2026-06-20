@@ -1,4 +1,4 @@
-package com.serbekun.ss.domain.models;
+package com.serbekun.ss.repo.localtokens;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -9,7 +9,7 @@ import java.util.UUID;
  * Token manager that binds a token to a resource identifier.
  * Each service/module should have its own instance of this class.
  */
-public class LocalTokens implements LocalTokensReadInterface {
+public class LocalTokensRepo implements LocalTokensReadInterface {
 
     private final Map<String, String> tokens;
     private final Supplier<String> tokenSupplier;
@@ -18,31 +18,31 @@ public class LocalTokens implements LocalTokensReadInterface {
     /**
      * Creates a token manager with the default token generator (UUID)
      */
-    public LocalTokens(String prefix) {
-        this(new ConcurrentHashMap<>(), LocalTokens::defaultToken, prefix);
+    public LocalTokensRepo(String prefix) {
+        this(new ConcurrentHashMap<>(), LocalTokensRepo::defaultToken, prefix);
     }
 
     /**
      * Creates a token manager with an already existing map (e.g. loaded from database)
      */
-    public LocalTokens(Map<String, String> initialTokens) {
-        this(initialTokens, LocalTokens::defaultToken, "");
+    public LocalTokensRepo(Map<String, String> initialTokens) {
+        this(initialTokens, LocalTokensRepo::defaultToken, "");
     }
 
     /**
      * Creates a token manager with an already existing map and a token prefix
      */
-    public LocalTokens(Map<String, String> initialTokens, String prefix) {
-        this(initialTokens, LocalTokens::defaultToken, prefix);
+    public LocalTokensRepo(Map<String, String> initialTokens, String prefix) {
+        this(initialTokens, LocalTokensRepo::defaultToken, prefix);
     }
 
     /**
      * Most flexible constructor — allows passing a custom map and a custom token generator
      */
-    public LocalTokens(Map<String, String> initialTokens, Supplier<String> tokenSupplier, String prefix) {
+    public LocalTokensRepo(Map<String, String> initialTokens, Supplier<String> tokenSupplier, String prefix) {
         Map<String, String> safeInitial = (initialTokens == null) ? Map.of() : initialTokens;
         this.tokens = new ConcurrentHashMap<>(safeInitial);
-        this.tokenSupplier = (tokenSupplier == null) ? LocalTokens::defaultToken : tokenSupplier;
+        this.tokenSupplier = (tokenSupplier == null) ? LocalTokensRepo::defaultToken : tokenSupplier;
         this.prefix = (prefix == null) ? "" : prefix;
     }
 

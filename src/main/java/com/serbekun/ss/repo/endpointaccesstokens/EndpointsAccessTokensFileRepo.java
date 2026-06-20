@@ -1,4 +1,4 @@
-package com.serbekun.ss.repository;
+package com.serbekun.ss.repo.endpointaccesstokens;
 
 // java imports
 import java.io.File;
@@ -11,7 +11,6 @@ import java.util.LinkedHashMap;
 // jackson imports
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.serbekun.ss.domain.models.EndpointsAccessTokensReadInterface;
 import com.serbekun.ss.service.auth.api.Endpoint;
 import com.serbekun.ss.service.autosave.interfaces.AutoSavable;
 

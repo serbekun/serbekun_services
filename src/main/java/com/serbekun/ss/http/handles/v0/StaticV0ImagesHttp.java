@@ -1,8 +1,8 @@
 package com.serbekun.ss.http.handles.v0;
 
+import io.javalin.http.ContentType;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
-import io.javalin.http.ContentType;
 
 import com.serbekun.ss.service.resource.ResourcesService;
 

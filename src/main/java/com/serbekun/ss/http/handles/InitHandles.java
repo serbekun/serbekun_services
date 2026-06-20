@@ -5,10 +5,10 @@ import io.javalin.Javalin;
 import com.serbekun.ss.http.handles.v0.*;
 import com.serbekun.ss.service.auth.api.*;
 import com.serbekun.ss.service.auth.AuthService;
+import com.serbekun.ss.service.cipher.CipherService;
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.youtube.YoutubeService;
-import com.serbekun.ss.service.cipher.CipherService;
 
 public class InitHandles {
 

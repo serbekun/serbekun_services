@@ -1,4 +1,4 @@
-package com.serbekun.ss.domain.models;
+package com.serbekun.ss.repo.endpointaccesstokens;
 
 import java.util.List;
 import java.util.Map;

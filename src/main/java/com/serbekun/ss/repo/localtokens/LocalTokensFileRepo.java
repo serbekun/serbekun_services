@@ -1,4 +1,4 @@
-package com.serbekun.ss.repository;
+package com.serbekun.ss.repo.localtokens;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.serbekun.ss.domain.models.LocalTokensReadInterface;
 import com.serbekun.ss.service.autosave.interfaces.AutoSavable;
 
 public class LocalTokensFileRepo implements AutoSavable {

@@ -1,4 +1,4 @@
-package com.serbekun.ss.repository;
+package com.serbekun.ss.repo.links;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.serbekun.ss.domain.models.Link;
-import com.serbekun.ss.domain.models.LinksRepositoryReadInterface;
 import com.serbekun.ss.service.autosave.interfaces.AutoSavable;
 
 public class LinksFileRepo implements AutoSavable {

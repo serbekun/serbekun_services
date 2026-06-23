@@ -1,4 +1,4 @@
-# serbekun-service
+# serbekun_services
 
 ## Instructions for AI agents
 
@@ -8,8 +8,8 @@ When the user states any preferences about coding style, architecture, conventio
 
 ```sh
 gradle build                 # compile + test
-gradle shadowJar             # fat JAR → build/libs/serbekun-service-1.0.0-all.jar
-java -jar build/libs/serbekun-service-1.0.0-all.jar  # server on :8080
+gradle shadowJar             # fat JAR → build/libs/serbekun_services-alfa-2026-06-23-all.jar
+java -jar build/libs/serbekun_services-alfa-2026-06-23-all.jar  # server on :8080
 gradle test                  # JUnit 5
 gradle compileJava           # compile only
 ```

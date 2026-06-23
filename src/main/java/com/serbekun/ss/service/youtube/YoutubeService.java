@@ -1,11 +1,10 @@
 package com.serbekun.ss.service.youtube;
 
 import java.io.IOException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class YoutubeService {
 

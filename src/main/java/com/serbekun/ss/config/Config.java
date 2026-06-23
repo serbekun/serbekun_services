@@ -10,13 +10,33 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * COnfig class load config of the from file and create config 
+ * file with defaults value if config file not found.
+ */
 public class Config {
 
-    private static final Logger log = LoggerFactory.getLogger(Config.class);
-    private static final ObjectMapper mapper = new ObjectMapper();
+    // region Fields
 
+    // region Dependencies
+    /** {@link org.slf4j.LoggerFactory} object for logging. */
+    private static final Logger log = LoggerFactory.getLogger(Config.class);
+
+    /** {@link com.fasterxml.jackson.databind.ObjectMapper} for serialize and deserialize json. */
+    private static final ObjectMapper mapper = new ObjectMapper();
+    // endregion
+
+    // region Config value
+    
+    /** Server port value */
     private final int port;
+    /** server max upload file size value */
     private final int uploadFileMaxSize;
+
+    // endregion
+    // endregion 
+
+    // region Methods
 
     @JsonCreator
     public Config(@JsonProperty("port") int port,
@@ -25,36 +45,68 @@ public class Config {
         this.uploadFileMaxSize = uploadFileMaxSize;
     }
 
+    // region Getters
+
+    /** @return Server http bind port */
     @JsonProperty("port")
-    public int getPort() {
-        return port;
-    }
+    public int getPort() { return port; }
 
+    /** @return Server upload file max size */
     @JsonProperty("upload_file_max_size")
-    public int getUploadFileMaxSize() {
-        return uploadFileMaxSize;
-    }
+    public int getUploadFileMaxSize() { return uploadFileMaxSize; }
 
+    // endregion
+    
+    // region FS
+    
+    /**
+     * 
+     * Load {@link Config} object from file
+     * 
+     * <p> Load file contents by path in given params after
+     * deserialize json to {@link Config} Object </p>
+     * 
+     * @param file
+     * @return {@link Config} object 
+    */
     public static Config load(Path file) {
-        File f = file.toFile();
-
-        if (!f.exists()) {
-            log.info("Config file not found, creating default config at {}", file);
-            Config defaults = new Config(8080, 20971520); // 20MB
-            save(defaults, f);
-            return defaults;
+       File f = file.toFile();
+       
+       // check is file exist
+       // if file not exist
+       // create Config with defaults values
+       // using defaultConfig();
+       // and save to file
+       if (!f.exists()) {
+           log.info("Config file not found, creating default config at {}", file);
+           Config defaults = defaultConfig();
+           save(defaults, f);
+           return defaults;
         }
-
+        
+        // try to deserialize json from file
+        // if deserializing was not successfully
+        // create Config with defaults values
+        // and save to file
         try {
             return mapper.readValue(f, Config.class);
         } catch (IOException e) {
             log.error("Error reading config file: {}", e.getMessage());
             log.info("Falling back to default config");
-            return new Config(8080, 20971520);  // 20MB
+            return defaultConfig();
         }
     }
-
+    
+    /**
+     * 
+     * Save config 
+     * 
+     * @param config {@link Config}
+     * @param file
+     */
     private static void save(Config config, File file) {
+        // try serialize Config object to json and save to file
+        // if doing this was not successfully just show error log message
         try {
             File parent = file.getParentFile();
             if (parent != null && !parent.exists()) {
@@ -65,4 +117,17 @@ public class Config {
             log.error("Error writing default config file: {}", e.getMessage());
         }
     }
+    
+    // endregion
+
+    // region Helpers
+
+    /** @return Config object with default values. */
+    private static Config defaultConfig() {
+        return new Config(8080, 20971520);
+    }
+
+    // endregion
+    // endregion
+
 }

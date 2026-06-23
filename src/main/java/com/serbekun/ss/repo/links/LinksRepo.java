@@ -8,8 +8,7 @@ import com.serbekun.ss.domain.models.Link;
 public class LinksRepo implements LinksRepositoryReadInterface {
 
     private final Map<UUID, Link> linksByUuid;
-    public int v;
-
+    
     public LinksRepo(Map<UUID, Link> linksByUID) {
         this.linksByUuid = linksByUID;
     }

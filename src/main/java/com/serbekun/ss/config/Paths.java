@@ -2,19 +2,13 @@ package com.serbekun.ss.config;
 
 import java.nio.file.Path;
 
-/**
- * class that contain paths to files that can be used in server
- */
+/** class that contain paths to files that can be used in server */
 public class Paths {
     
-    /**
-     * class for contain configuration for {@link com.serbekun.ss.infrastructure}
-     */
+    /** class for contain configuration for {@link com.serbekun.ss.infrastructure} */
     public static class Infrastructure {
 
-        /**
-         * class for contain configuration for {@link com.serbekun.ss.infrastructure.fs}
-         */
+        /** class for contain configuration for {@link com.serbekun.ss.infrastructure.fs} */
         public static class Fs {
             private static final String serverStorageFolder = "repository";
 
@@ -22,9 +16,7 @@ public class Paths {
         }
     }
 
-    /**
-     * class that contain configuration for {@link com.serbekun.ss.repo.links.LinksRepo}
-     */
+    /** class that contain configuration for {@link com.serbekun.ss.repo.links.LinksRepo} */
     public static class LinksConfig {
         private static final Path linksStorageFile = Path.of("repository/catalogs/links.json");
         private static final Path linksLocalTokensStorageFile = Path.of("repository/tokens/links_local_tokens.json");
@@ -33,9 +25,7 @@ public class Paths {
         public static Path getLinksLocalTokensStorageFile() { return linksLocalTokensStorageFile; }
     }
 
-    /**
-     * class that contain configuration for {@link com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensRepo}
-     */
+    /** class that contain configuration for {@link com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensRepo} */
     public static class TokensConfig {
         private static final Path tokensStorageFolder = Path.of("repository/endpoint_access_tokens.json");
 

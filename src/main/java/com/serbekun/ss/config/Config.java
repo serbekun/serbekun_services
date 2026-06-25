@@ -30,8 +30,15 @@ public class Config {
     
     /** Server port value */
     private final int port;
-    /** server max upload file size value */
+    /** Server max upload file size value */
     private final int uploadFileMaxSize;
+
+    /** How many time server can download videos from youtube */
+    private final long YoutubeProcessTimeoutSeconds;
+    /** Path to yt-dlp */
+    private final String YtDlpPath;
+    /** Path to deno */
+    private final String DenoPath;
 
     // endregion
     // endregion 
@@ -40,9 +47,16 @@ public class Config {
 
     @JsonCreator
     public Config(@JsonProperty("port") int port,
-    @JsonProperty("upload_file_max_size") int uploadFileMaxSize) {
+    @JsonProperty("upload_file_max_size") int uploadFileMaxSize,
+    @JsonProperty("youtube_process_timeout_seconds") long youtubeProcessTimeoutSeconds,
+    @JsonProperty("yt_dlp_path") String ytDlpPath,
+    @JsonProperty("deno_path") String denoPath
+) {
         this.port = port;
         this.uploadFileMaxSize = uploadFileMaxSize;
+        this.YoutubeProcessTimeoutSeconds = youtubeProcessTimeoutSeconds;
+        this.YtDlpPath = ytDlpPath;
+        this.DenoPath = denoPath;
     }
 
     // region Getters
@@ -54,6 +68,18 @@ public class Config {
     /** @return Server upload file max size */
     @JsonProperty("upload_file_max_size")
     public int getUploadFileMaxSize() { return uploadFileMaxSize; }
+
+    /** @return Youtube process timeout in seconds */
+    @JsonProperty("youtube_process_timeout_seconds")
+    public long getYoutubeProcessTimeoutSeconds() { return YoutubeProcessTimeoutSeconds; }
+
+    /** @return Path to yt-dlp */
+    @JsonProperty("yt_dlp_path")
+    public String getYtDlpPath() { return YtDlpPath; }
+
+    /** @return Path to deno */
+    @JsonProperty("deno_path")
+    public String getDenoPath() { return DenoPath; }
 
     // endregion
     
@@ -124,7 +150,7 @@ public class Config {
 
     /** @return Config object with default values. */
     private static Config defaultConfig() {
-        return new Config(8080, 20971520);
+        return new Config(8080, 20971520, 30, "/usr/local/bin/yt-dlp", "/usr/local/bin/deno");
     }
 
     // endregion

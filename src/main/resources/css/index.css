@@ -1,71 +1,23 @@
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html {
-    background: #000;
-    min-height: 100%;
-}
+/* ─── index.css — page-specific overrides & unique styles ─── */
 
 body {
-    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
     background: transparent;
-    color: #c8c8c8;
-    min-height: 100vh;
     padding: 3rem 1rem 4rem;
-    line-height: 1.6;
 }
 
 /* ─── Header ─── */
 .header {
     max-width: 680px;
     margin: 0 auto 2.5rem;
-    border-bottom: 1px solid #222;
-    padding-bottom: 1.5rem;
-}
-
-.header-title {
-    font-size: 1.6rem;
-    font-weight: 500;
-    color: #fff;
-    letter-spacing: 0.06em;
-    margin-bottom: 4px;
-}
-
-.header-sub {
-    font-size: 0.75rem;
-    color: #555;
-    letter-spacing: 0.12em;
 }
 
 /* ─── Prompt line ─── */
 .prompt-line {
     max-width: 680px;
     margin: 0 auto 2rem;
-    font-size: 0.8rem;
-    color: #555;
-    display: flex;
-    align-items: center;
-    gap: 6px;
 }
-
-.prompt-line .cwd { color: #888; }
-
-.prompt-cursor {
-    display: inline-block;
-    width: 7px;
-    height: 13px;
-    background: #777;
-    animation: blink 1.1s step-end infinite;
-    vertical-align: -2px;
-}
-
-@keyframes blink { 50% { opacity: 0; } }
 
 /* ─── Sections ─── */
-.container {
-    max-width: 680px;
-    margin: 0 auto;
-}
-
 .section { margin-bottom: 2rem; }
 
 .section-label {
@@ -144,10 +96,4 @@ body {
 .footer {
     max-width: 680px;
     margin: 3rem auto 0;
-    padding-top: 1rem;
-    border-top: 1px solid #1a1a1a;
-    font-size: 0.72rem;
-    color: #333;
-    letter-spacing: 0.1em;
-    text-align: right;
 }

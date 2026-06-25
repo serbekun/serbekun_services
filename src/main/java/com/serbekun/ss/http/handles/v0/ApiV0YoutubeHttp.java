@@ -25,13 +25,16 @@ public class ApiV0YoutubeHttp {
             String info = youtubeService.getVideoInfo(url);
             ctx.contentType("application/json");
             ctx.result(info);
+        } catch (IllegalArgumentException e) {
+            ctx.status(HttpStatus.BAD_REQUEST);
+            ctx.result("{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}");
         } catch (IllegalStateException e) {
             ctx.status(HttpStatus.BAD_REQUEST);
             ctx.result("{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}");
         } catch (Exception e) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
             ctx.result("{\"error\": \"" + e.getClass().getSimpleName() + ": " + e.getMessage().replace("\"", "'") + "\"}");
-        } 
+        }
     }
 
     public void handleDownload(Context ctx) {
@@ -46,6 +49,9 @@ public class ApiV0YoutubeHttp {
             byte[] videoBytes = youtubeService.downloadVideo(url);
             ctx.contentType("video/mp4");
             ctx.result(videoBytes);
+        } catch (IllegalArgumentException e) {
+            ctx.status(HttpStatus.BAD_REQUEST);
+            ctx.result("{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}");
         } catch (IllegalStateException e) {
             ctx.status(HttpStatus.BAD_REQUEST);
             ctx.result("{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}");

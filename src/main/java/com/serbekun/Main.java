@@ -26,6 +26,7 @@ import com.serbekun.ss.service.autosave.*;
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.tokens.EndpointsAccessTokensService;
+import com.serbekun.ss.service.youtube.Youtube;
 import com.serbekun.ss.service.youtube.YoutubeService;
 
 
@@ -45,7 +46,7 @@ public class Main {
         // 0. Config
         Config config = loadConfig();
 
-        ServerContext context = initializeApplication();
+        ServerContext context = initializeApplication(config);
 
         startServer(context, config);
 
@@ -57,7 +58,7 @@ public class Main {
         return Config.load(Path.of(Paths.Infrastructure.Fs.getServerStorageFolder(), "config.json"));
     }
 
-    private static ServerContext initializeApplication() {
+    private static ServerContext initializeApplication(Config config) {
         // 1. Storage
         initializeStorage();
 
@@ -65,7 +66,7 @@ public class Main {
         Repositories repos = initializeRepositories();
 
         // 3. Services
-        Services services = initializeServices(repos);
+        Services services = initializeServices(repos, config);
 
         // 4. Resources
         Resources resources = initializeResources();
@@ -117,12 +118,17 @@ public class Main {
         );
     }
 
-    private static Services initializeServices(Repositories repos) {
+    private static Services initializeServices(Repositories repos, Config config) {
         var endpointRegistry = new EndpointRegistry();
         var endpointAccessTokensService = new EndpointsAccessTokensService(repos.endpointsAccessTokensRepo);
         var linksService = new LinksService(repos.linksRepo, repos.linkLocalTokens);
         var authService = new AuthService(endpointAccessTokensService, endpointRegistry);
-        var youtubeService = new YoutubeService();
+        var youtube = new Youtube(
+            config.getYoutubeProcessTimeoutSeconds(),
+            config.getYtDlpPath(),
+            config.getDenoPath()
+        );
+        var youtubeService = new YoutubeService(youtube);
         return new Services(endpointRegistry, endpointAccessTokensService, linksService, authService, youtubeService);
     }
 

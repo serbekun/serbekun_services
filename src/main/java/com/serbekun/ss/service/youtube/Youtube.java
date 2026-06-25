@@ -7,26 +7,53 @@ import java.util.Map;
 import com.serbekun.ss.config.Paths;
 
 public class Youtube {
-    
-    private static final long PROCESS_TIMEOUT_SECONDS = 120;
-    private static final String YT_DLP = "/home/sergei/.local/bin/yt-dlp";
-    private static final String DENO_PATH = "/home/sergei/.deno/bin";
 
-    private static void setupEnvironment(ProcessBuilder pb) {
-        Map<String, String> env = pb.environment();
-        String existingPath = env.getOrDefault("PATH", "");
-        env.put("PATH", DENO_PATH + ":" + existingPath);
+    private final long processTimeoutSeconds;
+    private final String ytDlpPath;
+    private final String denoPath;
+
+    public Youtube(long processTimeoutSeconds, String ytDlpPath, String denoPath) {
+        this.processTimeoutSeconds = processTimeoutSeconds;
+        this.ytDlpPath = ytDlpPath;
+        this.denoPath = denoPath;
     }
 
-    public static byte[] DownloadVideoByUrl(String url) throws IOException {
+    /**
+     * Validates that the given string looks like a real URL,
+     * not a yt-dlp option or anything else.
+     *
+     * @param url the url to validate
+     * @throws IllegalArgumentException if url is not a valid http/https URL
+     */
+    static void validateUrl(String url) {
+        if (url == null || url.isBlank()) {
+            throw new IllegalArgumentException("URL must not be empty");
+        }
+        if (url.startsWith("-")) {
+            throw new IllegalArgumentException("URL must not start with '-', looks like a CLI option");
+        }
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            throw new IllegalArgumentException("URL must start with http:// or https://");
+        }
+    }
+
+    private void setupEnvironment(ProcessBuilder pb) {
+        Map<String, String> env = pb.environment();
+        String existingPath = env.getOrDefault("PATH", "");
+        env.put("PATH", denoPath + ":" + existingPath);
+    }
+
+    public byte[] DownloadVideoByUrl(String url) throws IOException {
+        validateUrl(url);
 
         ProcessBuilder pb = new ProcessBuilder(
-            YT_DLP,
+            ytDlpPath,
             "-f", "best",
             "--no-playlist",
             "--js-runtimes", "deno",
             "--cookies", Paths.YoutubeConfig.getCookiesPath().toString(),
             "-o", "-",
+            "--",
             url
         );
 
@@ -39,11 +66,11 @@ public class Youtube {
             byte[] videoBytes = process.getInputStream().readAllBytes();
             
             // Wait for process to complete with timeout
-            boolean completed = process.waitFor(PROCESS_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            boolean completed = process.waitFor(processTimeoutSeconds, TimeUnit.SECONDS);
             
             if (!completed) {
                 process.destroyForcibly();
-                throw new IOException("yt-dlp download timed out after " + PROCESS_TIMEOUT_SECONDS + " seconds");
+                throw new IOException("yt-dlp download timed out after " + processTimeoutSeconds + " seconds");
             }
             
             int exitCode = process.exitValue();
@@ -71,14 +98,16 @@ public class Youtube {
      * @throws IOException if process cannot be started or interrupted
      * @throws IllegalStateException if yt-dlp command fails
      */
-    public static String GetVideoInfo(String url) throws IOException {
+    public String GetVideoInfo(String url) throws IOException {
+        validateUrl(url);
 
         ProcessBuilder pb = new ProcessBuilder(
-            YT_DLP,
+            ytDlpPath,
             "--dump-json",
             "--no-playlist",
             "--js-runtimes", "deno",
             "--cookies", Paths.YoutubeConfig.getCookiesPath().toString(),
+            "--",
             url
         );
         
@@ -91,11 +120,11 @@ public class Youtube {
             String jsonOutput = new String(process.getInputStream().readAllBytes());
             
             // Wait for process to complete with timeout
-            boolean completed = process.waitFor(PROCESS_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            boolean completed = process.waitFor(processTimeoutSeconds, TimeUnit.SECONDS);
             
             if (!completed) {
                 process.destroyForcibly();
-                throw new IOException("yt-dlp info fetch timed out after " + PROCESS_TIMEOUT_SECONDS + " seconds");
+                throw new IOException("yt-dlp info fetch timed out after " + processTimeoutSeconds + " seconds");
             }
             
             int exitCode = process.exitValue();

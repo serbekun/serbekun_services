@@ -11,6 +11,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class YoutubeTest {
 
+    private final Youtube youtube = new Youtube(120, "/home/sergei/.local/bin/yt-dlp", "/home/sergei/.deno/bin");
+
     @Test
     void DownloadVideoTest() throws IOException {
         // This is an integration test that requires yt-dlp to be installed
@@ -18,7 +20,7 @@ class YoutubeTest {
         
         String url = "https://www.youtube.com/watch?v=pZgCd6cZEHU";
 
-        byte[] videoBytes = Youtube.DownloadVideoByUrl(url);
+        byte[] videoBytes = youtube.DownloadVideoByUrl(url);
 
         assertThat(videoBytes).isNotNull();
         assertThat(videoBytes).isNotEmpty();
@@ -36,7 +38,7 @@ class YoutubeTest {
         // Should throw IllegalStateException for invalid URL
         String invalidUrl = "https://www.youtube.com/watch?v=invalid";
         
-        assertThatThrownBy(() -> Youtube.DownloadVideoByUrl(invalidUrl))
+        assertThatThrownBy(() -> youtube.DownloadVideoByUrl(invalidUrl))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("yt-dlp failed");
     }
@@ -44,7 +46,7 @@ class YoutubeTest {
     @Test
     void DownloadVideoWithNullUrlTest() throws IOException {
         // Should handle null URL gracefully
-        assertThatThrownBy(() -> Youtube.DownloadVideoByUrl(null))
+        assertThatThrownBy(() -> youtube.DownloadVideoByUrl(null))
             .isInstanceOf(Exception.class);
     }
 }

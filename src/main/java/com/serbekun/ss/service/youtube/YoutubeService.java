@@ -10,10 +10,16 @@ public class YoutubeService {
 
     public final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(YoutubeService.class);
+
+    private final Youtube youtube;
+
+    public YoutubeService(Youtube youtube) {
+        this.youtube = youtube;
+    }
     
     public byte[] downloadVideo(String url) throws IOException {
         try {
-            return Youtube.DownloadVideoByUrl(url);
+            return youtube.DownloadVideoByUrl(url);
         } catch (IllegalStateException e) {
             log.error("yt-dlp download failed: {}", e.getMessage());
             throw new IOException("Failed to download video");
@@ -23,7 +29,7 @@ public class YoutubeService {
     public String getVideoInfo(String url) {
         String string;
         try {
-            string = Youtube.GetVideoInfo(url);
+            string = youtube.GetVideoInfo(url);
         } catch (Exception e) {
             log.error("yt-dlp info failed: {}", e.getMessage());
             throw new RuntimeException("Maybe you download video that required login to youtube.");

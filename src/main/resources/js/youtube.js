@@ -32,8 +32,28 @@
         }
     });
 
+    function isValidUrl(url) {
+        if (!url || url.startsWith('-')) return false;
+        try {
+            const u = new URL(url);
+            return u.protocol === 'http:' || u.protocol === 'https:';
+        } catch {
+            return false;
+        }
+    }
+
     async function fetchVideoInfo(url) {
         if (!url) return;
+        if (!isValidUrl(url)) {
+            videoInfoEl.classList.add('error');
+            videoInfoEl.style.display = 'block';
+            infoLabel.textContent = 'error';
+            titleEl.textContent = 'invalid URL';
+            metaEl.innerHTML = '';
+            descEl.textContent = 'please enter a valid http or https URL.';
+            setStatus('error: invalid URL', 'err');
+            return;
+        }
         setStatus('fetching video info...', '');
         videoInfoEl.style.display = 'none';
         downloadBtn.disabled = true;

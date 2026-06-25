@@ -5,12 +5,22 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Represents a link with a unique identifier, URL, name, and description.
+ */
 public class Link {
 
+    // region Fields
+
+    /** The unique identifier for the link. */
     private final UUID uuid;
+    /** The URL of the link. */
     private final String url;
+    /** The name of the link. */
     private final String name;
+    /** The description of the link. */
     private final String description;
+    // endregion
 
     @JsonCreator
     public Link(
@@ -26,6 +36,7 @@ public class Link {
             this.description = description;
         }
 
+        // region Getters
         @JsonProperty("uuid")
         public UUID uuid() { return uuid; }
 
@@ -38,6 +49,8 @@ public class Link {
         @JsonProperty("description")
         public String description() { return description; }
 
+        // endregion
+        
         @Override public boolean equals(Object o) {
             return (o instanceof Link) && uuid.equals(((Link) o).uuid);
         }

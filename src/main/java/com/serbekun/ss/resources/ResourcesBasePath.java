@@ -50,14 +50,22 @@ public final class ResourcesBasePath {
 
 
     /**
-     * 
-     * Resolve path just base + name
-     * 
+     *
+     * Resolve path just base + name.
+     * Rejects names containing path traversal sequences.
+     *
      * @param base base folder of resource path
      * @param name filename that will be resolved
      * @return resolved path
+     * @throws IllegalArgumentException if name contains path traversal characters
      */
     public static String resolve(String base, String name) {
+        if (name == null) {
+            name = "";
+        }
+        if (name.contains("..") || name.contains("/") || name.contains("\\") || name.contains("%")) {
+            throw new IllegalArgumentException("Invalid resource name: path traversal not allowed");
+        }
         if (!base.endsWith("/")) {
             base = base + "/";
         }

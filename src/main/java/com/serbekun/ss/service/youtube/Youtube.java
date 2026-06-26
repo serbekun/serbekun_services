@@ -26,6 +26,10 @@ public class Youtube {
      * @throws IllegalArgumentException if url is not a valid http/https URL
      */
     static void validateUrl(String url) {
+
+        // Basic validation to ensure the URL is not empty,
+        // does not start with a dash (which could be interpreted as a command-line option),
+        // and starts with "http://" or "https://".
         if (url == null || url.isBlank()) {
             throw new IllegalArgumentException("URL must not be empty");
         }
@@ -44,8 +48,10 @@ public class Youtube {
     }
 
     public byte[] DownloadVideoByUrl(String url) throws IOException {
+        // Validate the URL before proceeding
         validateUrl(url);
 
+        // Prepare the yt-dlp command with necessary arguments
         ProcessBuilder pb = new ProcessBuilder(
             ytDlpPath,
             "-f", "best",
@@ -60,8 +66,10 @@ public class Youtube {
         // Add required paths for yt-dlp process
         setupEnvironment(pb);
 
+        // Start the process and handle its output
         Process process = pb.start();
         
+        // Read the output bytes from the process's input stream and handle timeouts and errors
         try {
             byte[] videoBytes = process.getInputStream().readAllBytes();
             
@@ -101,6 +109,7 @@ public class Youtube {
     public String GetVideoInfo(String url) throws IOException {
         validateUrl(url);
 
+        // Prepare the yt-dlp command to fetch video info in JSON format
         ProcessBuilder pb = new ProcessBuilder(
             ytDlpPath,
             "--dump-json",
@@ -116,6 +125,7 @@ public class Youtube {
         
         Process process = pb.start();
         
+        // Read the output from the process's input stream and handle timeouts and errors
         try {
             String jsonOutput = new String(process.getInputStream().readAllBytes());
             

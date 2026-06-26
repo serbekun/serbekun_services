@@ -3,6 +3,10 @@ package com.serbekun.ss.service.youtube;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Represents an error response from the YouTube download service.
+ * YtDlpError
+ */
 public class YtDlpError {
 
     private final String error;

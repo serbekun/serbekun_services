@@ -84,8 +84,13 @@ public class ResourcesService {
         return cache.listResources(basePath);
     }
 
-    // === Static resource helpers (moved from deprecated service/http layer) ===
+    // region Static resource helpers
 
+    /**
+     * Returns the binary data for an image resource.
+     * @param name the name of the image resource
+     * @return the binary data for the image resource
+     */
     public byte[] getImage(String name) {
         if (name == null) name = "";
         if (name.isEmpty()) {
@@ -95,6 +100,11 @@ public class ResourcesService {
         return getBinaryData(path);
     }
 
+    /**
+     * Returns the JSON data for a resource.
+     * @param name the name of the JSON resource
+     * @return the JSON data for the resource
+     */
     public String getJson(String name) {
         if (name == null) name = "";
         if (name.isEmpty()) {
@@ -112,6 +122,12 @@ public class ResourcesService {
         return getTextData(path);
     }
 
+    /**
+     * Returns the HTML content for a given resource name.
+     * If the name is empty, it returns a JSON list of available HTML files.
+     * @param name the name of the HTML resource
+     * @return the HTML content for the resource
+     */
     public String getHtml(String name) {
         if (name == null) name = "";
         if (name.isEmpty()) {
@@ -129,6 +145,12 @@ public class ResourcesService {
         return getTextData(path);
     }
 
+    /**
+     * Returns the CSS content for a given resource name.
+     * If the name is empty, it returns a JSON list of available CSS files.
+     * @param name the name of the CSS resource
+     * @return the CSS content for the resource
+     */
     public String getCss(String name) {
         if (name == null) name = "";
         if (name.isEmpty()) {
@@ -146,6 +168,12 @@ public class ResourcesService {
         return getTextData(path);
     }
 
+    /**
+     * Returns the JavaScript content for a given resource name.
+     * If the name is empty, it returns a JSON list of available JavaScript files.
+     * @param name the name of the JavaScript resource
+     * @return the JavaScript content for the resource
+     */
     public String getJs(String name) {
         if (name == null) name = "";
         if (name.isEmpty()) {
@@ -163,7 +191,11 @@ public class ResourcesService {
         return getTextData(path);
     }
 
-
+    /**
+     * Returns the binary data for a PDF resource.
+     * @param name the name of the PDF resource
+     * @return the binary data for the resource
+     */
     public byte[] getPdf(String name) {
         if (name == null) name = "";
         if (name.isEmpty()) {
@@ -173,6 +205,10 @@ public class ResourcesService {
         return getBinaryData(path);
     }
 
+    /**
+     * Returns a JSON list of available PDF files in the PDFs directory.
+     * @return the JSON string containing the list of PDF files
+     */
     public String listPdfsAsJson() {
         String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_PDF_PATH;
         List<String> filesList = listResources(path).stream()
@@ -185,6 +221,10 @@ public class ResourcesService {
         }
     }
 
+    /**
+     * Returns a JSON list of available image files in the images directory.
+     * @return the JSON string containing the list of image files
+     */
     public String listImagesAsJson() {
         String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_IMAGES_PATH;
         List<String> filesList = listResources(path).stream()
@@ -197,6 +237,30 @@ public class ResourcesService {
         }
     }
 
+    public String getDomain(String name) {
+        if (name == null) name = "";
+        if (name.isEmpty()) {
+            return null;
+        }
+        String path = com.serbekun.ss.resources.ResourcesBasePath.resolveDomainPath(name);
+        return getTextData(path);
+    }
+
+    public String listDomainsAsJson() {
+        String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_DOMAIN_PATH;
+        List<String> filesList = listResources(path).stream()
+            .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
+            .toList();
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * A map of file extensions to their corresponding MIME types.
+     */
     private static final Map<String, String> MIME_TYPES = Map.ofEntries(
         Map.entry("html", "text/html"),
         Map.entry("htm", "text/html"),

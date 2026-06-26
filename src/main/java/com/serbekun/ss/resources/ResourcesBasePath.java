@@ -11,6 +11,7 @@ public final class ResourcesBasePath {
     public static final String BASE_IMAGES_PATH = "images/";
     public static final String BASE_JSON_PATH = "json/";
     public static final String BASE_PDF_PATH = "pdf/";
+    public static final String BASE_DOMAIN_PATH = "domain/";
 
     /**
      * Resolves the full path for an HTML resource.
@@ -42,6 +43,10 @@ public final class ResourcesBasePath {
 
     public static String resolvePdfPath(String filename) {
         return resolve(BASE_PDF_PATH, filename);
+    }
+
+    public static String resolveDomainPath(String filename) {
+        return resolve(BASE_DOMAIN_PATH, filename);
     }
 
     public static String resolveJsonPath(String filename) {

@@ -26,6 +26,8 @@ import com.serbekun.ss.service.autosave.*;
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.tokens.EndpointsAccessTokensService;
+import com.serbekun.ss.service.uploadedfiles.UploadedFilesCleanupService;
+import com.serbekun.ss.service.uploadedfiles.UploadedFilesService;
 import com.serbekun.ss.service.youtube.Youtube;
 import com.serbekun.ss.service.youtube.YoutubeService;
 
@@ -129,7 +131,15 @@ public class Main {
             config.getDenoPath()
         );
         var youtubeService = new YoutubeService(youtube);
-        return new Services(endpointRegistry, endpointAccessTokensService, linksService, authService, youtubeService);
+
+        // Uploaded Files
+        var uploadedFilesService = new UploadedFilesService(
+                repos.uploadedFilesRepo,
+                Paths.UploadedFilesConfig.getUploadedFilesRAWFolder());
+        var uploadedFilesCleanupService = new UploadedFilesCleanupService(uploadedFilesService, 60);
+
+        return new Services(endpointRegistry, endpointAccessTokensService, linksService, authService,
+                youtubeService, uploadedFilesService, uploadedFilesCleanupService);
     }
 
     private static Resources initializeResources() {
@@ -148,7 +158,8 @@ public class Main {
             resources.resourcesService,
             services.linksService,
             new com.serbekun.ss.service.cipher.CipherService(),
-            services.youtubeService
+            services.youtubeService,
+            services.uploadedFilesService
         );
     }
 
@@ -165,13 +176,17 @@ public class Main {
             ctx.handlers.resourcesService,
             ctx.handlers.linksService,
             ctx.handlers.cipherService,
-            ctx.handlers.youtubeService
+            ctx.handlers.youtubeService,
+            ctx.handlers.uploadedFilesService
         );
 
         // Autosave
         AutosaveService autosaveService = createAndStartAutosave(ctx.repos);
 
-        addShutdownHook(server, autosaveService);
+        // Uploaded files expiration cleanup
+        ctx.services.uploadedFilesCleanupService.start();
+
+        addShutdownHook(server, autosaveService, ctx.services.uploadedFilesCleanupService);
 
         // Run
         server.start(config.getPort());
@@ -188,10 +203,12 @@ public class Main {
         return autosave;
     }
 
-    private static void addShutdownHook(Javalin server, AutosaveService autosave) {
+    private static void addShutdownHook(Javalin server, AutosaveService autosave,
+                                         UploadedFilesCleanupService cleanupService) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             log.info("Shutting down server...");
             autosave.stop();
+            cleanupService.stop();
             server.stop();
         }, "shutdown-hook"));
     }
@@ -246,18 +263,24 @@ public class Main {
         private final LinksService linksService;
         private final AuthService authService;
         private final YoutubeService youtubeService;
+        private final UploadedFilesService uploadedFilesService;
+        private final UploadedFilesCleanupService uploadedFilesCleanupService;
 
         private Services(
                 EndpointRegistry endpointRegistry,
                 EndpointsAccessTokensService tokensService,
                 LinksService linksService,
                 AuthService authService,
-                YoutubeService youtubeService) {
+                YoutubeService youtubeService,
+                UploadedFilesService uploadedFilesService,
+                UploadedFilesCleanupService uploadedFilesCleanupService) {
             this.endpointRegistry = endpointRegistry;
             this.tokensService = tokensService;
             this.linksService = linksService;
             this.authService = authService;
             this.youtubeService = youtubeService;
+            this.uploadedFilesService = uploadedFilesService;
+            this.uploadedFilesCleanupService = uploadedFilesCleanupService;
         }
     }
 
@@ -281,16 +304,19 @@ public class Main {
         private final com.serbekun.ss.service.links.LinksService linksService;
         private final com.serbekun.ss.service.cipher.CipherService cipherService;
         private final YoutubeService youtubeService;
+        private final UploadedFilesService uploadedFilesService;
 
         private Handlers(
                 com.serbekun.ss.service.resource.ResourcesService resourcesService,
                 com.serbekun.ss.service.links.LinksService linksService,
                 com.serbekun.ss.service.cipher.CipherService cipherService,
-                YoutubeService youtubeService) {
+                YoutubeService youtubeService,
+                UploadedFilesService uploadedFilesService) {
             this.resourcesService = resourcesService;
             this.linksService = linksService;
             this.cipherService = cipherService;
             this.youtubeService = youtubeService;
+            this.uploadedFilesService = uploadedFilesService;
         }
     }
 }

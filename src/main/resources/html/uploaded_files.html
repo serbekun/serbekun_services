@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Uploaded Files — Serbekun</title>
+    <link rel="stylesheet" href="/static/v0/css/shared.css">
+    <link rel="stylesheet" href="/static/v0/css/uploaded_files.css">
+</head>
+<body>
+
+    <div class="container">
+        <a href="/" class="back-link">back</a>
+
+        <div class="header">
+            <h1 class="header-title">Uploaded Files</h1>
+            <p class="header-sub">// upload, download &amp; manage your files</p>
+        </div>
+
+        <div class="prompt-line">
+            <span class="cwd">~/serbekun/files</span>
+            <span>$</span>
+            <span>./manager --interactive</span>
+            <span class="prompt-cursor"></span>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab(0)">upload</button>
+            <button class="tab-btn" onclick="switchTab(1)">my files</button>
+            <button class="tab-btn" onclick="switchTab(2)">access</button>
+        </div>
+
+        <!-- UPLOAD TAB -->
+        <div id="uploadTab">
+            <div class="field">
+                <div class="field-label">select file</div>
+                <div class="file-drop-zone" id="dropZone">
+                    <input type="file" id="fileInput" onchange="onFileSelected()">
+                    <div class="drop-zone-content">
+                        <svg viewBox="0 0 24 24" class="upload-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <span id="dropZoneText">choose a file or drag it here</span>
+                        <span id="fileNameDisplay" class="file-name-display"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">file name (optional)</div>
+                <input type="text" id="uploadName" placeholder="leave empty to use original filename" spellcheck="false">
+            </div>
+
+            <div class="field">
+                <div class="field-label">time-to-live (seconds, 0 = never)</div>
+                <input type="number" id="uploadTtl" placeholder="3600" min="0" spellcheck="false" value="0">
+            </div>
+
+            <button class="btn-primary" onclick="uploadFile()">Upload File</button>
+        </div>
+
+        <!-- MY FILES TAB -->
+        <div id="filesTab">
+            <div class="files-section">
+                <p class="section-hint">// files uploaded this session — use uuid + token to access later</p>
+                <div class="files-list" id="filesList">
+                    <div class="empty-state">no files uploaded yet in this session</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACCESS FILE TAB -->
+        <div id="accessTab">
+            <div class="field">
+                <div class="field-label">file uuid</div>
+                <input type="text" id="accessUuid" placeholder="paste file uuid here..." spellcheck="false">
+            </div>
+
+            <div class="field">
+                <div class="field-label">access token</div>
+                <div class="token-input-wrap">
+                    <input type="text" id="accessToken" placeholder="paste token here..." spellcheck="false">
+                </div>
+            </div>
+
+            <div class="access-actions">
+                <button class="btn-primary" onclick="getFileInfo()" style="flex:1;">get info</button>
+                <button class="btn-primary" onclick="downloadFile()" style="flex:1;">download</button>
+                <button class="btn-danger" onclick="deleteFile()" style="flex:1;">delete</button>
+            </div>
+
+            <div class="file-info" id="fileInfo" style="display:none;">
+                <h3>file metadata</h3>
+                <div class="info-grid">
+                    <span class="info-label">Name:</span><span class="info-value" id="infoName"></span>
+                    <span class="info-label">UUID:</span><span class="info-value" id="infoUuid"></span>
+                    <span class="info-label">Expires:</span><span class="info-value" id="infoExpires"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-line" id="status"></div>
+
+        <div class="footer">serbekun service // uploaded files</div>
+    </div>
+
+    <!-- TOKEN MODAL -->
+    <div id="tokenModal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <h2>file uploaded successfully</h2>
+            <p style="color:#666; font-size:0.82rem; margin-bottom:0.8rem;">save these credentials — token won't be shown again</p>
+            <div class="credential-row">
+                <span class="cred-label">UUID</span>
+                <span class="cred-value mono" id="modalUuid"></span>
+            </div>
+            <div class="credential-row">
+                <span class="cred-label">Token</span>
+                <span class="cred-value mono" id="modalToken"></span>
+            </div>
+            <div class="credential-row">
+                <span class="cred-label">Name</span>
+                <span class="cred-value" id="modalName"></span>
+            </div>
+            <div class="credential-row">
+                <span class="cred-label">Expires</span>
+                <span class="cred-value" id="modalExpires"></span>
+            </div>
+            <div style="margin-top:1.2rem; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+                <button class="copy-btn" onclick="copyCredentials()">copy credentials</button>
+                <button class="close-modal-btn" onclick="closeTokenModal()">close</button>
+            </div>
+            <p class="feedback-text" id="modalCopyFeedback"></p>
+        </div>
+    </div>
+
+    <script src="/static/v0/js/uploaded_files.js"></script>
+</body>
+</html>

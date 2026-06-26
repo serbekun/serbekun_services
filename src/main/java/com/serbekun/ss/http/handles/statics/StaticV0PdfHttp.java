@@ -1,17 +1,17 @@
-package com.serbekun.ss.http.handles.v0;
+package com.serbekun.ss.http.handles.statics;
 
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
 import com.serbekun.ss.service.resource.ResourcesService;
 
-public class StaticV0HtmlHttp {
-    
+public class StaticV0PdfHttp {
+
     private final ResourcesService resourcesService;
 
-    public StaticV0HtmlHttp(ResourcesService resourcesService) {
+    public StaticV0PdfHttp(ResourcesService resourcesService) {
         this.resourcesService = resourcesService;
-    } 
+    }
 
     public void main(Context ctx) {
         main(ctx, ctx.pathParam("name"));
@@ -24,17 +24,26 @@ public class StaticV0HtmlHttp {
 
         if (name.isEmpty()) {
             ctx.contentType("application/json");
-        } else {
-            ctx.contentType("text/html");
+            String files = resourcesService.listPdfsAsJson();
+
+            if (files == null) {
+                ctx.status(HttpStatus.NOT_FOUND);
+                return;
+            }
+
+            ctx.result(files);
+            return;
         }
 
-        String html = resourcesService.getHtml(name);
+        ctx.contentType(resourcesService.detectMimeType(name));
 
-        if (html == null) {
+        byte[] pdf = resourcesService.getPdf(name);
+
+        if (pdf == null) {
             ctx.status(HttpStatus.NOT_FOUND);
             return;
         }
 
-        ctx.result(html);
+        ctx.result(pdf);
     }
 }

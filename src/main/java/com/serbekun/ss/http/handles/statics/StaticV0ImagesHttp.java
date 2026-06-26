@@ -1,4 +1,4 @@
-package com.serbekun.ss.http.handles.v0;
+package com.serbekun.ss.http.handles.statics;
 
 import io.javalin.http.ContentType;
 import io.javalin.http.Context;

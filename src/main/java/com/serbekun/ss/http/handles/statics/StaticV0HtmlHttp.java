@@ -1,16 +1,15 @@
-package com.serbekun.ss.http.handles.v0;
+package com.serbekun.ss.http.handles.statics;
 
-import io.javalin.http.ContentType;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
 import com.serbekun.ss.service.resource.ResourcesService;
 
-public class StaticV0CssHttp {
+public class StaticV0HtmlHttp {
     
     private final ResourcesService resourcesService;
 
-    public StaticV0CssHttp(ResourcesService resourcesService) {
+    public StaticV0HtmlHttp(ResourcesService resourcesService) {
         this.resourcesService = resourcesService;
     } 
 
@@ -24,12 +23,12 @@ public class StaticV0CssHttp {
         }
 
         if (name.isEmpty()) {
-            ctx.contentType(ContentType.JSON);
+            ctx.contentType("application/json");
         } else {
-            ctx.contentType(ContentType.CSS);
+            ctx.contentType("text/html");
         }
 
-        String html = resourcesService.getCss(name);
+        String html = resourcesService.getHtml(name);
 
         if (html == null) {
             ctx.status(HttpStatus.NOT_FOUND);

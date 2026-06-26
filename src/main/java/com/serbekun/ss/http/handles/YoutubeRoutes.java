@@ -1,8 +1,8 @@
 package com.serbekun.ss.http.handles;
 
-import io.javalin.Javalin;
+import com.serbekun.ss.http.handles.api.ApiV0YoutubeHttp;
 
-import com.serbekun.ss.http.handles.v0.ApiV0YoutubeHttp;
+import io.javalin.Javalin;
 
 public class YoutubeRoutes {
 

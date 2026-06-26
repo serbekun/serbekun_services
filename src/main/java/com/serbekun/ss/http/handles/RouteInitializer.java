@@ -2,11 +2,11 @@ package com.serbekun.ss.http.handles;
 
 import io.javalin.Javalin;
 
-import com.serbekun.ss.http.handles.v0.ApiV0CatalogsLinksHttp;
-import com.serbekun.ss.http.handles.v0.ApiV0CipherAesHttp;
-import com.serbekun.ss.http.handles.v0.ApiV0UploadedFilesHttp;
-import com.serbekun.ss.http.handles.v0.ApiVersion;
-import com.serbekun.ss.http.handles.v0.ApiV0YoutubeHttp;
+import com.serbekun.ss.http.handles.api.ApiV0CatalogsLinksHttp;
+import com.serbekun.ss.http.handles.api.ApiV0CipherAesHttp;
+import com.serbekun.ss.http.handles.api.ApiV0UploadedFilesHttp;
+import com.serbekun.ss.http.handles.api.ApiV0YoutubeHttp;
+import com.serbekun.ss.http.handles.api.ApiVersion;
 import com.serbekun.ss.http.handles.v0.StaticV0CssHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0HtmlHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0ImagesHttp;

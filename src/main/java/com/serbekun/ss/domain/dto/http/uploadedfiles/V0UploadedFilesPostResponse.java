@@ -1,5 +1,5 @@
 /** Response DTO returned after a successful file upload. */
-package com.serbekun.ss.http.handles.v0.dto.uploadedfiles;
+package com.serbekun.ss.domain.dto.http.uploadedfiles;
 
 import java.util.UUID;
 

@@ -1,5 +1,5 @@
 /** Record for updating an existing link via PUT request. */
-package com.serbekun.ss.http.handles.v0.dto.links;
+package com.serbekun.ss.domain.dto.http.links;
 
 public record V0LinksPutRequest(
     String uuid,

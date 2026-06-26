@@ -2,7 +2,7 @@ package com.serbekun.ss.http.handles;
 
 import io.javalin.Javalin;
 
-import com.serbekun.ss.http.handles.v0.ApiVersion;
+import com.serbekun.ss.http.handles.api.ApiVersion;
 
 public class VersionRoutes {
 

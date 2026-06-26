@@ -1,8 +1,8 @@
 package com.serbekun.ss.http.handles;
 
-import io.javalin.Javalin;
+import com.serbekun.ss.http.handles.api.ApiV0UploadedFilesHttp;
 
-import com.serbekun.ss.http.handles.v0.ApiV0UploadedFilesHttp;
+import io.javalin.Javalin;
 
 /**
  * Routes for working with uploaded files.

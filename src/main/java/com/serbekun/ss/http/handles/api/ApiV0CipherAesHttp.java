@@ -1,10 +1,10 @@
-package com.serbekun.ss.http.handles.v0;
+package com.serbekun.ss.http.handles.api;
 
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 import io.javalin.http.HttpStatus;
 
-import com.serbekun.ss.http.handles.v0.dto.cipher.aes.*;
+import com.serbekun.ss.domain.dto.http.cipher.aes.*;
 import com.serbekun.ss.service.cipher.CipherService;
 
 public class ApiV0CipherAesHttp {

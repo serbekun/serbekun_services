@@ -1,12 +1,12 @@
-package com.serbekun.ss.http.handles.v0;
+package com.serbekun.ss.http.handles.api;
 
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 import io.javalin.http.HttpStatus;
 
-import com.serbekun.ss.http.handles.v0.dto.links.V0LinksDeleteRequest;
-import com.serbekun.ss.http.handles.v0.dto.links.V0LinksPostRequest;
-import com.serbekun.ss.http.handles.v0.dto.links.V0LinksPutRequest;
+import com.serbekun.ss.domain.dto.http.links.V0LinksDeleteRequest;
+import com.serbekun.ss.domain.dto.http.links.V0LinksPostRequest;
+import com.serbekun.ss.domain.dto.http.links.V0LinksPutRequest;
 import com.serbekun.ss.service.links.LinksService;
 
 public class ApiV0CatalogsLinksHttp {

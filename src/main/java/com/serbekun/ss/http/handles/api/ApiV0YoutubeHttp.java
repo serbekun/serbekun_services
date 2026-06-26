@@ -1,4 +1,4 @@
-package com.serbekun.ss.http.handles.v0;
+package com.serbekun.ss.http.handles.api;
 
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;

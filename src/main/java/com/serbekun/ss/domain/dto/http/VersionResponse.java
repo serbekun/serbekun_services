@@ -1,4 +1,4 @@
-package com.serbekun.ss.http.handles.v0.dto;
+package com.serbekun.ss.domain.dto.http;
 
 /**
  * object for response in version api handles

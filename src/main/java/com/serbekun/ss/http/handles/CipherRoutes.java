@@ -1,8 +1,8 @@
 package com.serbekun.ss.http.handles;
 
-import io.javalin.Javalin;
+import com.serbekun.ss.http.handles.api.ApiV0CipherAesHttp;
 
-import com.serbekun.ss.http.handles.v0.ApiV0CipherAesHttp;
+import io.javalin.Javalin;
 
 /**
  * Routes for AES encryption.

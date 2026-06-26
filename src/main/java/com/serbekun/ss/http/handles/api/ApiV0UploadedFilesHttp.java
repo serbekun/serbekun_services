@@ -1,6 +1,7 @@
-package com.serbekun.ss.http.handles.v0;
+package com.serbekun.ss.http.handles.api;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
 
 import io.javalin.http.Context;
@@ -10,10 +11,11 @@ import io.javalin.http.UploadedFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.serbekun.ss.http.handles.v0.dto.uploadedfiles.V0UploadedFilesDeleteRequest;
-import com.serbekun.ss.http.handles.v0.dto.uploadedfiles.V0UploadedFilesGetResponse;
-import com.serbekun.ss.http.handles.v0.dto.uploadedfiles.V0UploadedFilesPostResponse;
+import com.serbekun.ss.domain.dto.http.uploadedfiles.V0UploadedFilesDeleteRequest;
+import com.serbekun.ss.domain.dto.http.uploadedfiles.V0UploadedFilesGetResponse;
+import com.serbekun.ss.domain.dto.http.uploadedfiles.V0UploadedFilesPostResponse;
 import com.serbekun.ss.service.uploadedfiles.UploadedFilesService;
 
 /**

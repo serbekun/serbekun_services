@@ -1,6 +1,6 @@
-package com.serbekun.ss.http.handles.v0;
+package com.serbekun.ss.http.handles.api;
 
-import com.serbekun.ss.http.handles.v0.dto.VersionResponse;
+import com.serbekun.ss.domain.dto.http.VersionResponse;
 
 import io.javalin.http.Context;
 

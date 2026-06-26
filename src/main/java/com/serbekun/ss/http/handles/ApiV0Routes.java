@@ -11,13 +11,15 @@ public class ApiV0Routes {
     private final LinkCatalogRoutes linkCatalogRoutes;
     private final YoutubeRoutes youtubeRoutes;
     private final UploadedFilesRoutes uploadedFilesRoutes;
+    private final VersionRoutes versionRoutes;
 
     public ApiV0Routes(CipherRoutes cipherRoutes, LinkCatalogRoutes linkCatalogRoutes, YoutubeRoutes youtubeRoutes,
-                       UploadedFilesRoutes uploadedFilesRoutes) {
+                       UploadedFilesRoutes uploadedFilesRoutes, VersionRoutes versionRoutes) {
         this.cipherRoutes = cipherRoutes;
         this.linkCatalogRoutes = linkCatalogRoutes;
         this.youtubeRoutes = youtubeRoutes;
         this.uploadedFilesRoutes = uploadedFilesRoutes;
+        this.versionRoutes = versionRoutes;
     }
 
     /**
@@ -28,5 +30,6 @@ public class ApiV0Routes {
         linkCatalogRoutes.register(svr);
         youtubeRoutes.register(svr);
         uploadedFilesRoutes.register(svr);
+        versionRoutes.register(svr);
     }
 }

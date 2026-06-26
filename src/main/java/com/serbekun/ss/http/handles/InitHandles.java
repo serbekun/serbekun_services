@@ -36,6 +36,7 @@ public class InitHandles {
         ApiV0CatalogsLinksHttp apiV0CatalogsLinksHttp = new ApiV0CatalogsLinksHttp(linksService);
         ApiV0YoutubeHttp apiV0YoutubeHttp = new ApiV0YoutubeHttp(youtubeService);
         ApiV0UploadedFilesHttp apiV0UploadedFilesHttp = new ApiV0UploadedFilesHttp(uploadedFilesService);
+        ApiVersion apiVersion = new ApiVersion();
 
         EndpointAuthInitializer.initHandlesAuthSetting(svr, endpointRegistrar, authService);
 
@@ -48,7 +49,8 @@ public class InitHandles {
             new CipherRoutes(apiV0CipherAesHttp),
             new LinkCatalogRoutes(apiV0CatalogsLinksHttp),
             new YoutubeRoutes(apiV0YoutubeHttp),
-            new UploadedFilesRoutes(apiV0UploadedFilesHttp)
+            new UploadedFilesRoutes(apiV0UploadedFilesHttp),
+            new VersionRoutes(apiVersion)
         );
         apiV0Routes.register(svr);
     }

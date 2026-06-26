@@ -18,6 +18,7 @@ public class EndpointAuthInitializer {
         Endpoint endpointStaticV0Html = new Endpoint("/static/v0/html/");
         Endpoint endpointApiV0CipherAes = new Endpoint("/api/v0/cipher");
         Endpoint endpointApiV0CatalogsLinks = new Endpoint("/api/v0/catalogs/links");
+        Endpoint endpointApiV0Version = new Endpoint("/api/v0/version");
 
         // register
         endpointRegistrar.register(endpointIndex, false);
@@ -26,6 +27,7 @@ public class EndpointAuthInitializer {
         endpointRegistrar.register(endpointStaticV0Html, false);
         endpointRegistrar.register(endpointApiV0CipherAes, false);
         endpointRegistrar.register(endpointApiV0CatalogsLinks, false);
+        endpointRegistrar.register(endpointApiV0Version, false);
 
         svr.before("/", ctx -> ctx.attribute("endpoint", endpointIndex));
         svr.before("/static/v0/images/{name}", ctx -> ctx.attribute("endpoint", endpointStaticV0Images));
@@ -38,6 +40,7 @@ public class EndpointAuthInitializer {
         svr.before("/api/v0/cipher/aes/decrypt", ctx -> ctx.attribute("endpoint", endpointApiV0CipherAes));
         svr.before("/api/v0/catalogs/links", ctx -> ctx.attribute("endpoint", endpointApiV0CatalogsLinks));
         svr.before("/api/v0/catalogs/links/{uuid}", ctx -> ctx.attribute("endpoint", endpointApiV0CatalogsLinks));
+        svr.before("/api/v0/version", ctx -> ctx.attribute("endpoint", endpointApiV0Version));
 
         // auth gate
         svr.before(ctx -> {

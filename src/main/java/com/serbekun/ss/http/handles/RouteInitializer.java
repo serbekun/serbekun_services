@@ -5,6 +5,7 @@ import io.javalin.Javalin;
 import com.serbekun.ss.http.handles.v0.ApiV0CatalogsLinksHttp;
 import com.serbekun.ss.http.handles.v0.ApiV0CipherAesHttp;
 import com.serbekun.ss.http.handles.v0.ApiV0UploadedFilesHttp;
+import com.serbekun.ss.http.handles.v0.ApiVersion;
 import com.serbekun.ss.http.handles.v0.ApiV0YoutubeHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0CssHttp;
 import com.serbekun.ss.http.handles.v0.StaticV0HtmlHttp;
@@ -66,6 +67,7 @@ public class RouteInitializer {
         ApiV0CatalogsLinksHttp apiV0CatalogsLinksHttp = new ApiV0CatalogsLinksHttp(linksService);
         ApiV0YoutubeHttp apiV0YoutubeHttp = new ApiV0YoutubeHttp(youtubeService);
         ApiV0UploadedFilesHttp apiV0UploadedFilesHttp = new ApiV0UploadedFilesHttp(uploadedFilesService);
+        ApiVersion apiVersion = new ApiVersion();
 
         // Register routes
         StaticRoutes staticRoutes = new StaticRoutes(index,
@@ -83,7 +85,8 @@ public class RouteInitializer {
             new CipherRoutes(apiV0CipherAesHttp),
             new LinkCatalogRoutes(apiV0CatalogsLinksHttp),
             new YoutubeRoutes(apiV0YoutubeHttp),
-            new UploadedFilesRoutes(apiV0UploadedFilesHttp)
+            new UploadedFilesRoutes(apiV0UploadedFilesHttp),
+            new VersionRoutes(apiVersion)
         );
         apiV0Routes.register(svr);
     }

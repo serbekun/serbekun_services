@@ -39,6 +39,10 @@ public class FilesStorageService {
         }
     }
 
+    /**
+     * Remove file from storage by uuid.
+     * @param uuid the UUID of the file to be removed.
+     */
     public void RemoveFile(UUID uuid) {
         Path filePath = formatPath(uuid);
 
@@ -54,6 +58,11 @@ public class FilesStorageService {
         }
     }
 
+    /**
+     * Get file bytes by uuid.
+     * @param uuid the UUID of the file to retrieve.
+     * @return the bytes of the file, or null if the file is not found.
+     */
     public byte[] GetFile(UUID uuid) {
         Path path = formatPath(uuid);
         

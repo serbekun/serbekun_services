@@ -11,10 +11,9 @@ import com.serbekun.ss.service.auth.api.EndpointRegistrar;
  * class for contain Map of <endpoint, requires auth>
  */
 public class EndpointRegistry implements EndpointRegistrar, EndpointAuthProvider {
-    
 
     /**
-     * endpoints map
+     * Endpoints map
      */
     private static final Map<Endpoint, Boolean> endpoints = new ConcurrentHashMap<>();
    

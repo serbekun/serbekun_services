@@ -8,6 +8,7 @@ import com.serbekun.ss.service.auth.api.Endpoint;
 
 public class EndpointsAccessTokensService {
     
+    /** Repository for managing endpoint access tokens */
     private final EndpointsAccessTokensRepo tokens;
 
     public EndpointsAccessTokensService(EndpointsAccessTokensRepo tokens) {
@@ -15,11 +16,9 @@ public class EndpointsAccessTokensService {
     }
 
     /**
-     *
      * Add token to catalog
-     *
      * @param token the token string
-     * @param allowedEndpoints list of allowed endpoints
+     * @param allowedEndpoints list of endpoints that the token allows access to
      */
     public synchronized void addToken(String token, List<Endpoint> allowedEndpoints) {
         if (token == null) {
@@ -29,31 +28,26 @@ public class EndpointsAccessTokensService {
     }
 
     /**
-     *
-     * get allowed endpoints for token
-     *
+     * Get token from catalog
      * @param token the token string
-     * @return list of allowed endpoints or null
+     * @return list of allowed endpoints for the token or null if not found
      */
     public synchronized List<Endpoint> getToken(String token) {
         return tokens.getToken(token);
     }
 
     /**
-     * return all tokens
-     *
-     * @return immutable copy of tokens map
+     * Get all tokens and their allowed endpoints
+     * @return a map of token strings to their corresponding list of allowed endpoints
      */
     public synchronized Map<String, List<Endpoint>> getAllTokens() {
         return tokens.getEndpointsTokensData();
     }
 
     /**
-     *
-     * helper method for update token
-     *
+     * Update token in catalog
      * @param token the token string
-     * @param newAllowedEndpoints new list of allowed endpoints
+     * @param newAllowedEndpoints list of new allowed endpoints
      */
     public synchronized void updateToken(String token, List<Endpoint> newAllowedEndpoints) {
         tokens.removeToken(token);
@@ -61,11 +55,10 @@ public class EndpointsAccessTokensService {
     }
 
     /**
-     *
-     * remove token from catalog
+     * Remove token from catalog
      *
      * @param token the token string
-     * @return the previous list of allowed endpoints or null
+     * @return list of allowed endpoints for the removed token or null
      */
     public synchronized List<Endpoint> removeToken(String token) {
         if (token == null) {

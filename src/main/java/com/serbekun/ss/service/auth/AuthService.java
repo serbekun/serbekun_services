@@ -14,12 +14,14 @@ import com.serbekun.ss.service.tokens.EndpointsAccessTokensService;
  */
 public class AuthService {
     
+    /** Logger for logging authentication-related events. */
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
+    /** Service for managing endpoint access tokens. */
     private EndpointsAccessTokensService tokensService;
+    /** Provider for checking endpoint authentication requirements. */
     private EndpointAuthProvider endpointAuthProvider;
 
-    
     public AuthService(EndpointsAccessTokensService tokensService, EndpointAuthProvider endpointAuthProvider) {
         this.tokensService = tokensService;
         this.endpointAuthProvider = endpointAuthProvider;

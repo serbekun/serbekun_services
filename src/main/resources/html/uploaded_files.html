@@ -52,7 +52,16 @@
 
             <div class="field">
                 <div class="field-label">time-to-live (seconds, 0 = never)</div>
-                <input type="number" id="uploadTtl" placeholder="3600" min="0" spellcheck="false" value="0">
+                <div class="ttl-presets" id="ttlPresets">
+                    <button type="button" class="ttl-preset" data-ttl="60" onclick="setTtlPreset(this, 60)">Minute</button>
+                    <button type="button" class="ttl-preset" data-ttl="3600" onclick="setTtlPreset(this, 3600)">Hour</button>
+                    <button type="button" class="ttl-preset" data-ttl="86400" onclick="setTtlPreset(this, 86400)">Day</button>
+                    <button type="button" class="ttl-preset" data-ttl="604800" onclick="setTtlPreset(this, 604800)">Week</button>
+                    <button type="button" class="ttl-preset" data-ttl="2592000" onclick="setTtlPreset(this, 2592000)">Month</button>
+                    <button type="button" class="ttl-preset" data-ttl="31536000" onclick="setTtlPreset(this, 31536000)">Year</button>
+                    <button type="button" class="ttl-preset active" data-ttl="0" onclick="setTtlPreset(this, 0)">Forever</button>
+                </div>
+                <input type="number" id="uploadTtl" placeholder="3600" min="0" spellcheck="false" value="0" oninput="syncTtlPresets()">
             </div>
 
             <button class="btn-primary" onclick="uploadFile()">Upload File</button>

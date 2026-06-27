@@ -60,6 +60,27 @@ function onFileSelected() {
     });
 })();
 
+// ── TTL presets ──
+
+// Sets the ttl input to the chosen preset and highlights its button.
+function setTtlPreset(btn, seconds) {
+    document.getElementById('uploadTtl').value = String(seconds);
+    highlightTtlPreset(seconds);
+}
+
+// Highlights the preset button matching the given seconds value, if any.
+function highlightTtlPreset(seconds) {
+    document.querySelectorAll('.ttl-preset').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.ttl, 10) === seconds);
+    });
+}
+
+// Keeps preset highlighting in sync when the ttl input is edited manually.
+function syncTtlPresets() {
+    const val = parseInt(document.getElementById('uploadTtl').value, 10);
+    highlightTtlPreset(isNaN(val) ? null : val);
+}
+
 // ── Formatting ──
 
 function formatSize(bytes) {
@@ -138,6 +159,7 @@ async function uploadFile() {
         document.getElementById('dropZoneText').style.display = '';
         nameInput.value = '';
         ttlInput.value = '0';
+        highlightTtlPreset(0);
 
         showStatus('File uploaded successfully!');
         openTokenModal(data);
@@ -388,6 +410,8 @@ function showStatus(msg, isError) {
     window.switchTab = switchTab;
     window.onFileSelected = onFileSelected;
     window.uploadFile = uploadFile;
+    window.setTtlPreset = setTtlPreset;
+    window.syncTtlPresets = syncTtlPresets;
     window.copyCredentials = copyCredentials;
     window.copyShareLink = copyShareLink;
     window.closeTokenModal = closeTokenModal;

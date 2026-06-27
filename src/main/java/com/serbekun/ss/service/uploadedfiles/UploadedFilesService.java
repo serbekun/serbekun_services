@@ -3,6 +3,7 @@ package com.serbekun.ss.service.uploadedfiles;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
@@ -93,6 +94,21 @@ public class UploadedFilesService {
 
     /** Read raw file content from disk. Returns null if the file does not exist. */
     public synchronized byte[] getFileContent(UUID uuid) throws IOException {
+
+        
+        UploadedFile uploadedFile = getFileMetadata(uuid);
+        if (uploadedFile == null) {
+            return null;
+        }
+
+
+        long now = Instant.now().toEpochMilli();
+        if (now >= uploadedFile.expiredTime()) {
+            repo.removeUploadedFile(uuid);
+            deleteRawFile(uuid);
+            return null;
+        }
+
         Path source = rawFilesDir.resolve(uuid.toString());
         if (!Files.exists(source)) {
             return null;
@@ -103,6 +119,21 @@ public class UploadedFilesService {
     /** Check whether a file with the given UUID exists in the repository. */
     public synchronized boolean exists(UUID uuid) {
         return repo.existsUploadedFile(uuid);
+    }
+
+    /**
+     * Delete the raw file from disk. Does not remove metadata from the repository.
+     * @param uuid the UUID of the file to delete
+     * @throws IOException if an I/O error occurs while deleting the file
+     */
+    private synchronized void deleteRawFile(UUID uuid) throws IOException {
+        Path source = rawFilesDir.resolve(uuid.toString());
+        try {
+            Files.deleteIfExists(source);
+        } catch (IOException e) {
+            log.error("Failed to delete raw file for uuid={}", uuid, e);
+            throw e;
+        }
     }
 
     /**
@@ -121,9 +152,8 @@ public class UploadedFilesService {
         }
 
         // Delete raw file
-        Path source = rawFilesDir.resolve(uuid.toString());
         try {
-            Files.deleteIfExists(source);
+            deleteRawFile(uuid);
         } catch (IOException e) {
             log.error("Failed to delete raw file for uuid={}", uuid, e);
             return 500;

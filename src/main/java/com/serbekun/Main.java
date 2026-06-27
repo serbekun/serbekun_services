@@ -163,7 +163,10 @@ public class Main {
         var uploadedFilesService = new UploadedFilesService(
                 repos.uploadedFilesRepo,
                 Paths.UploadedFilesConfig.getUploadedFilesRAWFolder());
-        var uploadedFilesCleanupService = new UploadedFilesCleanupService(uploadedFilesService, 60);
+
+        var uploadedFilesCleanupService = 
+            new UploadedFilesCleanupService(uploadedFilesService, 600);
+
 
         return new Services(endpointRegistry, endpointAccessTokensService, linksService, authService,
                 youtubeService, uploadedFilesService, uploadedFilesCleanupService);

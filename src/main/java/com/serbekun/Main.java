@@ -16,6 +16,8 @@ import com.serbekun.ss.repo.links.LinksFileRepo;
 import com.serbekun.ss.repo.links.LinksRepo;
 import com.serbekun.ss.repo.localtokens.LocalTokensFileRepo;
 import com.serbekun.ss.repo.localtokens.LocalTokensRepo;
+import com.serbekun.ss.repo.shorturl.ShortUrlFileRepo;
+import com.serbekun.ss.repo.shorturl.ShortUrlRepo;
 import com.serbekun.ss.repo.uploadedfiles.UploadedFilesFileRepo;
 import com.serbekun.ss.repo.uploadedfiles.UploadedFilesRepo;
 import com.serbekun.ss.resources.ResourceCache;
@@ -25,6 +27,7 @@ import com.serbekun.ss.service.auth.EndpointRegistry;
 import com.serbekun.ss.service.autosave.*;
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
+import com.serbekun.ss.service.shorturl.ShortUrlService;
 import com.serbekun.ss.service.tokens.EndpointsAccessTokensService;
 import com.serbekun.ss.service.uploadedfiles.UploadedFilesCleanupService;
 import com.serbekun.ss.service.uploadedfiles.UploadedFilesService;
@@ -127,6 +130,11 @@ public class Main {
         UploadedFilesRepo uploadedFilesRepo = new UploadedFilesRepo(uploadedFilesFileRepo.load());
         uploadedFilesFileRepo.setUploadedFilesReadInterface(uploadedFilesRepo);
 
+        // 5. Short URLs
+        ShortUrlFileRepo shortUrlFileRepo = new ShortUrlFileRepo(Paths.ShortUrlConfig.getShortUrlStorageFile());
+        ShortUrlRepo shortUrlRepo = new ShortUrlRepo(shortUrlFileRepo.load());
+        shortUrlFileRepo.setShortUrlReadInterface(shortUrlRepo);
+
         return new Repositories(
             linksRepo,
             endpointsAccessTokensRepo,
@@ -135,7 +143,9 @@ public class Main {
             linksLocalTokensFileRepo,
             linksFileRepo,
             uploadedFilesRepo,
-            uploadedFilesFileRepo
+            uploadedFilesFileRepo,
+            shortUrlRepo,
+            shortUrlFileRepo
         );
     }
 
@@ -164,12 +174,16 @@ public class Main {
                 repos.uploadedFilesRepo,
                 Paths.UploadedFilesConfig.getUploadedFilesRAWFolder());
 
-        var uploadedFilesCleanupService = 
+        var uploadedFilesCleanupService =
             new UploadedFilesCleanupService(uploadedFilesService, 600);
+
+        // Short URLs
+        var shortUrlService = new ShortUrlService(repos.shortUrlRepo);
 
 
         return new Services(endpointRegistry, linksService, authService,
-                youtubeService, uploadedFilesService, uploadedFilesCleanupService);
+                youtubeService, uploadedFilesService, uploadedFilesCleanupService,
+                shortUrlService);
     }
 
     /**
@@ -201,7 +215,8 @@ public class Main {
             services.linksService,
             new com.serbekun.ss.service.cipher.CipherService(),
             services.youtubeService,
-            services.uploadedFilesService
+            services.uploadedFilesService,
+            services.shortUrlService
         );
     }
 
@@ -225,7 +240,8 @@ public class Main {
             ctx.handlers.linksService,
             ctx.handlers.cipherService,
             ctx.handlers.youtubeService,
-            ctx.handlers.uploadedFilesService
+            ctx.handlers.uploadedFilesService,
+            ctx.handlers.shortUrlService
         );
 
         // Autosave
@@ -252,6 +268,7 @@ public class Main {
         autosave.register(repos.endpointsAccessTokensFileRepo);
         autosave.register(repos.linksLocalTokensFileRepo);
         autosave.register(repos.uploadedFilesFileRepo);
+        autosave.register(repos.shortUrlFileRepo);
         autosave.start();
         return autosave;
     }
@@ -301,6 +318,8 @@ public class Main {
         private final LinksFileRepo linksFileRepo;
         private final UploadedFilesRepo uploadedFilesRepo;
         private final UploadedFilesFileRepo uploadedFilesFileRepo;
+        private final ShortUrlRepo shortUrlRepo;
+        private final ShortUrlFileRepo shortUrlFileRepo;
 
         private Repositories(
                 LinksRepo linksRepo,
@@ -310,7 +329,9 @@ public class Main {
                 LocalTokensFileRepo linksLocalTokensFileRepo,
                 LinksFileRepo linksFileRepo,
                 UploadedFilesRepo uploadedFilesRepo,
-                UploadedFilesFileRepo uploadedFilesFileRepo) {
+                UploadedFilesFileRepo uploadedFilesFileRepo,
+                ShortUrlRepo shortUrlRepo,
+                ShortUrlFileRepo shortUrlFileRepo) {
             this.linksRepo = linksRepo;
             this.endpointsAccessTokensRepo = endpointsAccessTokensRepo;
             this.endpointsAccessTokensFileRepo = endpointsAccessTokensFileRepo;
@@ -319,6 +340,8 @@ public class Main {
             this.linksFileRepo = linksFileRepo;
             this.uploadedFilesRepo = uploadedFilesRepo;
             this.uploadedFilesFileRepo = uploadedFilesFileRepo;
+            this.shortUrlRepo = shortUrlRepo;
+            this.shortUrlFileRepo = shortUrlFileRepo;
         }
     }
 
@@ -334,6 +357,7 @@ public class Main {
         private final YoutubeService youtubeService;
         private final UploadedFilesService uploadedFilesService;
         private final UploadedFilesCleanupService uploadedFilesCleanupService;
+        private final ShortUrlService shortUrlService;
 
         private Services(
                 EndpointRegistry endpointRegistry,
@@ -341,13 +365,15 @@ public class Main {
                 AuthService authService,
                 YoutubeService youtubeService,
                 UploadedFilesService uploadedFilesService,
-                UploadedFilesCleanupService uploadedFilesCleanupService) {
+                UploadedFilesCleanupService uploadedFilesCleanupService,
+                ShortUrlService shortUrlService) {
             this.endpointRegistry = endpointRegistry;
             this.linksService = linksService;
             this.authService = authService;
             this.youtubeService = youtubeService;
             this.uploadedFilesService = uploadedFilesService;
             this.uploadedFilesCleanupService = uploadedFilesCleanupService;
+            this.shortUrlService = shortUrlService;
         }
     }
 
@@ -370,18 +396,21 @@ public class Main {
         private final com.serbekun.ss.service.cipher.CipherService cipherService;
         private final YoutubeService youtubeService;
         private final UploadedFilesService uploadedFilesService;
+        private final ShortUrlService shortUrlService;
 
         private Handlers(
                 com.serbekun.ss.service.resource.ResourcesService resourcesService,
                 com.serbekun.ss.service.links.LinksService linksService,
                 com.serbekun.ss.service.cipher.CipherService cipherService,
                 YoutubeService youtubeService,
-                UploadedFilesService uploadedFilesService) {
+                UploadedFilesService uploadedFilesService,
+                ShortUrlService shortUrlService) {
             this.resourcesService = resourcesService;
             this.linksService = linksService;
             this.cipherService = cipherService;
             this.youtubeService = youtubeService;
             this.uploadedFilesService = uploadedFilesService;
+            this.shortUrlService = shortUrlService;
         }
     }
 }

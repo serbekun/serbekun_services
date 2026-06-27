@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>URL Shortener — Serbekun</title>
+    <link rel="stylesheet" href="/static/v0/css/shared.css">
+    <link rel="stylesheet" href="/static/v0/css/short_url.css">
+</head>
+<body>
+
+    <div class="container">
+        <a href="/" class="back-link">back</a>
+
+        <div class="header">
+            <h1 class="header-title">URL Shortener</h1>
+            <p class="header-sub">// shorten, share &amp; manage your links</p>
+        </div>
+
+        <div class="prompt-line">
+            <span class="cwd">~/serbekun/short-url</span>
+            <span>$</span>
+            <span>./shorten --interactive</span>
+            <span class="prompt-cursor"></span>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab(0)">shorten</button>
+            <button class="tab-btn" onclick="switchTab(1)">my links</button>
+            <button class="tab-btn" onclick="switchTab(2)">manage</button>
+        </div>
+
+        <!-- SHORTEN TAB -->
+        <div id="shortenTab">
+            <div class="field">
+                <div class="field-label">long url</div>
+                <input type="text" id="targetUrl" placeholder="https://example.com/very/long/path..." spellcheck="false">
+            </div>
+
+            <div class="field">
+                <div class="field-label">name (optional)</div>
+                <input type="text" id="linkName" placeholder="a short label for this link" spellcheck="false">
+            </div>
+
+            <div class="field">
+                <div class="field-label">description (optional)</div>
+                <textarea id="linkDescription" placeholder="what is this link for?" spellcheck="false" rows="3"></textarea>
+            </div>
+
+            <button class="btn-primary" onclick="shortenUrl()">Shorten URL</button>
+        </div>
+
+        <!-- MY LINKS TAB -->
+        <div id="linksTab">
+            <div class="files-section">
+                <p class="section-hint">// links created this session — keep the token to delete later</p>
+                <div class="files-list" id="linksList">
+                    <div class="empty-state">no links created yet in this session</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MANAGE TAB -->
+        <div id="manageTab">
+            <div class="field">
+                <div class="field-label">short id</div>
+                <input type="text" id="manageId" placeholder="paste short id here..." spellcheck="false">
+            </div>
+
+            <div class="field">
+                <div class="field-label">delete token</div>
+                <div class="token-input-wrap">
+                    <input type="text" id="manageToken" placeholder="paste token here (required to delete)..." spellcheck="false">
+                </div>
+            </div>
+
+            <div class="access-actions">
+                <button class="btn-primary" onclick="openShort()" style="flex:1;">open link</button>
+                <button class="btn-primary" onclick="copyShortLink()" style="flex:1;">copy link</button>
+                <button class="btn-danger" onclick="deleteShort()" style="flex:1;">delete</button>
+            </div>
+        </div>
+
+        <div class="status-line" id="status"></div>
+
+        <div class="footer">serbekun service // url shortener</div>
+    </div>
+
+    <!-- TOKEN MODAL -->
+    <div id="tokenModal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <h2>short url created</h2>
+            <p style="color:#666; font-size:0.82rem; margin-bottom:0.8rem;">save the token — it's required to delete this link and won't be shown again</p>
+            <div class="credential-row">
+                <span class="cred-label">Short link</span>
+                <span class="cred-value mono" id="modalLink"></span>
+            </div>
+            <div class="credential-row">
+                <span class="cred-label">ID</span>
+                <span class="cred-value mono" id="modalId"></span>
+            </div>
+            <div class="credential-row">
+                <span class="cred-label">Token</span>
+                <span class="cred-value mono" id="modalToken"></span>
+            </div>
+            <div class="credential-row">
+                <span class="cred-label">Target</span>
+                <span class="cred-value" id="modalTarget"></span>
+            </div>
+            <div class="credential-row">
+                <span class="cred-label">Name</span>
+                <span class="cred-value" id="modalName"></span>
+            </div>
+            <div style="margin-top:1.2rem; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+                <button class="copy-btn" onclick="copyModalLink()">copy link</button>
+                <button class="copy-btn" onclick="copyCredentials()">copy credentials</button>
+                <button class="close-modal-btn" onclick="closeTokenModal()">close</button>
+            </div>
+            <p class="feedback-text" id="modalCopyFeedback"></p>
+        </div>
+    </div>
+
+    <script src="/static/v0/js/short_url.js"></script>
+</body>
+</html>

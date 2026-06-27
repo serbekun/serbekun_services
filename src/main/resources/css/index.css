@@ -17,6 +17,19 @@ body {
     margin: 0 auto 2rem;
 }
 
+/* `ver` command output sits tight under its prompt */
+.ver-prompt { margin-bottom: 6px; }
+
+.ver-output {
+    max-width: 680px;
+    margin: 0 auto 2rem;
+    font-size: 0.8rem;
+    color: #888;
+    padding-left: 2px;
+}
+
+.ver-output.ver-error { color: #a05050; }
+
 /* ─── Sections ─── */
 .section { margin-bottom: 2rem; }
 

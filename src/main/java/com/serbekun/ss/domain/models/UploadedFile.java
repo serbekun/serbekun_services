@@ -5,6 +5,9 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Represents an uploaded file in the system.
+ */
 public class UploadedFile {
 
     private final UUID uuid;

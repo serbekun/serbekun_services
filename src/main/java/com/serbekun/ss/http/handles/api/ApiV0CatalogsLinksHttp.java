@@ -9,6 +9,10 @@ import com.serbekun.ss.domain.dto.http.links.V0LinksPostRequest;
 import com.serbekun.ss.domain.dto.http.links.V0LinksPutRequest;
 import com.serbekun.ss.service.links.LinksService;
 
+/**
+ * Handles HTTP requests for the API version 0 related to catalogs links.
+ * ApiV0CatalogsLinksHttp
+ */
 public class ApiV0CatalogsLinksHttp {
     
     private final LinksService linksService;
@@ -17,6 +21,10 @@ public class ApiV0CatalogsLinksHttp {
         this.linksService = linksService;
     }
 
+    /**
+     * Handles the main HTTP request for the API version 0 catalogs links.
+     * @param ctx the Javalin context containing the request.
+     */
     public void main(Context ctx) {
 
         HandlerType handlerType = ctx.method();
@@ -40,6 +48,10 @@ public class ApiV0CatalogsLinksHttp {
         }
     }
 
+    /**
+     * Handles the GET request for retrieving all links in JSON format.
+     * @param ctx the Javalin context containing the request.
+     */
     private void handleGet(Context ctx) {
         ctx.contentType("application/json");
 
@@ -52,6 +64,10 @@ public class ApiV0CatalogsLinksHttp {
         ctx.result(json);
     }
 
+    /**
+     * Handles the POST request for creating a new link.
+     * @param ctx the Javalin context containing the request.
+     */
     private void handlePost(Context ctx) {
         ctx.contentType("application/json");
 
@@ -66,6 +82,10 @@ public class ApiV0CatalogsLinksHttp {
         ctx.result("{\"token\":\"" + token + "\"}");
     }
 
+    /**
+     * Handles the PUT request for updating an existing link.
+     * @param ctx the Javalin context containing the request.
+     */
     private void handlePut(Context ctx) {
         ctx.contentType("application/json");
 
@@ -98,6 +118,10 @@ public class ApiV0CatalogsLinksHttp {
         ctx.status(HttpStatus.NO_CONTENT);
     }
 
+    /**
+     * Handles the DELETE request for deleting an existing link.
+     * @param ctx the Javalin context containing the request.
+     */
     private void handleDelete(Context ctx) {
         ctx.contentType("application/json");
 
@@ -130,6 +154,13 @@ public class ApiV0CatalogsLinksHttp {
         ctx.status(HttpStatus.NO_CONTENT);
     }
 
+    /**
+     * Parses the request body into an instance of the specified class.
+     * @param <T> the type of the class to parse the body into
+     * @param ctx the Javalin context containing the request
+     * @param clazz the class to parse the body into
+     * @return an instance of the specified class, or null if parsing fails
+     */
     private <T> T parseBody(Context ctx, Class<T> clazz) {
         try {
             return ctx.bodyAsClass(clazz);
@@ -138,6 +169,12 @@ public class ApiV0CatalogsLinksHttp {
         }
     }
 
+    /**
+     * Retrieves the value of a path parameter from the context.
+     * @param ctx the Javalin context containing the request.
+     * @param name name of the path parameter to retrieve.
+     * @return the value of the path parameter, or null if not found.
+     */
     private String pathParam(Context ctx, String name) {
         if (ctx.pathParamMap().containsKey(name)) {
             return ctx.pathParamMap().get(name);
@@ -149,6 +186,10 @@ public class ApiV0CatalogsLinksHttp {
         return value == null || value.isBlank();
     }
 
+    /**
+     * Writes an invalid request error response.
+     * @param ctx the Javalin context containing the request.
+     */
     private void writeInvalidRequest(Context ctx) {
         ctx.status(HttpStatus.BAD_REQUEST);
         ctx.result("{\"error\":\"INVALID_REQUEST\",\"message\":\"required field \"url\" are missing\"}");

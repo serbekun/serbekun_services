@@ -20,7 +20,7 @@ input[type="url"]:focus {
     outline: none;
     border-color: #444;
 }
-input[type="url"]::placeholder { color: #3a3a3a; }
+input[type="url"]::placeholder { color: #666; }
 
 /* ── Video info card ── */
 .video-info {
@@ -47,9 +47,9 @@ input[type="url"]::placeholder { color: #3a3a3a; }
     font-size: 0.68rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #555;
+    color: #999;
 }
-.video-info.error .info-header-label { color: #884444; }
+.video-info.error .info-header-label { color: #cc7777; }
 
 .info-body { padding: 14px; background: #080808; }
 
@@ -70,15 +70,15 @@ input[type="url"]::placeholder { color: #3a3a3a; }
 }
 .video-meta span {
     font-size: 0.75rem;
-    color: #555;
+    color: #999;
     letter-spacing: 0.04em;
 }
-.video-meta span::after { content: ' ·'; margin: 0 6px; color: #333; }
+.video-meta span::after { content: ' ·'; margin: 0 6px; color: #555; }
 .video-meta span:last-child::after { content: ''; margin: 0; }
 
 .video-description {
     font-size: 0.78rem;
-    color: #444;
+    color: #bbb;
     line-height: 1.7;
     max-height: 80px;
     overflow: hidden;

@@ -20,7 +20,7 @@
     text-transform: uppercase;
     background: transparent;
     border: none;
-    color: #555;
+    color: #999;
     padding: 8px 18px 10px;
     cursor: pointer;
     border-bottom: 2px solid transparent;
@@ -40,7 +40,7 @@
     font-weight: 500;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #555;
+    color: #999;
     margin-bottom: 8px;
     padding-left: 2px;
 }
@@ -73,7 +73,7 @@ textarea:focus {
 
 input::placeholder,
 textarea::placeholder {
-    color: #3a3a3a;
+    color: #666;
 }
 
 /* ── Buttons ── */
@@ -180,7 +180,7 @@ textarea::placeholder {
 }
 
 .section-hint {
-    color: #555;
+    color: #999;
     font-size: 0.75rem;
     text-align: center;
     margin-bottom: 1.2rem;
@@ -195,7 +195,7 @@ textarea::placeholder {
 
 .empty-state {
     text-align: center;
-    color: #444;
+    color: #999;
     padding: 2rem 1rem;
     font-size: 0.82rem;
 }
@@ -230,7 +230,7 @@ textarea::placeholder {
 .file-card-meta {
     margin-top: 6px;
     font-size: 0.75rem;
-    color: #555;
+    color: #999;
     font-family: inherit;
 }
 
@@ -249,7 +249,7 @@ textarea::placeholder {
 .file-card-actions button {
     padding: 6px 14px;
     background: transparent;
-    color: #666;
+    color: #999;
     border: 1px solid #2a2a2a;
     border-radius: 4px;
     cursor: pointer;
@@ -266,7 +266,7 @@ textarea::placeholder {
 }
 
 .file-card-actions button.danger {
-    color: #884444;
+    color: #aa6666;
     border-color: #3a2020;
 }
 
@@ -279,15 +279,15 @@ textarea::placeholder {
 .status-line {
     font-size: 0.78rem;
     letter-spacing: 0.06em;
-    color: #555;
+    color: #999;
     margin-top: 1.2rem;
     min-height: 18px;
     padding-left: 2px;
     transition: color 0.2s;
 }
 
-.status-line.ok  { color: #668866; }
-.status-line.err { color: #886666; }
+.status-line.ok  { color: #80b380; }
+.status-line.err { color: #cc8080; }
 
 /* ── Modal (terminal themed) ── */
 .modal-overlay {
@@ -326,7 +326,7 @@ textarea::placeholder {
 }
 
 .cred-label {
-    color: #555;
+    color: #999;
     font-size: 0.68rem;
     font-weight: 500;
     text-transform: uppercase;
@@ -358,7 +358,7 @@ textarea::placeholder {
     border-radius: 4px;
     background: transparent;
     border: 1px solid #2a2a2a;
-    color: #666;
+    color: #999;
 }
 
 .copy-btn:hover,
@@ -371,7 +371,7 @@ textarea::placeholder {
     text-align: center;
     margin-top: 10px;
     font-size: 0.75rem;
-    color: #668866;
+    color: #80b380;
     min-height: 18px;
 }
 

@@ -1,17 +1,17 @@
-/* ─── index.css — page-specific overrides & unique styles ─── */
+/*index.css — page-specific overrides & unique styles */
 
 body {
     background: transparent;
     padding: 3rem 1rem 4rem;
 }
 
-/* ─── Header ─── */
+/* Header */
 .header {
     max-width: 680px;
     margin: 0 auto 2.5rem;
 }
 
-/* ─── Prompt line ─── */
+/* Prompt line */
 .prompt-line {
     max-width: 680px;
     margin: 0 auto 2rem;
@@ -24,7 +24,7 @@ body {
     max-width: 680px;
     margin: 0 auto 2rem;
     font-size: 0.8rem;
-    color: #888;
+    color: #aaa;
     padding-left: 2px;
 }
 
@@ -38,7 +38,7 @@ body {
     font-weight: 500;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #444;
+    color: #999;
     margin-bottom: 10px;
     padding-left: 2px;
 }
@@ -69,13 +69,13 @@ body {
 
 .item-num {
     font-size: 0.7rem;
-    color: #444;
+    color: #777;
     min-width: 18px;
 }
 
 .item-icon {
     font-size: 0.9rem;
-    color: #666;
+    color: #999;
     width: 16px;
     text-align: center;
 }
@@ -84,7 +84,7 @@ body {
 .item-icon svg {
     width: 15px;
     height: 15px;
-    stroke: #666;
+    stroke: #999;
     fill: none;
     stroke-width: 1.8;
     stroke-linecap: round;
@@ -98,12 +98,12 @@ body {
 .item-name { flex: 1; letter-spacing: 0.02em; }
 
 .item-arrow {
-    color: #333;
+    color: #666;
     font-size: 0.85rem;
     transition: color 0.15s;
 }
 
-.item:hover .item-arrow { color: #666; }
+.item:hover .item-arrow { color: #aaa; }
 
 /* ─── Footer ─── */
 .footer {

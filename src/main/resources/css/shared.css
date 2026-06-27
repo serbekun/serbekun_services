@@ -22,13 +22,13 @@ body {
     align-items: center;
     gap: 6px;
     font-size: 0.78rem;
-    color: #555;
+    color: #999;
     text-decoration: none;
     letter-spacing: 0.06em;
     margin-bottom: 2.5rem;
     transition: color 0.15s;
 }
-.back-link:hover { color: #aaa; }
+.back-link:hover { color: #ddd; }
 .back-link::before { content: '<'; }
 
 /* ─── Header ─── */
@@ -45,19 +45,19 @@ body {
 }
 .header-sub {
     font-size: 0.75rem;
-    color: #555;
+    color: #999;
     letter-spacing: 0.12em;
 }
 
 /* ─── Prompt line ─── */
 .prompt-line {
     font-size: 0.8rem;
-    color: #555;
+    color: #999;
     display: flex;
     align-items: center;
     gap: 6px;
 }
-.prompt-line .cwd { color: #888; }
+.prompt-line .cwd { color: #bbb; }
 .prompt-cursor {
     display: inline-block;
     width: 7px;
@@ -74,7 +74,7 @@ body {
     font-weight: 500;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #555;
+    color: #999;
     margin-bottom: 8px;
     padding-left: 2px;
 }
@@ -83,14 +83,14 @@ body {
 .status-line {
     font-size: 0.78rem;
     letter-spacing: 0.06em;
-    color: #555;
+    color: #999;
     margin-top: 1.2rem;
     min-height: 18px;
     padding-left: 2px;
     transition: color 0.2s;
 }
-.status-line.ok  { color: #668866; }
-.status-line.err { color: #886666; }
+.status-line.ok  { color: #80b380; }
+.status-line.err { color: #cc8080; }
 
 /* ─── Fade in animation ─── */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
@@ -124,7 +124,7 @@ body {
     padding-top: 1rem;
     border-top: 1px solid #1a1a1a;
     font-size: 0.72rem;
-    color: #333;
+    color: #777;
     letter-spacing: 0.1em;
     text-align: right;
 }

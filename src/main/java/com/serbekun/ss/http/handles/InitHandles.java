@@ -9,6 +9,7 @@ import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.cipher.CipherService;
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
+import com.serbekun.ss.service.shorturl.ShortUrlService;
 import com.serbekun.ss.service.uploadedfiles.UploadedFilesService;
 import com.serbekun.ss.service.youtube.YoutubeService;
 
@@ -20,7 +21,8 @@ public class InitHandles {
         LinksService linksService,
         CipherService cipherService,
         YoutubeService youtubeService,
-        UploadedFilesService uploadedFilesService
+        UploadedFilesService uploadedFilesService,
+        ShortUrlService shortUrlService
     ) {
 
         // init handles objects
@@ -38,6 +40,7 @@ public class InitHandles {
         ApiV0CatalogsLinksHttp apiV0CatalogsLinksHttp = new ApiV0CatalogsLinksHttp(linksService);
         ApiV0YoutubeHttp apiV0YoutubeHttp = new ApiV0YoutubeHttp(youtubeService);
         ApiV0UploadedFilesHttp apiV0UploadedFilesHttp = new ApiV0UploadedFilesHttp(uploadedFilesService);
+        ApiV0ShortUrlHttp apiV0ShortUrlHttp = new ApiV0ShortUrlHttp(shortUrlService);
         ApiVersion apiVersion = new ApiVersion();
 
         EndpointAuthInitializer.initHandlesAuthSetting(svr, endpointRegistrar, authService);
@@ -52,6 +55,7 @@ public class InitHandles {
             new LinkCatalogRoutes(apiV0CatalogsLinksHttp),
             new YoutubeRoutes(apiV0YoutubeHttp),
             new UploadedFilesRoutes(apiV0UploadedFilesHttp),
+            new ShortUrlRoutes(apiV0ShortUrlHttp),
             new VersionRoutes(apiVersion)
         );
         apiV0Routes.register(svr);

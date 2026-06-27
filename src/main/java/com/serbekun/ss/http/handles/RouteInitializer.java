@@ -4,6 +4,7 @@ import io.javalin.Javalin;
 
 import com.serbekun.ss.http.handles.api.ApiV0CatalogsLinksHttp;
 import com.serbekun.ss.http.handles.api.ApiV0CipherAesHttp;
+import com.serbekun.ss.http.handles.api.ApiV0ShortUrlHttp;
 import com.serbekun.ss.http.handles.api.ApiV0UploadedFilesHttp;
 import com.serbekun.ss.http.handles.api.ApiV0YoutubeHttp;
 import com.serbekun.ss.http.handles.api.ApiVersion;
@@ -18,6 +19,7 @@ import com.serbekun.ss.service.auth.api.EndpointRegistrar;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.links.LinksService;
 import com.serbekun.ss.service.resource.ResourcesService;
+import com.serbekun.ss.service.shorturl.ShortUrlService;
 import com.serbekun.ss.service.uploadedfiles.UploadedFilesService;
 import com.serbekun.ss.service.youtube.YoutubeService;
 
@@ -46,7 +48,8 @@ public class RouteInitializer {
                       LinksService linksService,
                       com.serbekun.ss.service.cipher.CipherService cipherService,
                       YoutubeService youtubeService,
-                      UploadedFilesService uploadedFilesService) {
+                      UploadedFilesService uploadedFilesService,
+                      ShortUrlService shortUrlService) {
 
         // First initialize auth and endpoints
         AuthInitializer authInitializer = new AuthInitializer();
@@ -69,6 +72,7 @@ public class RouteInitializer {
         ApiV0CatalogsLinksHttp apiV0CatalogsLinksHttp = new ApiV0CatalogsLinksHttp(linksService);
         ApiV0YoutubeHttp apiV0YoutubeHttp = new ApiV0YoutubeHttp(youtubeService);
         ApiV0UploadedFilesHttp apiV0UploadedFilesHttp = new ApiV0UploadedFilesHttp(uploadedFilesService);
+        ApiV0ShortUrlHttp apiV0ShortUrlHttp = new ApiV0ShortUrlHttp(shortUrlService);
         ApiVersion apiVersion = new ApiVersion();
 
         // Register routes
@@ -89,6 +93,7 @@ public class RouteInitializer {
             new LinkCatalogRoutes(apiV0CatalogsLinksHttp),
             new YoutubeRoutes(apiV0YoutubeHttp),
             new UploadedFilesRoutes(apiV0UploadedFilesHttp),
+            new ShortUrlRoutes(apiV0ShortUrlHttp),
             new VersionRoutes(apiVersion)
         );
         apiV0Routes.register(svr);

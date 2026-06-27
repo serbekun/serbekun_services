@@ -83,6 +83,9 @@ All registered in `http/handles/*Routes` classes:
 - `DELETE /api/v0/catalogs/links/{uuid}` — delete link
 - `GET /api/v0/youtube/info?url=...` — get video metadata as JSON
 - `GET /api/v0/youtube/download?url=...` — download video and return MP4 bytes
+- `POST /api/v0/short-url` — create a short url (JSON body `{"url", "name"?, "description"?}`), returns `{"id", "token"}`
+- `GET /api/v0/short-url/{id}` — redirect (302) to the target url, 404 if unknown
+- `DELETE /api/v0/short-url/{id}` — delete a short url; requires the delete `token` (`?token=` query param or JSON body), 403 on mismatch, 404 if unknown
 
 ## YouTube functionality
 

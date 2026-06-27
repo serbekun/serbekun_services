@@ -124,7 +124,12 @@
                 <span class="cred-label">Expires</span>
                 <span class="cred-value" id="modalExpires"></span>
             </div>
+            <div class="credential-row">
+                <span class="cred-label">Link</span>
+                <span class="cred-value mono" id="modalLink"></span>
+            </div>
             <div style="margin-top:1.2rem; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+                <button class="copy-btn" onclick="copyShareLink()">copy link</button>
                 <button class="copy-btn" onclick="copyCredentials()">copy credentials</button>
                 <button class="close-modal-btn" onclick="closeTokenModal()">close</button>
             </div>

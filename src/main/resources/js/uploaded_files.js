@@ -80,6 +80,16 @@ function formatExpiry(epochMs) {
     return h + 'h ' + m + 'm';
 }
 
+// ── Shareable link ──
+
+// Builds the full, copy-ready download URL for a file.
+// Uses the current origin so it works on any deployment (dev/prod).
+function buildDownloadUrl(uuid, token) {
+    return window.location.origin
+        + '/api/v0/uploaded-files/' + uuid
+        + '/download?token=' + encodeURIComponent(token);
+}
+
 // ── Upload ──
 
 async function uploadFile() {
@@ -143,6 +153,7 @@ function openTokenModal(data) {
     document.getElementById('modalToken').textContent = data.token;
     document.getElementById('modalName').textContent = data.name;
     document.getElementById('modalExpires').textContent = formatExpiry(data.expiredTime);
+    document.getElementById('modalLink').textContent = buildDownloadUrl(data.uuid, data.token);
     document.getElementById('modalCopyFeedback').textContent = '';
     document.getElementById('tokenModal').style.display = 'flex';
 }
@@ -163,6 +174,20 @@ function copyCredentials() {
         setTimeout(() => { fb.textContent = ''; }, 2500);
     }).catch(() => {
         const fb = document.getElementById('modalCopyFeedback');
+        fb.textContent = 'Could not copy. Select and copy manually.';
+        fb.style.color = '#faa';
+    });
+}
+
+function copyShareLink() {
+    const link = document.getElementById('modalLink').textContent;
+    const fb = document.getElementById('modalCopyFeedback');
+
+    copyToClipboard(link).then(() => {
+        fb.textContent = 'Download link copied!';
+        fb.style.color = '#8f8';
+        setTimeout(() => { fb.textContent = ''; }, 2500);
+    }).catch(() => {
         fb.textContent = 'Could not copy. Select and copy manually.';
         fb.style.color = '#faa';
     });
@@ -222,6 +247,7 @@ function renderFilesList() {
             </div>
             <div class="file-card-actions">
                 <button onclick="downloadWithCreds('${f.uuid}','${escapeHtml(f.token)}')">Download</button>
+                <button onclick="copyLinkWithCreds('${f.uuid}','${escapeHtml(f.token)}')">Copy link</button>
                 <button class="danger" onclick="deleteWithCreds('${f.uuid}','${escapeHtml(f.token)}')">Delete</button>
             </div>
         </div>`;
@@ -229,7 +255,13 @@ function renderFilesList() {
 }
 
 function downloadWithCreds(uuid, token) {
-    window.open('/api/v0/uploaded-files/' + uuid + '/download?token=' + encodeURIComponent(token), '_blank');
+    window.open(buildDownloadUrl(uuid, token), '_blank');
+}
+
+function copyLinkWithCreds(uuid, token) {
+    copyToClipboard(buildDownloadUrl(uuid, token))
+        .then(() => showStatus('Download link copied!'))
+        .catch(() => showStatus('Could not copy link', true));
 }
 
 async function deleteWithCreds(uuid, token) {
@@ -290,7 +322,7 @@ async function getFileInfo() {
 async function downloadFile() {
     const p = getAccessParams();
     if (!p) return;
-    window.open('/api/v0/uploaded-files/' + p.uuid + '/download?token=' + encodeURIComponent(p.token), '_blank');
+    window.open(buildDownloadUrl(p.uuid, p.token), '_blank');
     showStatus('Download started...');
 }
 
@@ -357,11 +389,13 @@ function showStatus(msg, isError) {
     window.onFileSelected = onFileSelected;
     window.uploadFile = uploadFile;
     window.copyCredentials = copyCredentials;
+    window.copyShareLink = copyShareLink;
     window.closeTokenModal = closeTokenModal;
     window.getFileInfo = getFileInfo;
     window.downloadFile = downloadFile;
     window.deleteFile = deleteFile;
     window.downloadWithCreds = downloadWithCreds;
+    window.copyLinkWithCreds = copyLinkWithCreds;
     window.deleteWithCreds = deleteWithCreds;
 
     // ── Modal overlay click ──

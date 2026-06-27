@@ -17,6 +17,22 @@ repositories {
     mavenCentral()
 }
 
+def generatedResourcesDir = layout.buildDirectory.dir('generated-resources')
+
+tasks.register('generateVersionProperties') {
+    def outputDir = generatedResourcesDir
+    def projectVersion = project.version.toString()
+    inputs.property('version', projectVersion)
+    outputs.dir(outputDir)
+    doLast {
+        def file = outputDir.get().file('com/serbekun/ss/version.properties').asFile
+        file.parentFile.mkdirs()
+        file.text = "version=${projectVersion}\n"
+    }
+}
+
+sourceSets.main.output.dir(generatedResourcesDir, builtBy: 'generateVersionProperties')
+
 dependencies {
     implementation 'io.javalin:javalin:6.7.0'
     implementation 'io.javalin.community.ssl:ssl-plugin:6.7.0'

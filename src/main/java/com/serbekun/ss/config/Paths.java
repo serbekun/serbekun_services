@@ -82,6 +82,21 @@ public class Paths {
         public static Path getUploadedFilesStorageFile() { return UploadedFilesStorageFile; }
     }
 
+    /** class that contain configuration for {@link com.serbekun.ss.repo.shorturl.ShortUrlRepo} */
+    public static class ShortUrlConfig {
+        /**
+         * Returns the path to the short url storage file.
+         * This file is used to store short url records in JSON format.
+         */
+        private static final Path shortUrlStorageFile = Path.of("repository/short_url/short_url.json");
+
+        /**
+         * Returns the path to the short url storage file.
+         * @return the path to the short url storage file
+         */
+        public static Path getShortUrlStorageFile() { return shortUrlStorageFile; }
+    }
+
     public static class YoutubeConfig {
         /** Returns the path to the YouTube cookies file. */
         private static final Path CookiesPath = Path.of("repository/www.youtube.com_cookies.txt");

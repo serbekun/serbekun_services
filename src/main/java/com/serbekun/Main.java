@@ -168,7 +168,7 @@ public class Main {
             new UploadedFilesCleanupService(uploadedFilesService, 600);
 
 
-        return new Services(endpointRegistry, endpointAccessTokensService, linksService, authService,
+        return new Services(endpointRegistry, linksService, authService,
                 youtubeService, uploadedFilesService, uploadedFilesCleanupService);
     }
 
@@ -182,7 +182,7 @@ public class Main {
         var resourceCache = new ResourceCache(resourceLoader);
         var resourcesService = new ResourcesService(resourceLoader, resourceCache);
 
-        return new Resources(resourceLoader, resourceCache, resourcesService);
+        return new Resources(resourcesService);
     }
 
     /**
@@ -329,7 +329,6 @@ public class Main {
      */
     private static final class Services {
         private final EndpointRegistry endpointRegistry;
-        private final EndpointsAccessTokensService tokensService;
         private final LinksService linksService;
         private final AuthService authService;
         private final YoutubeService youtubeService;
@@ -338,14 +337,12 @@ public class Main {
 
         private Services(
                 EndpointRegistry endpointRegistry,
-                EndpointsAccessTokensService tokensService,
                 LinksService linksService,
                 AuthService authService,
                 YoutubeService youtubeService,
                 UploadedFilesService uploadedFilesService,
                 UploadedFilesCleanupService uploadedFilesCleanupService) {
             this.endpointRegistry = endpointRegistry;
-            this.tokensService = tokensService;
             this.linksService = linksService;
             this.authService = authService;
             this.youtubeService = youtubeService;
@@ -359,16 +356,10 @@ public class Main {
      * including resource loader, cache, and service.
      */
     private static final class Resources {
-        private final ResourceLoader resourceLoader;
-        private final ResourceCache resourceCache;
         private final ResourcesService resourcesService;
 
         private Resources(
-                ResourceLoader resourceLoader,
-                ResourceCache resourceCache,
                 ResourcesService resourcesService) {
-            this.resourceLoader = resourceLoader;
-            this.resourceCache = resourceCache;
             this.resourcesService = resourcesService;
         }
     }

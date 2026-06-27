@@ -8,6 +8,7 @@ import com.serbekun.ss.http.handles.api.ApiV0UploadedFilesHttp;
 import com.serbekun.ss.http.handles.api.ApiV0YoutubeHttp;
 import com.serbekun.ss.http.handles.api.ApiVersion;
 import com.serbekun.ss.http.handles.statics.StaticV0CssHttp;
+import com.serbekun.ss.http.handles.statics.StaticV0DomainHttp;
 import com.serbekun.ss.http.handles.statics.StaticV0HtmlHttp;
 import com.serbekun.ss.http.handles.statics.StaticV0ImagesHttp;
 import com.serbekun.ss.http.handles.statics.StaticV0JsHttp;
@@ -61,6 +62,7 @@ public class RouteInitializer {
         StaticV0PdfHttp staticV0PdfHttp = new StaticV0PdfHttp(staticResourcesService);
         StaticV0CssHttp staticV0CssHttp = new StaticV0CssHttp(staticResourcesService);
         StaticV0JsHttp staticV0JsHttp = new StaticV0JsHttp(staticResourcesService);
+        StaticV0DomainHttp staticV0DomainHttp = new StaticV0DomainHttp(staticResourcesService);
 
         // API routes
         ApiV0CipherAesHttp apiV0CipherAesHttp = new ApiV0CipherAesHttp(cipherService);
@@ -76,7 +78,8 @@ public class RouteInitializer {
             staticV0HtmlHttp,
             staticV0PdfHttp,
             staticV0CssHttp,
-            staticV0JsHttp
+            staticV0JsHttp,
+            staticV0DomainHttp
             );
             
         staticRoutes.register(svr);

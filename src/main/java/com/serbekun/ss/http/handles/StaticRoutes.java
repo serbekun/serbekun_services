@@ -16,11 +16,13 @@ public class StaticRoutes {
     private final StaticV0PdfHttp staticV0PdfHttp;
     private final StaticV0CssHttp staticV0CssHttp;
     private final StaticV0JsHttp staticV0JsHttp;
+    private final StaticV0DomainHttp staticV0DomainHttp;
 
     public StaticRoutes(IndexHttp index, StaticV0ImagesHttp staticV0ImagesHttp,
                         StaticV0JsonHttp staticV0JsonHttp, StaticV0HtmlHttp staticV0HtmlHttp,
                         StaticV0PdfHttp staticV0PdfHttp, StaticV0CssHttp staticV0CssHttp,
-                        StaticV0JsHttp staticV0JsHttp) {
+                        StaticV0JsHttp staticV0JsHttp,
+                        StaticV0DomainHttp staticV0DomainHttp) {
         this.index = index;
         this.staticV0ImagesHttp = staticV0ImagesHttp;
         this.staticV0JsonHttp = staticV0JsonHttp;
@@ -28,6 +30,7 @@ public class StaticRoutes {
         this.staticV0PdfHttp = staticV0PdfHttp;
         this.staticV0CssHttp = staticV0CssHttp;
         this.staticV0JsHttp = staticV0JsHttp;
+        this.staticV0DomainHttp = staticV0DomainHttp;
     }
 
     /**
@@ -65,5 +68,10 @@ public class StaticRoutes {
         svr.get("/static/v0/pdf", ctx -> staticV0PdfHttp.main(ctx, ""));
         svr.get("/static/v0/pdf/", ctx -> staticV0PdfHttp.main(ctx, ""));
         svr.get("/static/v0/pdf/{name}", ctx -> staticV0PdfHttp.main(ctx));
+
+        // DOMAIN
+        svr.get("/static/v0/domain", ctx -> staticV0DomainHttp.main(ctx, ""));
+        svr.get("/static/v0/domain/", ctx -> staticV0DomainHttp.main(ctx, ""));
+        svr.get("/static/v0/domain/{name}", ctx -> staticV0DomainHttp.main(ctx));
     }
 }

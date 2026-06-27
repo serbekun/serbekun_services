@@ -31,6 +31,7 @@ public class InitHandles {
         StaticV0PdfHttp staticV0PdfHttp = new StaticV0PdfHttp(staticResourcesService);
         StaticV0CssHttp staticV0CssHttp = new StaticV0CssHttp(staticResourcesService);
         StaticV0JsHttp staticV0JsHttp = new StaticV0JsHttp(staticResourcesService);
+        StaticV0DomainHttp staticV0DomainHttp = new StaticV0DomainHttp(staticResourcesService);
 
 
         ApiV0CipherAesHttp apiV0CipherAesHttp = new ApiV0CipherAesHttp(cipherService);
@@ -42,7 +43,7 @@ public class InitHandles {
         EndpointAuthInitializer.initHandlesAuthSetting(svr, endpointRegistrar, authService);
 
         // routes
-        StaticRoutes staticRoutes = new StaticRoutes(index, staticV0ImagesHttp, staticV0JsonHttp, staticV0HtmlHttp, staticV0PdfHttp, staticV0CssHttp, staticV0JsHttp);
+        StaticRoutes staticRoutes = new StaticRoutes(index, staticV0ImagesHttp, staticV0JsonHttp, staticV0HtmlHttp, staticV0PdfHttp, staticV0CssHttp, staticV0JsHttp, staticV0DomainHttp);
         staticRoutes.register(svr);
 
         // API

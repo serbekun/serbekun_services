@@ -9,21 +9,27 @@ echo "=== [deploy] Building serbekun-service (gradle shadowjar) ==="
 export PATH=/opt/gradle/gradle-8.6/bin:$PATH
 gradle shadowjar
 
-# The rest of your script remains the same...
-JAR="build/libs/serbekun-service-1.0.0-all.jar"
-echo "=== [deploy] Deploying JAR to DMZ ==="
-scp "$JAR" dmz:/home/sergei/serbekun_service/
+# Pick up whatever shadowJar actually produced (name follows the version in
+# build.gradle), and deploy it under a stable name so the run command never
+# has to change when the version bumps.
+JAR="$(ls -t build/libs/*-all.jar | head -n1)"
+if [ -z "$JAR" ] || [ ! -f "$JAR" ]; then
+  echo "[deploy] ERROR: no *-all.jar found in build/libs/" >&2
+  exit 1
+fi
+echo "=== [deploy] Deploying JAR ($JAR) to DMZ ==="
+scp "$JAR" dmz:/home/sergei/serbekun_services/serbekun-service.jar
 
 
 echo "=== [deploy] Provisioning DMZ (yt-dlp + Deno) ==="
-scp provision_dmz.sh dmz:/tmp/
+scp sh_utils/provision_dmz.sh dmz:/tmp/
 ssh dmz "bash /tmp/provision_dmz.sh"
 
 echo "=== [deploy] Restarting service on DMZ ==="
 ssh dmz "bash -c '
   tmux send-keys -t ss_serbekun_com C-c
   sleep 3
-  tmux send-keys -t ss_serbekun_com \"java -jar /home/sergei/serbekun_service/serbekun-service-1.0.0-all.jar\" Enter
+  tmux send-keys -t ss_serbekun_com \"java -jar /home/sergei/serbekun_services/serbekun-service.jar\" Enter
 '"
 echo "=== [deploy] Deployment complete! ==="
 echo "Check logs: ssh dmz \"tmux attach -t ss_serbekun_com\""

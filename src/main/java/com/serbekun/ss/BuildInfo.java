@@ -27,6 +27,10 @@ public final class BuildInfo {
     private BuildInfo() {
     }
 
+    /**
+     * Returns the version of the build.
+     * @return the version string, or "unknown" if the version could not be determined
+     */
     public static String version() {
         return VERSION;
     }

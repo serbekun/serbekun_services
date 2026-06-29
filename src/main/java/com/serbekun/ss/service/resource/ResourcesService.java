@@ -1,34 +1,37 @@
 package com.serbekun.ss.service.resource;
 
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
-
 import com.serbekun.ss.resources.ResourceCache;
 import com.serbekun.ss.resources.ResourceLoader;
+import com.serbekun.ss.resources.ResourcesBasePath;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Public API for loading static resources.
  * Combines resource loading and caching functionality.
  */
 public class ResourcesService {
-    // private static final Logger log = LoggerFactory.getLogger(ResourcesService.class);
+    
+    private static final Logger log = LoggerFactory.getLogger(ResourcesService.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    // private final ResourceLoader loader;
     private final ResourceCache cache;
 
     /**
      * Creates a new ResourcesService with the given ResourceLoader and ResourceCache.
      *
-     * @param loader the resource loader
+     * @param loader the resource loader (unused, kept for backward compatibility)
      * @param cache the resource cache
      */
     public ResourcesService(ResourceLoader loader, ResourceCache cache) {
-        // this.loader = loader;
         this.cache = cache;
     }
 
@@ -96,7 +99,7 @@ public class ResourcesService {
         if (name.isEmpty()) {
             return null; // listing is handled separately
         }
-        String path = com.serbekun.ss.resources.ResourcesBasePath.resolveImagePath(name);
+        String path = ResourcesBasePath.resolveImagePath(name);
         return getBinaryData(path);
     }
 
@@ -106,20 +109,9 @@ public class ResourcesService {
      * @return the JSON data for the resource
      */
     public String getJson(String name) {
-        if (name == null) name = "";
-        if (name.isEmpty()) {
-            String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_JSON_PATH;
-            List<String> filesList = listResources(path).stream()
-                .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
-                .toList();
-            try {
-                return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        String path = com.serbekun.ss.resources.ResourcesBasePath.resolveJsonPath(name);
-        return getTextData(path);
+        return getTextResourceWithListing(name, 
+            ResourcesBasePath.BASE_JSON_PATH,
+            ResourcesBasePath::resolveJsonPath);
     }
 
     /**
@@ -129,20 +121,9 @@ public class ResourcesService {
      * @return the HTML content for the resource
      */
     public String getHtml(String name) {
-        if (name == null) name = "";
-        if (name.isEmpty()) {
-            String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_HTML_PATH;
-            List<String> filesList = listResources(path).stream()
-                .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
-                .toList();
-            try {
-                return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        String path = com.serbekun.ss.resources.ResourcesBasePath.resolveHtmlPath(name);
-        return getTextData(path);
+        return getTextResourceWithListing(name,
+            ResourcesBasePath.BASE_HTML_PATH,
+            ResourcesBasePath::resolveHtmlPath);
     }
 
     /**
@@ -152,20 +133,9 @@ public class ResourcesService {
      * @return the CSS content for the resource
      */
     public String getCss(String name) {
-        if (name == null) name = "";
-        if (name.isEmpty()) {
-            String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_CSS_PATH;
-            List<String> filesList = listResources(path).stream()
-                .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
-                .toList();
-            try {
-                return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        String path = com.serbekun.ss.resources.ResourcesBasePath.resolveCssPath(name);
-        return getTextData(path);
+        return getTextResourceWithListing(name,
+            ResourcesBasePath.BASE_CSS_PATH,
+            ResourcesBasePath::resolveCssPath);
     }
 
     /**
@@ -175,20 +145,9 @@ public class ResourcesService {
      * @return the JavaScript content for the resource
      */
     public String getJs(String name) {
-        if (name == null) name = "";
-        if (name.isEmpty()) {
-            String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_JS_PATH;
-            List<String> filesList = listResources(path).stream()
-                .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
-                .toList();
-            try {
-                return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        String path = com.serbekun.ss.resources.ResourcesBasePath.resolveJsPath(name);
-        return getTextData(path);
+        return getTextResourceWithListing(name,
+            ResourcesBasePath.BASE_JS_PATH,
+            ResourcesBasePath::resolveJsPath);
     }
 
     /**
@@ -201,7 +160,7 @@ public class ResourcesService {
         if (name.isEmpty()) {
             return null;
         }
-        String path = com.serbekun.ss.resources.ResourcesBasePath.resolvePdfPath(name);
+        String path = ResourcesBasePath.resolvePdfPath(name);
         return getBinaryData(path);
     }
 
@@ -210,15 +169,7 @@ public class ResourcesService {
      * @return the JSON string containing the list of PDF files
      */
     public String listPdfsAsJson() {
-        String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_PDF_PATH;
-        List<String> filesList = listResources(path).stream()
-            .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
-            .toList();
-        try {
-            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
-        } catch (Exception e) {
-            return null;
-        }
+        return listResourcesAsJson(ResourcesBasePath.BASE_PDF_PATH);
     }
 
     /**
@@ -226,34 +177,50 @@ public class ResourcesService {
      * @return the JSON string containing the list of image files
      */
     public String listImagesAsJson() {
-        String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_IMAGES_PATH;
-        List<String> filesList = listResources(path).stream()
-            .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
-            .toList();
-        try {
-            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
-        } catch (Exception e) {
-            return null;
-        }
+        return listResourcesAsJson(ResourcesBasePath.BASE_IMAGES_PATH);
     }
 
     public String getDomain(String name) {
-        if (name == null) name = "";
-        if (name.isEmpty()) {
-            return null;
-        }
-        String path = com.serbekun.ss.resources.ResourcesBasePath.resolveDomainPath(name);
-        return getTextData(path);
+        return getTextResourceWithListing(name,
+            ResourcesBasePath.BASE_DOMAIN_PATH,
+            ResourcesBasePath::resolveDomainPath);
     }
 
     public String listDomainsAsJson() {
-        String path = com.serbekun.ss.resources.ResourcesBasePath.BASE_DOMAIN_PATH;
-        List<String> filesList = listResources(path).stream()
-            .map(file -> file.startsWith(path) ? file.substring(path.length()) : file)
+        return listResourcesAsJson(ResourcesBasePath.BASE_DOMAIN_PATH);
+    }
+
+    /**
+     * Returns the text content for a named resource, or a JSON listing of the
+     * files available under {@code basePath} when {@code name} is null or empty.
+     *
+     * @param name     the resource name; null/empty returns the directory listing
+     * @param basePath the base directory used for listing
+     * @param resolver maps a resource name to its full resource path
+     * @return the resource text, the JSON listing, or {@code null} on error
+     */
+    private String getTextResourceWithListing(String name, String basePath, Function<String, String> resolver) {
+        if (name == null || name.isEmpty()) {
+            return listResourcesAsJson(basePath);
+        }
+        return getTextData(resolver.apply(name));
+    }
+
+    /**
+     * Returns a JSON array of the resource file names under {@code basePath},
+     * with the base path stripped from each entry.
+     *
+     * @param basePath the directory to list
+     * @return the JSON listing, or {@code null} if serialization fails
+     */
+    private String listResourcesAsJson(String basePath) {
+        List<String> filesList = listResources(basePath).stream()
+            .map(file -> file.startsWith(basePath) ? file.substring(basePath.length()) : file)
             .toList();
         try {
-            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(filesList);
+            return OBJECT_MAPPER.writeValueAsString(filesList);
         } catch (Exception e) {
+            log.warn("Failed to serialize resource listing for {}", basePath, e);
             return null;
         }
     }

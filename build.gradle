@@ -35,22 +35,14 @@ sourceSets.main.output.dir(generatedResourcesDir, builtBy: 'generateVersionPrope
 
 dependencies {
     implementation 'io.javalin:javalin:6.7.0'
-    implementation 'io.javalin.community.ssl:ssl-plugin:6.7.0'
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2'
 
-    implementation 'org.flywaydb:flyway-core:10.14.0'
-    implementation 'com.h2database:h2:2.2.224'
-
     implementation 'org.slf4j:slf4j-api:2.0.9'
     implementation 'ch.qos.logback:logback-classic:1.4.14'
 
-    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
-    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
-
-    implementation 'com.google.guava:guava:32.1.2-jre'
     implementation 'org.jsoup:jsoup:1.18.3'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'

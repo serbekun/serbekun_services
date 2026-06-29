@@ -39,7 +39,7 @@ class YoutubeTest {
 
         String url = "https://www.youtube.com/watch?v=pZgCd6cZEHU";
 
-        byte[] videoBytes = youtube.DownloadVideoByUrl(url);
+        byte[] videoBytes = youtube.downloadVideoByUrl(url);
 
         assertThat(videoBytes).isNotNull();
         assertThat(videoBytes).isNotEmpty();
@@ -57,7 +57,7 @@ class YoutubeTest {
         // Should throw IllegalStateException for invalid URL
         String invalidUrl = "https://www.youtube.com/watch?v=invalid";
 
-        assertThatThrownBy(() -> youtube.DownloadVideoByUrl(invalidUrl))
+        assertThatThrownBy(() -> youtube.downloadVideoByUrl(invalidUrl))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("yt-dlp failed");
     }
@@ -65,7 +65,7 @@ class YoutubeTest {
     @Test
     void DownloadVideoWithNullUrlTest() throws IOException {
         // Should handle null URL gracefully
-        assertThatThrownBy(() -> youtube.DownloadVideoByUrl(null))
+        assertThatThrownBy(() -> youtube.downloadVideoByUrl(null))
             .isInstanceOf(Exception.class);
     }
 
@@ -194,13 +194,13 @@ class YoutubeTest {
     @Test
     void serviceAcceptsValidYouTubeDomain() throws IOException {
         Youtube mockYoutube = mock(Youtube.class);
-        when(mockYoutube.GetVideoInfo("https://www.youtube.com/watch?v=abc123"))
+        when(mockYoutube.getVideoInfo("https://www.youtube.com/watch?v=abc123"))
             .thenReturn("{\"title\":\"Test Video\"}");
         YoutubeService service = new YoutubeService(mockYoutube, testDomains);
 
         String result = service.getVideoInfo("https://www.youtube.com/watch?v=abc123");
         assertThat(result).isEqualTo("{\"title\":\"Test Video\"}");
-        verify(mockYoutube).GetVideoInfo("https://www.youtube.com/watch?v=abc123");
+        verify(mockYoutube).getVideoInfo("https://www.youtube.com/watch?v=abc123");
     }
 
     @Test
@@ -215,7 +215,7 @@ class YoutubeTest {
         }
 
         // yt-dlp should never be invoked for invalid domains
-        verify(mockYoutube, never()).GetVideoInfo("https://evil.com/video");
+        verify(mockYoutube, never()).getVideoInfo("https://evil.com/video");
     }
 
     @Test

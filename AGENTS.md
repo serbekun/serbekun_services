@@ -24,9 +24,9 @@ No lint, typecheck, or codegen tasks exist. No CI/CD.
 |----------------|--------------------------------------|------|
 | Bootstrap      | `com.serbekun.Main`                  | Entry point. Manual dependency wiring via inner `ServerContext` / `Repositories` / `Services` / `Resources` / `Handlers` classes. No DI framework. |
 | Config         | `com.serbekun.ss.config`             | `Config` (port), `Paths` — hardcoded static configuration. |
-| Domain         | `com.serbekun.ss.domain.*`           | Domain entities (`Link`, `Links`, `ShortUrl`, `UploadedFile`) and HTTP DTOs (`domain/dto/http/*`). No framework dependencies. |
+| Domain         | `com.serbekun.ss.domain.*`           | Domain entities (`Link`, `LinkRepository`, `ShortUrl`, `UploadedFile`) and HTTP DTOs (`domain/dto/http/*`). No framework dependencies. |
 | Repository     | `com.serbekun.ss.repo.*`             | Repository **interfaces** + JSON-file implementations (Jackson). All implement `AutoSavable`. |
-| Service        | `com.serbekun.ss.service.*`          | Business logic and orchestration only (auth, cipher, links, resources, tokens, autosave, youtube, uploaded files cleanup). |
+| Service        | `com.serbekun.ss.service.*`          | Business logic and orchestration only (auth, cipher, link repositories, short urls, resources, tokens, autosave, youtube, uploaded files cleanup). |
 | HTTP (thin)    | `com.serbekun.ss.http.handles.*`     | Javalin route registration, DTOs mapping, validation, and service calls. **No business logic**. |
 | Infrastructure | `com.serbekun.ss.infrastructure.*`   | Low-level technical components (FS initialization, autosave scheduler). |
 | Resources      | `com.serbekun.ss.resources.*`        | Load and cache static files from classpath (`src/main/resources/`). |
@@ -35,7 +35,7 @@ No lint, typecheck, or codegen tasks exist. No CI/CD.
 
 - **Clean Layered Architecture** — full refactoring completed in 2026. The previous anti-pattern `service/http/handles/` (business logic mixed with HTTP) has been completely removed.
 - **Domain** is isolated (`domain/models/`). All domain models are plain Java classes with Jackson annotations only where needed for persistence.
-- **Repository interfaces** exist for all data access (`LinksRepository`, `LocalTokensRepository`, `EndpointAccessTokensRepository`, `UploadedFilesRepo`). Implementations are in `*Impl` classes.
+- **Repository interfaces** exist for all data access (`LinkRepositoryRepo`, `ShortUrlRepo`, `EndpointsAccessTokensRepo`, `UploadedFilesRepo`). Each has a `*FileRepo` JSON-file implementation and a `*ReadInterface` read-only view.
 - **Services** contain all business rules and orchestration. They depend only on repository interfaces and other services. `Youtube` is a utility service (not wired into the DI context).
 - **HTTP layer is thin** — only handles routing, DTO mapping, basic validation, and delegates to services.
 - **No DI framework** — manual constructor injection via inner context classes in `Main.java`.
@@ -78,10 +78,12 @@ All registered in `http/handles/*Routes` classes:
 - `GET /api/v0/cipher/aes` — cipher info
 - `POST /api/v0/cipher/aes/encrypt` — AES encrypt
 - `POST /api/v0/cipher/aes/decrypt` — AES decrypt
-- `GET /api/v0/catalogs/links` — list links
-- `POST /api/v0/catalogs/links` — create link
-- `PUT /api/v0/catalogs/links/{uuid}` — update link
-- `DELETE /api/v0/catalogs/links/{uuid}` — delete link
+- `POST /api/v0/repository/links/` — create a link repository (JSON body `{"name"?}`), returns `{"repositoryId", "token", "name", "createdAt"}` (the `token` is shown only here)
+- `GET /api/v0/repository/links/{repositoryId}?token=...` — get a repository with all its links, 404 if not found or token is invalid
+- `DELETE /api/v0/repository/links/{repositoryId}?token=...` — delete a repository, 204 on success, 404 if not found or token is invalid
+- `POST /api/v0/repository/links/{repositoryId}/links?token=...` — add a link (JSON body `{"url", "name"?, "description"?}`), returns `{"uuid", "url", "name", "description"}`
+- `PUT /api/v0/repository/links/{repositoryId}/links/{uuid}?token=...` — update a link (JSON body `{"url", "name"?, "description"?}`), 204 on success, 400 if `url` is blank, 404 if not found or token is invalid
+- `DELETE /api/v0/repository/links/{repositoryId}/links/{uuid}?token=...` — delete a link, 204 on success, 404 if not found or token is invalid
 - `GET /api/v0/youtube/info?url=...` — get video metadata as JSON
 - `GET /api/v0/youtube/download?url=...` — download video and return MP4 bytes
 - `POST /api/v0/short-url` — create a short url (JSON body `{"url", "name"?, "description"?}`), returns `{"id", "token"}`

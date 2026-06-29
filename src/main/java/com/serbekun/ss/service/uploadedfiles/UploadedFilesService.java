@@ -103,7 +103,7 @@ public class UploadedFilesService {
 
 
         long now = Instant.now().toEpochMilli();
-        if (now >= uploadedFile.expiredTime()) {
+        if (now >= uploadedFile.expiredTime() && uploadedFile.expiredTime() != 0) {
             repo.removeUploadedFile(uuid);
             deleteRawFile(uuid);
             return null;

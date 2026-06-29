@@ -3,79 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>LINKS CATALOG</title>
+    <title>Link Repository — Serbekun</title>
+    <link rel="stylesheet" href="/static/v0/css/shared.css">
     <link rel="stylesheet" href="/static/v0/css/links.css">
 </head>
 <body>
-    <a href="/" style="position:fixed;top:16px;left:16px;z-index:9999;background:rgba(20,20,20,0.9);color:#aaa;border:1px solid #444;border-radius:999px;padding:6px 14px;font-size:0.85rem;text-decoration:none;box-shadow:0 4px 12px #000;">← Back</a>
+
     <div class="container">
-        <h1>LINKS CATALOG</h1>
-        <div class="subhead">manage your links collection</div>
+        <a href="/" class="back-link">back</a>
 
-        <!-- TOKEN INPUT SECTION -->
-        <div class="token-section">
-            <label for="manualToken">Access Token:</label>
-            <div class="token-input-wrap">
-                <input type="text" id="manualToken" placeholder="Paste your token here..." spellcheck="false">
-                <button class="token-apply-btn" onclick="applyToken()">Apply</button>
+        <div class="header">
+            <h1 class="header-title">Link Repository</h1>
+            <p class="header-sub">// a token-protected collection of links</p>
+        </div>
+
+        <div class="prompt-line">
+            <span class="cwd">~/serbekun/link-repository</span>
+            <span>$</span>
+            <span>./repo --interactive</span>
+            <span class="prompt-cursor"></span>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab(0)">open</button>
+            <button class="tab-btn" onclick="switchTab(1)">create</button>
+            <button class="tab-btn" onclick="switchTab(2)">links</button>
+        </div>
+
+        <!-- OPEN TAB -->
+        <div id="openTab">
+            <div class="field">
+                <div class="field-label">repository id</div>
+                <input type="text" id="openRepoId" placeholder="paste repository id..." spellcheck="false">
+            </div>
+
+            <div class="field">
+                <div class="field-label">access token</div>
+                <input type="text" id="openToken" placeholder="paste access token..." spellcheck="false">
+            </div>
+
+            <button class="btn-primary" onclick="openRepository()">open repository</button>
+        </div>
+
+        <!-- CREATE TAB -->
+        <div id="createTab">
+            <div class="field">
+                <div class="field-label">name (optional)</div>
+                <input type="text" id="createName" placeholder="a label for this repository" spellcheck="false">
+            </div>
+
+            <p class="section-hint">// creates a new repository and returns a repository id + access token</p>
+
+            <button class="btn-primary" onclick="createRepository()">create repository</button>
+        </div>
+
+        <!-- LINKS TAB -->
+        <div id="linksTab">
+            <div id="noRepoState" class="empty-state">
+                no repository open —
+                <a href="#" class="inline-link" onclick="switchTab(0);return false;">open</a> or
+                <a href="#" class="inline-link" onclick="switchTab(1);return false;">create</a> one
+            </div>
+
+            <div id="repoContent" style="display:none;">
+                <div class="repo-banner">
+                    <div class="repo-banner-name" id="repoName"></div>
+                    <div class="repo-banner-meta" id="repoMeta"></div>
+                    <div class="repo-banner-actions">
+                        <button onclick="reloadLinks()">refresh</button>
+                        <button onclick="copyShareLink()">copy share link</button>
+                        <button onclick="closeRepository()">close</button>
+                        <button class="danger" onclick="deleteRepository()">delete repo</button>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-label">link url</div>
+                    <input type="text" id="linkUrl" placeholder="https://example.com" spellcheck="false">
+                </div>
+
+                <div class="field">
+                    <div class="field-label">name (optional)</div>
+                    <input type="text" id="linkName" placeholder="a short label for this link" spellcheck="false">
+                </div>
+
+                <div class="field">
+                    <div class="field-label">description (optional)</div>
+                    <textarea id="linkDescription" placeholder="what is this link for?" spellcheck="false" rows="3"></textarea>
+                </div>
+
+                <input type="hidden" id="editingUuid">
+
+                <div class="editor-actions">
+                    <button class="btn-primary" id="submitLinkBtn" onclick="submitLink()">add link</button>
+                    <button class="btn-secondary" id="cancelEditBtn" onclick="cancelEdit()" style="display:none;">cancel</button>
+                </div>
+
+                <div class="files-section">
+                    <p class="section-hint">// links in this repository</p>
+                    <div class="files-list" id="linksList">
+                        <div class="empty-state">no links yet</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="tab-buttons">
-            <button class="tab-btn active" onclick="switchTab(0)">View Links</button>
-            <button class="tab-btn" onclick="switchTab(1)">Add Link</button>
-            <button class="tab-btn" onclick="switchTab(2)" id="editBtn" style="display:none;">Edit Link</button>
-        </div>
+        <div class="status-line" id="status"></div>
 
-        <div id="viewTab">
-            <div class="links-list" id="linksList">
-                <!-- Links will be loaded here -->
-            </div>
-        </div>
-
-        <div id="addTab">
-            <label>Link URL</label>
-            <input type="url" id="addUrl" placeholder="https://example.com" spellcheck="false">
-
-            <label>Link Name</label>
-            <input type="text" id="addName" placeholder="My Awesome Link" spellcheck="false">
-
-            <label>Description</label>
-            <textarea id="addDescription" placeholder="Brief description of the link..."></textarea>
-
-            <button class="btn-primary" onclick="addLink()">Add Link</button>
-        </div>
-
-        <div id="editTab">
-            <input type="hidden" id="editUuid">
-
-            <label>Link URL</label>
-            <input type="url" id="editUrl" placeholder="https://example.com" spellcheck="false">
-
-            <label>Link Name</label>
-            <input type="text" id="editName" placeholder="My Awesome Link" spellcheck="false">
-
-            <label>Description</label>
-            <textarea id="editDescription" placeholder="Brief description of the link..."></textarea>
-
-            <button class="btn-primary" onclick="updateLink()">Update Link</button>
-            <button class="btn-secondary" onclick="switchTab(0)">Cancel</button>
-        </div>
-
-        <div class="status" id="status"></div>
+        <div class="footer">serbekun service // link repository</div>
     </div>
 
-    <!-- TOKEN MODAL (hidden by default) -->
-    <div id="tokenModal" class="modal-overlay" style="display: none;">
+    <!-- CREATE MODAL -->
+    <div id="repoModal" class="modal-overlay" style="display: none;">
         <div class="modal">
-            <h2>Your Access Token</h2>
-            <p style="color:#ccc; margin-bottom:0.5rem;">This token grants access to edit or delete your link.<br>Keep it safe - it won't be shown again.</p>
-            <div class="token-display" id="modalTokenText"></div>
-            <div>
-                <button class="copy-btn" onclick="copyModalToken()">Copy Token</button>
-                <button class="close-modal-btn" onclick="closeTokenModal()">Close</button>
+            <h2>repository created</h2>
+            <p class="modal-note">save these credentials — the token is required to open, edit and delete this repository and won't be shown again</p>
+            <div class="credential-row">
+                <span class="cred-label">Repo ID</span>
+                <span class="cred-value mono" id="modalRepoId"></span>
             </div>
-            <p class="warning-text" id="modalCopyFeedback"></p>
+            <div class="credential-row">
+                <span class="cred-label">Token</span>
+                <span class="cred-value mono" id="modalToken"></span>
+            </div>
+            <div class="credential-row">
+                <span class="cred-label">Name</span>
+                <span class="cred-value" id="modalName"></span>
+            </div>
+            <div class="credential-row">
+                <span class="cred-label">Created</span>
+                <span class="cred-value" id="modalCreated"></span>
+            </div>
+            <div class="modal-actions">
+                <button class="copy-btn" onclick="copyShareLink()">copy share link</button>
+                <button class="copy-btn" onclick="copyCredentials()">copy credentials</button>
+                <button class="close-modal-btn" onclick="closeModal()">close</button>
+            </div>
+            <p class="feedback-text" id="modalFeedback"></p>
         </div>
     </div>
 

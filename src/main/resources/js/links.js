@@ -1,374 +1,498 @@
-let currentToken = null;
-let editingUuid = null;
+(function () {
+    'use strict';
 
-function getTokenFromUrl() {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('token') || urlParams.get('auth') || '';
-}
+    const API_BASE = '/api/v0/repository/links';
+    const STORAGE_KEY = 'link_repository_session';
 
-function getAuthHeaders() {
-    const headers = { 'Content-Type': 'application/json' };
-    if (currentToken) {
-        headers['Authorization'] = 'Bearer ' + currentToken;
-    }
-    return headers;
-}
+    // Currently opened repository: { repositoryId, token, name, createdAt }
+    let currentRepo = null;
+    // Cache of the links last loaded for the open repo (used to populate the edit form).
+    let currentLinks = [];
 
-async function loadLinks() {
-    try {
-        showStatus('Loading links...');
-        const response = await fetch('/api/v0/catalogs/links', {
-            headers: getAuthHeaders()
-        });
+    // ── Session persistence ──
 
-        if (!response.ok) {
-            throw new Error(`Failed to load links: ${response.status}`);
+    function loadSession() {
+        try {
+            const raw = sessionStorage.getItem(STORAGE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
         }
-
-        const data = await response.json();
-        displayLinks(data);
-        showStatus('Links loaded successfully');
-    } catch (error) {
-        showStatus('Error loading links: ' + error.message);
-        document.getElementById('linksList').innerHTML =
-            '<div class="link-item error"><strong>Failed to load links</strong></div>';
-    }
-}
-
-function displayLinks(links) {
-    const container = document.getElementById('linksList');
-    container.innerHTML = '';
-
-    const linkArray = Object.values(links || {});
-    if (linkArray.length === 0) {
-        container.innerHTML =
-            '<div class="link-item"><strong>No links found</strong><br><small>Add your first link using the "Add Link" tab</small></div>';
-        return;
     }
 
-    linkArray.forEach(link => {
-        const item = document.createElement('div');
-        item.className = 'link-item';
-
-        const descHtml = escapeHtml(link.description || '');
-        const hasDescription = descHtml.trim().length > 0;
-
-        item.innerHTML = `
-            <div class="link-header" onclick="toggleDescription(this)" role="button" aria-expanded="false">
-                <div>
-                    <div class="link-title">${escapeHtml(link.name)}</div>
-                    <div class="link-url"><a href="${escapeHtml(link.url)}" target="_blank" onclick="event.stopPropagation();">${escapeHtml(link.url)}</a></div>
-                </div>
-                <span class="toggle-arrow ${hasDescription ? '' : 'rotated'}" style="${hasDescription ? '' : 'visibility: hidden;'}">></span>
-            </div>
-            <div class="link-description-wrapper ${hasDescription ? '' : 'open'}">
-                <div class="link-description">${hasDescription ? descHtml : '<em style="color:#666;">No description</em>'}</div>
-            </div>
-            <div class="link-actions">
-                <button onclick="event.stopPropagation(); editLink('${link.uuid}', '${escapeHtml(link.url)}', '${escapeHtml(link.name)}', '${escapeHtml(link.description || '')}')">Edit</button>
-                <button onclick="event.stopPropagation(); deleteLink('${link.uuid}')">Delete</button>
-            </div>
-        `;
-        container.appendChild(item);
-    });
-}
-
-function toggleDescription(headerElement) {
-    const wrapper = headerElement.nextElementSibling;
-    const arrow = headerElement.querySelector('.toggle-arrow');
-    if (!wrapper || !arrow) return;
-
-    const isOpen = wrapper.classList.contains('open');
-    if (isOpen) {
-        wrapper.classList.remove('open');
-        arrow.classList.remove('rotated');
-    } else {
-        wrapper.classList.add('open');
-        arrow.classList.add('rotated');
-    }
-}
-
-async function addLink() {
-    const url = document.getElementById('addUrl').value.trim();
-    const name = document.getElementById('addName').value.trim();
-    const description = document.getElementById('addDescription').value.trim();
-
-    if (!url) {
-        showStatus('URL and Name are required');
-        return;
+    function saveSession(repo) {
+        if (repo) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(repo));
+        else sessionStorage.removeItem(STORAGE_KEY);
     }
 
-    try {
-        showStatus('Adding link...');
-        const response = await fetch('/api/v0/catalogs/links', {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ url, name, description })
-        });
+    // ── Share link ──
 
-        if (!response.ok) {
-            const error = await response.text();
-            throw new Error(error || `Failed to add link: ${response.status}`);
-        }
-
-        const result = await response.json();
-        const newToken = result.token;
-
-        // Clear form
-        document.getElementById('addUrl').value = '';
-        document.getElementById('addName').value = '';
-        document.getElementById('addDescription').value = '';
-
-        // Show token in modal
-        if (newToken) {
-            openTokenModal(newToken);
-            // Optionally apply it automatically
-            currentToken = newToken;
-            document.getElementById('manualToken').value = newToken;
-        }
-
-        showStatus('Link added successfully');
-        switchTab(0);
-        loadLinks();
-    } catch (error) {
-        showStatus('Error adding link: ' + error.message);
-    }
-}
-
-function editLink(uuid, url, name, description) {
-    editingUuid = uuid;
-    document.getElementById('editUuid').value = uuid;
-    document.getElementById('editUrl').value = unescapeHtml(url);
-    document.getElementById('editName').value = unescapeHtml(name);
-    document.getElementById('editDescription').value = unescapeHtml(description);
-    switchTab(2);
-}
-
-async function updateLink() {
-    const uuid = document.getElementById('editUuid').value;
-    const url = document.getElementById('editUrl').value.trim();
-    const name = document.getElementById('editName').value.trim();
-    const description = document.getElementById('editDescription').value.trim();
-
-    if (!uuid || !url || !name) {
-        showStatus('UUID, URL and Name are required');
-        return;
+    // Builds a copy-ready URL that re-opens this repository automatically.
+    function buildShareLink(repo) {
+        return window.location.origin + '/static/v0/html/links.html'
+            + '?repositoryId=' + encodeURIComponent(repo.repositoryId)
+            + '&token=' + encodeURIComponent(repo.token);
     }
 
-    if (!currentToken) {
-        showStatus('No token available. Please paste your access token above.');
-        return;
-    }
+    // ── Create repository ──
 
-    try {
-        showStatus('Updating link...');
-        const response = await fetch(`/api/v0/catalogs/links/${uuid}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ uuid, token: currentToken, url, name, description })
-        });
+    async function createRepository() {
+        const nameInput = document.getElementById('createName');
+        const name = nameInput.value.trim();
 
-        if (!response.ok) {
-            const error = await response.text();
-            throw new Error(error || `Failed to update link: ${response.status}`);
-        }
-
-        showStatus('Link updated successfully');
-        switchTab(0);
-        loadLinks();
-    } catch (error) {
-        showStatus('Error updating link: ' + error.message);
-    }
-}
-
-async function deleteLink(uuid) {
-    if (!confirm('Are you sure you want to delete this link?')) {
-        return;
-    }
-
-    if (!currentToken) {
-        showStatus('No token available. Please paste your access token above.');
-        return;
-    }
-
-    try {
-        showStatus('Deleting link...');
-        const response = await fetch(`/api/v0/catalogs/links/${uuid}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ uuid, token: currentToken })
-        });
-
-        if (!response.ok) {
-            const error = await response.text();
-            throw new Error(error || `Failed to delete link: ${response.status}`);
-        }
-
-        showStatus('Link deleted successfully');
-        loadLinks();
-    } catch (error) {
-        showStatus('Error deleting link: ' + error.message);
-    }
-}
-
-function switchTab(tabIndex) {
-    const tabs = document.querySelectorAll('.tab-btn');
-    const viewTab = document.getElementById('viewTab');
-    const addTab = document.getElementById('addTab');
-    const editTab = document.getElementById('editTab');
-    const editBtn = document.getElementById('editBtn');
-
-    tabs.forEach((btn, idx) => {
-        btn.classList.toggle('active', idx === tabIndex);
-    });
-
-    if (tabIndex === 0) {
-        viewTab.style.display = 'block';
-        addTab.style.display = 'none';
-        editTab.style.display = 'none';
-        editBtn.style.display = 'none';
-        loadLinks();
-    } else if (tabIndex === 1) {
-        viewTab.style.display = 'none';
-        addTab.style.display = 'block';
-        editTab.style.display = 'none';
-        editBtn.style.display = 'none';
-    } else if (tabIndex === 2) {
-        viewTab.style.display = 'none';
-        addTab.style.display = 'none';
-        editTab.style.display = 'block';
-        editBtn.style.display = 'inline-block';
-        editBtn.classList.add('active');
-    }
-    document.getElementById('status').textContent = '';
-}
-
-function showStatus(message) {
-    const statusEl = document.getElementById('status');
-    statusEl.textContent = message;
-    if (message.includes('Error') || message.includes('Failed')) {
-        statusEl.style.color = '#ff8888';
-    } else if (message.includes('success')) {
-        statusEl.style.color = '#ffffff';
-    } else {
-        statusEl.style.color = '#cccccc';
-    }
-
-    if (message !== 'Loading links...' && message !== 'Links loaded successfully') {
-        setTimeout(() => {
-            if (statusEl.textContent === message) {
-                statusEl.textContent = '';
-            }
-        }, 5000);
-    }
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function unescapeHtml(text) {
-    const div = document.createElement('div');
-    div.innerHTML = text;
-    return div.textContent;
-}
-
-// ---- TOKEN MODAL LOGIC ----
-function openTokenModal(token) {
-    document.getElementById('modalTokenText').textContent = token;
-    document.getElementById('tokenModal').style.display = 'flex';
-    document.getElementById('modalCopyFeedback').textContent = '';
-}
-
-function closeTokenModal() {
-    document.getElementById('tokenModal').style.display = 'none';
-}
-
-function copyToClipboard(text) {
-    return new Promise((resolve, reject) => {
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(resolve).catch(() => {
-                fallbackCopy(text, resolve, reject);
+        try {
+            showStatus('Creating repository...');
+            const resp = await fetch(API_BASE + '/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(name ? { name: name } : {})
             });
-        } else {
-            fallbackCopy(text, resolve, reject);
-        }
-    });
-}
 
-function fallbackCopy(text, resolve, reject) {
-    try {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.left = '-9999px';
-        textarea.style.top = '-9999px';
-        document.body.appendChild(textarea);
-        textarea.focus();
-        textarea.select();
-        const successful = document.execCommand('copy');
-        document.body.removeChild(textarea);
-        if (successful) {
-            resolve();
-        } else {
-            reject(new Error('execCommand failed'));
-        }
-    } catch (err) {
-        reject(err);
-    }
-}
-
-function copyModalToken() {
-    const token = document.getElementById('modalTokenText').textContent;
-    if (!token) return;
-    copyToClipboard(token).then(() => {
-        const feedback = document.getElementById('modalCopyFeedback');
-        feedback.textContent = 'Token copied to clipboard!';
-        setTimeout(() => {
-            if (feedback.textContent === 'Token copied to clipboard!') {
-                feedback.textContent = '';
+            if (!resp.ok) {
+                const err = await resp.text();
+                throw new Error(err || 'Create failed: ' + resp.status);
             }
-        }, 2500);
-    }).catch(() => {
-        document.getElementById('modalCopyFeedback').textContent = 
-            'Could not copy automatically. Please select and copy manually.';
-    });
-}
 
-// Close modal when clicking overlay background
-document.addEventListener('click', function(e) {
-    if (e.target.id === 'tokenModal') {
-        closeTokenModal();
-    }
-});
+            const data = await resp.json();
+            currentRepo = {
+                repositoryId: data.repositoryId,
+                token: data.token,
+                name: data.name,
+                createdAt: data.createdAt
+            };
+            currentLinks = [];
+            saveSession(currentRepo);
 
-// ---- MANUAL TOKEN APPLICATION ----
-function applyToken() {
-    const input = document.getElementById('manualToken');
-    const token = input.value.trim();
-    if (token) {
-        currentToken = token;
-        showStatus('Token applied successfully');
-        // Reload links with new token
-        if (document.getElementById('viewTab').style.display !== 'none') {
-            loadLinks();
+            nameInput.value = '';
+            openModal(currentRepo);
+            showStatus('Repository created');
+            renderRepo();
+            switchTab(2);
+        } catch (err) {
+            showStatus('Error: ' + err.message, true);
         }
-    } else {
-        showStatus('Please enter a valid token');
     }
-}
 
-// Initialize
-window.addEventListener('DOMContentLoaded', function() {
-    const urlToken = getTokenFromUrl();
-    if (urlToken) {
-        currentToken = urlToken;
-        document.getElementById('manualToken').value = urlToken;
-        showStatus('Token loaded from URL');
-    } else {
-        showStatus('No token found. You can paste one above or create a new link to get a token.');
+    // ── Open repository ──
+
+    async function openRepository() {
+        const id = document.getElementById('openRepoId').value.trim();
+        const token = document.getElementById('openToken').value.trim();
+        if (!id) { showStatus('Repository id is required', true); return; }
+        if (!token) { showStatus('Access token is required', true); return; }
+        await loadRepository(id, token, true);
     }
-    switchTab(0); // Load links by default
-});
+
+    // Fetches the repository, and on success stores it as current and shows the links tab.
+    async function loadRepository(id, token, switchToLinks) {
+        try {
+            showStatus('Opening repository...');
+            const data = await fetchRepository(id, token);
+
+            currentRepo = {
+                repositoryId: data.repositoryId,
+                token: token,
+                name: data.name,
+                createdAt: data.createdAt
+            };
+            currentLinks = data.links || [];
+            saveSession(currentRepo);
+
+            renderRepo();
+            if (switchToLinks) switchTab(2);
+            showStatus('Repository opened');
+        } catch (err) {
+            showStatus('Error: ' + err.message, true);
+        }
+    }
+
+    // Performs the GET and returns the parsed repository, throwing a friendly error otherwise.
+    async function fetchRepository(id, token) {
+        const resp = await fetch(API_BASE + '/' + encodeURIComponent(id)
+            + '?token=' + encodeURIComponent(token));
+        if (!resp.ok) {
+            if (resp.status === 404) throw new Error('Repository not found or token is invalid');
+            if (resp.status === 400) throw new Error('Repository id or token missing');
+            const err = await resp.text();
+            throw new Error(err || 'Open failed: ' + resp.status);
+        }
+        return resp.json();
+    }
+
+    // Re-fetches links for the currently open repo without changing tabs.
+    async function reloadLinks() {
+        if (!currentRepo) return;
+        try {
+            showStatus('Refreshing...');
+            const data = await fetchRepository(currentRepo.repositoryId, currentRepo.token);
+            currentRepo.name = data.name;
+            currentRepo.createdAt = data.createdAt;
+            currentLinks = data.links || [];
+            saveSession(currentRepo);
+            renderRepo();
+            showStatus('Links refreshed');
+        } catch (err) {
+            showStatus('Error: ' + err.message, true);
+        }
+    }
+
+    function closeRepository() {
+        currentRepo = null;
+        currentLinks = [];
+        saveSession(null);
+        cancelEdit();
+        renderRepo();
+        showStatus('Repository closed');
+        switchTab(0);
+    }
+
+    async function deleteRepository() {
+        if (!currentRepo) return;
+        if (!confirm('Delete this repository and all its links permanently?')) return;
+        try {
+            showStatus('Deleting repository...');
+            const resp = await fetch(API_BASE + '/' + encodeURIComponent(currentRepo.repositoryId)
+                + '?token=' + encodeURIComponent(currentRepo.token), { method: 'DELETE' });
+            if (!resp.ok && resp.status !== 204) {
+                if (resp.status === 404) throw new Error('Repository not found or token is invalid');
+                const err = await resp.text();
+                throw new Error(err || 'Delete failed: ' + resp.status);
+            }
+            currentRepo = null;
+            currentLinks = [];
+            saveSession(null);
+            cancelEdit();
+            renderRepo();
+            showStatus('Repository deleted');
+            switchTab(0);
+        } catch (err) {
+            showStatus('Error: ' + err.message, true);
+        }
+    }
+
+    // ── Add / update link ──
+
+    async function submitLink() {
+        if (!currentRepo) { showStatus('No repository open', true); return; }
+
+        const url = document.getElementById('linkUrl').value.trim();
+        const name = document.getElementById('linkName').value.trim();
+        const description = document.getElementById('linkDescription').value.trim();
+        const editingUuid = document.getElementById('editingUuid').value;
+
+        if (!url) { showStatus('Link url is required', true); return; }
+
+        const payload = { url: url };
+        if (name) payload.name = name;
+        if (description) payload.description = description;
+
+        try {
+            let resp;
+            if (editingUuid) {
+                showStatus('Updating link...');
+                resp = await fetch(linkUrlFor(editingUuid), {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                showStatus('Adding link...');
+                resp = await fetch(API_BASE + '/' + encodeURIComponent(currentRepo.repositoryId)
+                    + '/links?token=' + encodeURIComponent(currentRepo.token), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            if (!resp.ok && resp.status !== 204) {
+                if (resp.status === 404) throw new Error('Repository or link not found, or token is invalid');
+                if (resp.status === 400) throw new Error('Link url is required');
+                const err = await resp.text();
+                throw new Error(err || 'Save failed: ' + resp.status);
+            }
+
+            cancelEdit();
+            showStatus(editingUuid ? 'Link updated' : 'Link added');
+            await reloadLinks();
+        } catch (err) {
+            showStatus('Error: ' + err.message, true);
+        }
+    }
+
+    // Builds the URL for a single link of the current repo.
+    function linkUrlFor(uuid) {
+        return API_BASE + '/' + encodeURIComponent(currentRepo.repositoryId)
+            + '/links/' + encodeURIComponent(uuid)
+            + '?token=' + encodeURIComponent(currentRepo.token);
+    }
+
+    function startEdit(uuid) {
+        const link = currentLinks.find(l => l.uuid === uuid);
+        if (!link) return;
+        document.getElementById('editingUuid').value = uuid;
+        document.getElementById('linkUrl').value = link.url || '';
+        document.getElementById('linkName').value = link.name || '';
+        document.getElementById('linkDescription').value = link.description || '';
+        document.getElementById('submitLinkBtn').textContent = 'update link';
+        document.getElementById('cancelEditBtn').style.display = 'inline-block';
+        document.getElementById('linkUrl').focus();
+    }
+
+    function cancelEdit() {
+        document.getElementById('editingUuid').value = '';
+        document.getElementById('linkUrl').value = '';
+        document.getElementById('linkName').value = '';
+        document.getElementById('linkDescription').value = '';
+        document.getElementById('submitLinkBtn').textContent = 'add link';
+        document.getElementById('cancelEditBtn').style.display = 'none';
+    }
+
+    async function deleteLink(uuid) {
+        if (!currentRepo) return;
+        if (!confirm('Delete this link permanently?')) return;
+        try {
+            showStatus('Deleting link...');
+            const resp = await fetch(linkUrlFor(uuid), { method: 'DELETE' });
+            if (!resp.ok && resp.status !== 204) {
+                if (resp.status === 404) throw new Error('Link not found or token is invalid');
+                const err = await resp.text();
+                throw new Error(err || 'Delete failed: ' + resp.status);
+            }
+            // If we were editing the deleted link, reset the form.
+            if (document.getElementById('editingUuid').value === uuid) cancelEdit();
+            showStatus('Link deleted');
+            await reloadLinks();
+        } catch (err) {
+            showStatus('Error: ' + err.message, true);
+        }
+    }
+
+    // ── Rendering ──
+
+    // Renders the links tab: either the "no repo" state or the open repo with its banner and list.
+    function renderRepo() {
+        const noRepo = document.getElementById('noRepoState');
+        const content = document.getElementById('repoContent');
+
+        if (!currentRepo) {
+            noRepo.style.display = 'block';
+            content.style.display = 'none';
+            return;
+        }
+
+        noRepo.style.display = 'none';
+        content.style.display = 'block';
+
+        document.getElementById('repoName').textContent = currentRepo.name || currentRepo.repositoryId;
+        const created = currentRepo.createdAt ? ' • created ' + currentRepo.createdAt : '';
+        document.getElementById('repoMeta').textContent = 'id: ' + currentRepo.repositoryId + created;
+
+        renderLinksList();
+    }
+
+    function renderLinksList() {
+        const container = document.getElementById('linksList');
+        if (!currentLinks || currentLinks.length === 0) {
+            container.innerHTML = '<div class="empty-state">no links yet</div>';
+            return;
+        }
+
+        container.innerHTML = currentLinks.map(l => {
+            const title = l.name ? escapeHtml(l.name) : escapeHtml(l.url);
+            const url = escapeHtml(l.url);
+            const desc = l.description
+                ? `<div class="file-card-desc">${escapeHtml(l.description)}</div>` : '';
+            return `
+            <div class="file-card">
+                <div class="file-card-name">${title}</div>
+                <div class="file-card-meta">
+                    <a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>
+                </div>
+                ${desc}
+                <div class="file-card-actions">
+                    <button onclick="openLink('${escapeJs(l.url)}')">Open</button>
+                    <button onclick="copyLink('${escapeJs(l.url)}')">Copy</button>
+                    <button onclick="startEdit('${escapeJs(l.uuid)}')">Edit</button>
+                    <button class="danger" onclick="deleteLink('${escapeJs(l.uuid)}')">Delete</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function openLink(url) {
+        window.open(url, '_blank', 'noopener');
+    }
+
+    function copyLink(url) {
+        copyToClipboard(url)
+            .then(() => showStatus('Link copied'))
+            .catch(() => showStatus('Could not copy link', true));
+    }
+
+    // ── Create modal ──
+
+    function openModal(repo) {
+        document.getElementById('modalRepoId').textContent = repo.repositoryId;
+        document.getElementById('modalToken').textContent = repo.token;
+        document.getElementById('modalName').textContent = repo.name || '—';
+        document.getElementById('modalCreated').textContent = repo.createdAt || '—';
+        document.getElementById('modalFeedback').textContent = '';
+        document.getElementById('repoModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('repoModal').style.display = 'none';
+    }
+
+    function copyShareLink() {
+        if (!currentRepo) return;
+        copyWithFeedback(buildShareLink(currentRepo), 'Share link copied!');
+    }
+
+    function copyCredentials() {
+        if (!currentRepo) return;
+        const text = 'Repository ID: ' + currentRepo.repositoryId
+            + '\nToken: ' + currentRepo.token
+            + '\nShare link: ' + buildShareLink(currentRepo);
+        copyWithFeedback(text, 'Credentials copied!');
+    }
+
+    // Copies text and reports the result into the modal feedback line if visible, else the status line.
+    function copyWithFeedback(text, okMsg) {
+        const modalOpen = document.getElementById('repoModal').style.display === 'flex';
+        copyToClipboard(text).then(() => {
+            if (modalOpen) {
+                const fb = document.getElementById('modalFeedback');
+                fb.textContent = okMsg;
+                fb.style.color = '#80b380';
+                setTimeout(() => { fb.textContent = ''; }, 2500);
+            } else {
+                showStatus(okMsg);
+            }
+        }).catch(() => {
+            if (modalOpen) {
+                const fb = document.getElementById('modalFeedback');
+                fb.textContent = 'Could not copy. Select and copy manually.';
+                fb.style.color = '#cc8080';
+            } else {
+                showStatus('Could not copy', true);
+            }
+        });
+    }
+
+    // ── Clipboard ──
+
+    function copyToClipboard(text) {
+        return new Promise((resolve, reject) => {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(resolve).catch(() => fallbackCopy(text, resolve, reject));
+            } else {
+                fallbackCopy(text, resolve, reject);
+            }
+        });
+    }
+
+    function fallbackCopy(text, resolve, reject) {
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            ok ? resolve() : reject(new Error('execCommand failed'));
+        } catch (err) {
+            reject(err);
+        }
+    }
+
+    // ── Tabs ──
+
+    function switchTab(idx) {
+        document.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === idx));
+        document.getElementById('openTab').style.display = idx === 0 ? 'block' : 'none';
+        document.getElementById('createTab').style.display = idx === 1 ? 'block' : 'none';
+        document.getElementById('linksTab').style.display = idx === 2 ? 'block' : 'none';
+        document.getElementById('status').textContent = '';
+        document.getElementById('status').className = 'status-line';
+        if (idx === 2) renderRepo();
+    }
+
+    // ── Status ──
+
+    let statusTimer;
+    function showStatus(msg, isError) {
+        const el = document.getElementById('status');
+        el.textContent = msg;
+        el.className = 'status-line' + (isError ? ' err' : msg && !msg.endsWith('...') ? ' ok' : '');
+        clearTimeout(statusTimer);
+        if (msg && !isError) {
+            statusTimer = setTimeout(() => { el.textContent = ''; el.className = 'status-line'; }, 5000);
+        }
+    }
+
+    // ── Helpers ──
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text == null ? '' : text;
+        return div.innerHTML;
+    }
+
+    // Escapes a value for safe embedding inside a single-quoted JS string in inline handlers.
+    function escapeJs(text) {
+        return String(text == null ? '' : text)
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'")
+            .replace(/"/g, '\\"');
+    }
+
+    function getUrlParam(name) {
+        return new URLSearchParams(window.location.search).get(name) || '';
+    }
+
+    // ── Expose public API (inline handlers) ──
+    window.switchTab = switchTab;
+    window.createRepository = createRepository;
+    window.openRepository = openRepository;
+    window.reloadLinks = reloadLinks;
+    window.closeRepository = closeRepository;
+    window.deleteRepository = deleteRepository;
+    window.submitLink = submitLink;
+    window.startEdit = startEdit;
+    window.cancelEdit = cancelEdit;
+    window.deleteLink = deleteLink;
+    window.openLink = openLink;
+    window.copyLink = copyLink;
+    window.copyShareLink = copyShareLink;
+    window.copyCredentials = copyCredentials;
+    window.closeModal = closeModal;
+
+    // ── Modal overlay click closes ──
+    document.addEventListener('click', function (e) {
+        if (e.target.id === 'repoModal') closeModal();
+    });
+
+    // ── Init ──
+    window.addEventListener('DOMContentLoaded', function () {
+        switchTab(0);
+
+        // Prefer credentials from the URL (share link), otherwise restore the session.
+        const urlId = getUrlParam('repositoryId');
+        const urlToken = getUrlParam('token') || getUrlParam('auth');
+        if (urlId && urlToken) {
+            document.getElementById('openRepoId').value = urlId;
+            document.getElementById('openToken').value = urlToken;
+            loadRepository(urlId, urlToken, true);
+            return;
+        }
+
+        const saved = loadSession();
+        if (saved && saved.repositoryId && saved.token) {
+            loadRepository(saved.repositoryId, saved.token, false);
+        }
+    });
+})();

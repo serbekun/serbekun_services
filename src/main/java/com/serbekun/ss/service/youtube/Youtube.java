@@ -47,7 +47,7 @@ public class Youtube {
         env.put("PATH", denoPath + ":" + existingPath);
     }
 
-    public byte[] DownloadVideoByUrl(String url) throws IOException {
+    public byte[] downloadVideoByUrl(String url) throws IOException {
         // Validate the URL before proceeding
         validateUrl(url);
 
@@ -106,7 +106,7 @@ public class Youtube {
      * @throws IOException if process cannot be started or interrupted
      * @throws IllegalStateException if yt-dlp command fails
      */
-    public String GetVideoInfo(String url) throws IOException {
+    public String getVideoInfo(String url) throws IOException {
         validateUrl(url);
 
         // Prepare the yt-dlp command to fetch video info in JSON format

@@ -52,7 +52,7 @@ public class YoutubeService {
     public byte[] downloadVideo(String url) throws IOException {
         validateDomain(url);
         try {
-            return youtube.DownloadVideoByUrl(url);
+            return youtube.downloadVideoByUrl(url);
         } catch (IllegalStateException e) {
             log.error("yt-dlp download failed: {}", e.getMessage());
             throw new IOException("Failed to download video");
@@ -68,7 +68,7 @@ public class YoutubeService {
         validateDomain(url);
         String string;
         try {
-            string = youtube.GetVideoInfo(url);
+            string = youtube.getVideoInfo(url);
         } catch (Exception e) {
             log.error("yt-dlp info failed: {}", e.getMessage());
             throw new RuntimeException("Maybe you download video that required login to youtube.");

@@ -7,23 +7,18 @@ import com.serbekun.ss.service.auth.api.Endpoint;
 import com.serbekun.ss.service.auth.api.EndpointRegistrar;
 import com.serbekun.ss.service.auth.AuthService;
 
-/**
- * Authorization and endpoint registrar initializer.
- * Contains all logic from EndpointAuthInitializer.
- */
 public class AuthInitializer {
-
-    /**
-     * Initializes endpoints, registers them and sets up auth before-filters.
-     */
-    public void init(Javalin svr, EndpointRegistrar endpointRegistrar, AuthService authService) {
-        // SINGLE instances
+ 
+    public static void initHandlesAuthSetting(Javalin svr, EndpointRegistrar endpointRegistrar, AuthService authService) {
+        
+                // SINGLE instances
         Endpoint endpointIndex = new Endpoint("/index");
         Endpoint endpointStaticV0Images = new Endpoint("/static/v0/images");
         Endpoint endpointStaticV0Json = new Endpoint("/static/v0/json");
         Endpoint endpointStaticV0Html = new Endpoint("/static/v0/html/");
         Endpoint endpointApiV0CipherAes = new Endpoint("/api/v0/cipher");
-        Endpoint endpointApiV0CatalogsLinks = new Endpoint("/api/v0/catalogs/links");
+        Endpoint endpointApiV0RepositoryLinks = new Endpoint("/api/v0/repository/links");
+        Endpoint endpointApiV0ShortUrl = new Endpoint("/api/v0/short-url");
         Endpoint endpointApiV0Version = new Endpoint("/api/v0/version");
 
         // register
@@ -32,7 +27,8 @@ public class AuthInitializer {
         endpointRegistrar.register(endpointStaticV0Json, false);
         endpointRegistrar.register(endpointStaticV0Html, false);
         endpointRegistrar.register(endpointApiV0CipherAes, false);
-        endpointRegistrar.register(endpointApiV0CatalogsLinks, false);
+        endpointRegistrar.register(endpointApiV0RepositoryLinks, false);
+        endpointRegistrar.register(endpointApiV0ShortUrl, false);
         endpointRegistrar.register(endpointApiV0Version, false);
 
         svr.before("/", ctx -> ctx.attribute("endpoint", endpointIndex));
@@ -44,14 +40,18 @@ public class AuthInitializer {
         svr.before("/api/v0/cipher/aes", ctx -> ctx.attribute("endpoint", endpointApiV0CipherAes));
         svr.before("/api/v0/cipher/aes/encrypt", ctx -> ctx.attribute("endpoint", endpointApiV0CipherAes));
         svr.before("/api/v0/cipher/aes/decrypt", ctx -> ctx.attribute("endpoint", endpointApiV0CipherAes));
-        svr.before("/api/v0/catalogs/links", ctx -> ctx.attribute("endpoint", endpointApiV0CatalogsLinks));
-        svr.before("/api/v0/catalogs/links/{uuid}", ctx -> ctx.attribute("endpoint", endpointApiV0CatalogsLinks));
+        svr.before("/api/v0/repository/links/", ctx -> ctx.attribute("endpoint", endpointApiV0RepositoryLinks));
+        svr.before("/api/v0/repository/links/{repositoryId}", ctx -> ctx.attribute("endpoint", endpointApiV0RepositoryLinks));
+        svr.before("/api/v0/repository/links/{repositoryId}/links", ctx -> ctx.attribute("endpoint", endpointApiV0RepositoryLinks));
+        svr.before("/api/v0/repository/links/{repositoryId}/links/{uuid}", ctx -> ctx.attribute("endpoint", endpointApiV0RepositoryLinks));
+        svr.before("/api/v0/short-url", ctx -> ctx.attribute("endpoint", endpointApiV0ShortUrl));
+        svr.before("/api/v0/short-url/{id}", ctx -> ctx.attribute("endpoint", endpointApiV0ShortUrl));
         svr.before("/api/v0/version", ctx -> ctx.attribute("endpoint", endpointApiV0Version));
 
         // auth gate
         svr.before(ctx -> {
             Endpoint endpoint = ctx.attribute("endpoint");
-
+            
             if (endpoint == null) {
                 return;
             }

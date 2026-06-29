@@ -34,11 +34,11 @@ public class Config {
     private final int uploadFileMaxSize;
 
     /** How many time server can download videos from youtube */
-    private final long YoutubeProcessTimeoutSeconds;
+    private final long youtubeProcessTimeoutSeconds;
     /** Path to yt-dlp */
-    private final String YtDlpPath;
+    private final String ytDlpPath;
     /** Path to deno */
-    private final String DenoPath;
+    private final String denoPath;
 
     // endregion
     // endregion 
@@ -54,9 +54,9 @@ public class Config {
 ) {
         this.port = port;
         this.uploadFileMaxSize = uploadFileMaxSize;
-        this.YoutubeProcessTimeoutSeconds = youtubeProcessTimeoutSeconds;
-        this.YtDlpPath = ytDlpPath;
-        this.DenoPath = denoPath;
+        this.youtubeProcessTimeoutSeconds = youtubeProcessTimeoutSeconds;
+        this.ytDlpPath = ytDlpPath;
+        this.denoPath = denoPath;
     }
 
     // region Getters
@@ -71,15 +71,15 @@ public class Config {
 
     /** @return Youtube process timeout in seconds */
     @JsonProperty("youtube_process_timeout_seconds")
-    public long getYoutubeProcessTimeoutSeconds() { return YoutubeProcessTimeoutSeconds; }
+    public long getYoutubeProcessTimeoutSeconds() { return youtubeProcessTimeoutSeconds; }
 
     /** @return Path to yt-dlp */
     @JsonProperty("yt_dlp_path")
-    public String getYtDlpPath() { return YtDlpPath; }
+    public String getYtDlpPath() { return ytDlpPath; }
 
     /** @return Path to deno */
     @JsonProperty("deno_path")
-    public String getDenoPath() { return DenoPath; }
+    public String getDenoPath() { return denoPath; }
 
     // endregion
     

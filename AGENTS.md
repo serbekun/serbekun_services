@@ -7,14 +7,14 @@ When the user states any preferences about coding style, architecture, conventio
 ## Quick start
 
 ```sh
-gradle build                 # compile + test
-gradle shadowJar             # fat JAR → build/libs/serbekun_services-alfa-2026-06-23-all.jar
-java -jar build/libs/serbekun_services-alfa-2026-06-23-all.jar  # server on :8080
-gradle test                  # JUnit 5
-gradle compileJava           # compile only
+./gradlew build                 # compile + test
+./gradlew shadowJar             # fat JAR → build/libs/serbekun_services-<version>-all.jar
+java -jar build/libs/serbekun_services-<version>-all.jar  # server on :8080
+./gradlew test                  # JUnit 5
+./gradlew compileJava           # compile only
 ```
 
-> **Important**: `gradlew` wrapper is broken (missing `gradle/wrapper/`). Always use system `gradle` from `/opt/gradle/bin/gradle`.
+> The Gradle wrapper (`./gradlew`, Gradle 8.6) is the canonical build tool. System `gradle` from `/opt/gradle/bin/gradle` also works.
 
 No lint, typecheck, or codegen tasks exist. No CI/CD.
 
@@ -45,7 +45,6 @@ No lint, typecheck, or codegen tasks exist. No CI/CD.
 - **File cleanup** — `UploadedFilesCleanupService` periodically removes expired uploaded files (based on `expired_time` field). Runs on a separate scheduled executor.
 - **Server port** — loaded from `repository/config.json` at startup (defaults to `8080`).
 - **Java 21** with `-parameters` compiler flag (method parameter names preserved for Jackson).
-- **Dead dependencies in `build.gradle`**: H2, Flyway, Hibernate Validator, Guava, Javalin SSL plugin, Jakarta Validation API are declared but unused.
 
 ## Current state after refactoring
 
@@ -65,7 +64,7 @@ The project is a Javalin 6 server with token-based auth, JSON-file persistence, 
 
 ## Tests
 
-Single unit test at `src/test/java/com/serbekun/ss/service/resource/ResourceServiceTest.java` — uses Mockito + AssertJ. No integration tests. Run with `gradle test`.
+Single unit test at `src/test/java/com/serbekun/ss/service/resource/ResourceServiceTest.java` — uses Mockito + AssertJ. No integration tests. Run with `./gradlew test`.
 
 ## API endpoints (v0)
 

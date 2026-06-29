@@ -8,14 +8,12 @@ import io.javalin.Javalin;
 
 import com.serbekun.ss.config.Config;
 import com.serbekun.ss.config.Paths;
-import com.serbekun.ss.http.handles.InitHandles;
+import com.serbekun.ss.http.handles.RouteInitializer;
 import com.serbekun.ss.infrastructure.fs.ServerStorageInitializer;
 import com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensFileRepo;
 import com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensRepo;
-import com.serbekun.ss.repo.links.LinksFileRepo;
-import com.serbekun.ss.repo.links.LinksRepo;
-import com.serbekun.ss.repo.localtokens.LocalTokensFileRepo;
-import com.serbekun.ss.repo.localtokens.LocalTokensRepo;
+import com.serbekun.ss.repo.linksrepo.LinkRepositoryFileRepo;
+import com.serbekun.ss.repo.linksrepo.LinkRepositoryRepo;
 import com.serbekun.ss.repo.shorturl.ShortUrlFileRepo;
 import com.serbekun.ss.repo.shorturl.ShortUrlRepo;
 import com.serbekun.ss.repo.uploadedfiles.UploadedFilesFileRepo;
@@ -25,7 +23,7 @@ import com.serbekun.ss.resources.ResourceLoader;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.EndpointRegistry;
 import com.serbekun.ss.service.autosave.*;
-import com.serbekun.ss.service.links.LinksService;
+import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.shorturl.ShortUrlService;
 import com.serbekun.ss.service.tokens.EndpointsAccessTokensService;
@@ -110,38 +108,31 @@ public class Main {
     private static Repositories initializeRepositories() {
         log.info("Initializing repositories");
 
-        // 1. Links
-        LinksFileRepo linksFileRepo = new LinksFileRepo(Paths.LinksConfig.getLinksStorageFile());
-        LinksRepo linksRepo = new LinksRepo(linksFileRepo.load());
-        linksFileRepo.setLinksRepositoryReadInterface(linksRepo);
+        // 1. Link Repositories
+        LinkRepositoryFileRepo linkRepositoryFileRepo = new LinkRepositoryFileRepo(Paths.LinksRepositoryConfig.getRepositoriesStorageFile());
+        LinkRepositoryRepo linkRepositoryRepo = new LinkRepositoryRepo(linkRepositoryFileRepo.load());
+        linkRepositoryFileRepo.setReadInterface(linkRepositoryRepo);
 
         // 2. Endpoint Access Tokens
         EndpointsAccessTokensFileRepo endpointsAccessTokensFileRepo = new EndpointsAccessTokensFileRepo(Paths.TokensConfig.getTokensStorageFolder());
         EndpointsAccessTokensRepo endpointsAccessTokensRepo = new EndpointsAccessTokensRepo(endpointsAccessTokensFileRepo.load());
         endpointsAccessTokensFileRepo.setEndpointsAccessTokensFileRepository(endpointsAccessTokensRepo);
 
-        // 3. Local Tokens (for links)
-        LocalTokensFileRepo linksLocalTokensFileRepo = new LocalTokensFileRepo(Paths.LinksConfig.getLinksLocalTokensStorageFile(), "ss_links-");
-        LocalTokensRepo linkLocalTokens = new LocalTokensRepo(linksLocalTokensFileRepo.load(), "ss_links-");
-        linksLocalTokensFileRepo.setLocalTokensReadInterface(linkLocalTokens);
-
-        // 4. Uploaded Files
+        // 3. Uploaded Files
         UploadedFilesFileRepo uploadedFilesFileRepo = new UploadedFilesFileRepo(Paths.UploadedFilesConfig.getUploadedFilesStorageFile());
         UploadedFilesRepo uploadedFilesRepo = new UploadedFilesRepo(uploadedFilesFileRepo.load());
         uploadedFilesFileRepo.setUploadedFilesReadInterface(uploadedFilesRepo);
 
-        // 5. Short URLs
+        // 4. Short URLs
         ShortUrlFileRepo shortUrlFileRepo = new ShortUrlFileRepo(Paths.ShortUrlConfig.getShortUrlStorageFile());
         ShortUrlRepo shortUrlRepo = new ShortUrlRepo(shortUrlFileRepo.load());
         shortUrlFileRepo.setShortUrlReadInterface(shortUrlRepo);
 
         return new Repositories(
-            linksRepo,
+            linkRepositoryRepo,
+            linkRepositoryFileRepo,
             endpointsAccessTokensRepo,
             endpointsAccessTokensFileRepo,
-            linkLocalTokens,
-            linksLocalTokensFileRepo,
-            linksFileRepo,
             uploadedFilesRepo,
             uploadedFilesFileRepo,
             shortUrlRepo,
@@ -159,7 +150,7 @@ public class Main {
     private static Services initializeServices(Repositories repos, Config config) {
         var endpointRegistry = new EndpointRegistry();
         var endpointAccessTokensService = new EndpointsAccessTokensService(repos.endpointsAccessTokensRepo);
-        var linksService = new LinksService(repos.linksRepo, repos.linkLocalTokens);
+        var linkRepositoryService = new LinkRepositoryService(repos.linkRepositoryRepo);
         var authService = new AuthService(endpointAccessTokensService, endpointRegistry);
         var youtube = new Youtube(
             config.getYoutubeProcessTimeoutSeconds(),
@@ -181,7 +172,7 @@ public class Main {
         var shortUrlService = new ShortUrlService(repos.shortUrlRepo);
 
 
-        return new Services(endpointRegistry, linksService, authService,
+        return new Services(endpointRegistry, linkRepositoryService, authService,
                 youtubeService, uploadedFilesService, uploadedFilesCleanupService,
                 shortUrlService);
     }
@@ -212,7 +203,7 @@ public class Main {
 
         return new Handlers(
             resources.resourcesService,
-            services.linksService,
+            services.linkRepositoryService,
             new com.serbekun.ss.service.cipher.CipherService(),
             services.youtubeService,
             services.uploadedFilesService,
@@ -230,14 +221,23 @@ public class Main {
         log.info("Initializing Javalin server");
         Javalin server = Javalin.create();
 
-        InitHandles initHandles = new InitHandles();
+        // Force UTF-8 for every response, independent of the server's default
+        // JVM charset. ctx.result(String) encodes with responseCharset(), which
+        // falls back to Charset.defaultCharset() when no charset is set on the
+        // response. On a server running under a C/POSIX locale (or a pre-Java-18
+        // JRE) that default is US-ASCII, so non-ASCII characters (─ — → …,
+        // cyrillic) get written as '?'. Setting it up front keeps static assets
+        // and API JSON correct regardless of the host locale.
+        server.before(reqCtx -> reqCtx.res().setCharacterEncoding("UTF-8"));
+
+        RouteInitializer initHandles = new RouteInitializer();
         initHandles.initHandles(
             server,
             ctx.resources.resourcesService,
             ctx.services.authService,
             ctx.services.endpointRegistry,
             ctx.handlers.resourcesService,
-            ctx.handlers.linksService,
+            ctx.handlers.linkRepositoryService,
             ctx.handlers.cipherService,
             ctx.handlers.youtubeService,
             ctx.handlers.uploadedFilesService,
@@ -264,9 +264,8 @@ public class Main {
     private static AutosaveService createAndStartAutosave(Repositories repos) {
         log.info("Initializing autosave service");
         var autosave = new AutosaveService();
-        autosave.register(repos.linksFileRepo);
+        autosave.register(repos.linkRepositoryFileRepo);
         autosave.register(repos.endpointsAccessTokensFileRepo);
-        autosave.register(repos.linksLocalTokensFileRepo);
         autosave.register(repos.uploadedFilesFileRepo);
         autosave.register(repos.shortUrlFileRepo);
         autosave.start();
@@ -310,34 +309,28 @@ public class Main {
      * Container class for holding all initialized repository instances.
      */
     private static final class Repositories {
-        private final LinksRepo linksRepo;
+        private final LinkRepositoryRepo linkRepositoryRepo;
+        private final LinkRepositoryFileRepo linkRepositoryFileRepo;
         private final EndpointsAccessTokensRepo endpointsAccessTokensRepo;
         private final EndpointsAccessTokensFileRepo endpointsAccessTokensFileRepo;
-        private final LocalTokensRepo linkLocalTokens;
-        private final LocalTokensFileRepo linksLocalTokensFileRepo;
-        private final LinksFileRepo linksFileRepo;
         private final UploadedFilesRepo uploadedFilesRepo;
         private final UploadedFilesFileRepo uploadedFilesFileRepo;
         private final ShortUrlRepo shortUrlRepo;
         private final ShortUrlFileRepo shortUrlFileRepo;
 
         private Repositories(
-                LinksRepo linksRepo,
+                LinkRepositoryRepo linkRepositoryRepo,
+                LinkRepositoryFileRepo linkRepositoryFileRepo,
                 EndpointsAccessTokensRepo endpointsAccessTokensRepo,
                 EndpointsAccessTokensFileRepo endpointsAccessTokensFileRepo,
-                LocalTokensRepo linkLocalTokens,
-                LocalTokensFileRepo linksLocalTokensFileRepo,
-                LinksFileRepo linksFileRepo,
                 UploadedFilesRepo uploadedFilesRepo,
                 UploadedFilesFileRepo uploadedFilesFileRepo,
                 ShortUrlRepo shortUrlRepo,
                 ShortUrlFileRepo shortUrlFileRepo) {
-            this.linksRepo = linksRepo;
+            this.linkRepositoryRepo = linkRepositoryRepo;
+            this.linkRepositoryFileRepo = linkRepositoryFileRepo;
             this.endpointsAccessTokensRepo = endpointsAccessTokensRepo;
             this.endpointsAccessTokensFileRepo = endpointsAccessTokensFileRepo;
-            this.linkLocalTokens = linkLocalTokens;
-            this.linksLocalTokensFileRepo = linksLocalTokensFileRepo;
-            this.linksFileRepo = linksFileRepo;
             this.uploadedFilesRepo = uploadedFilesRepo;
             this.uploadedFilesFileRepo = uploadedFilesFileRepo;
             this.shortUrlRepo = shortUrlRepo;
@@ -352,7 +345,7 @@ public class Main {
      */
     private static final class Services {
         private final EndpointRegistry endpointRegistry;
-        private final LinksService linksService;
+        private final LinkRepositoryService linkRepositoryService;
         private final AuthService authService;
         private final YoutubeService youtubeService;
         private final UploadedFilesService uploadedFilesService;
@@ -361,14 +354,14 @@ public class Main {
 
         private Services(
                 EndpointRegistry endpointRegistry,
-                LinksService linksService,
+                LinkRepositoryService linkRepositoryService,
                 AuthService authService,
                 YoutubeService youtubeService,
                 UploadedFilesService uploadedFilesService,
                 UploadedFilesCleanupService uploadedFilesCleanupService,
                 ShortUrlService shortUrlService) {
             this.endpointRegistry = endpointRegistry;
-            this.linksService = linksService;
+            this.linkRepositoryService = linkRepositoryService;
             this.authService = authService;
             this.youtubeService = youtubeService;
             this.uploadedFilesService = uploadedFilesService;
@@ -392,7 +385,7 @@ public class Main {
 
     private static final class Handlers {
         private final com.serbekun.ss.service.resource.ResourcesService resourcesService;
-        private final com.serbekun.ss.service.links.LinksService linksService;
+        private final LinkRepositoryService linkRepositoryService;
         private final com.serbekun.ss.service.cipher.CipherService cipherService;
         private final YoutubeService youtubeService;
         private final UploadedFilesService uploadedFilesService;
@@ -400,13 +393,13 @@ public class Main {
 
         private Handlers(
                 com.serbekun.ss.service.resource.ResourcesService resourcesService,
-                com.serbekun.ss.service.links.LinksService linksService,
+                LinkRepositoryService linkRepositoryService,
                 com.serbekun.ss.service.cipher.CipherService cipherService,
                 YoutubeService youtubeService,
                 UploadedFilesService uploadedFilesService,
                 ShortUrlService shortUrlService) {
             this.resourcesService = resourcesService;
-            this.linksService = linksService;
+            this.linkRepositoryService = linkRepositoryService;
             this.cipherService = cipherService;
             this.youtubeService = youtubeService;
             this.uploadedFilesService = uploadedFilesService;

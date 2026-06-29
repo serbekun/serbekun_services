@@ -21,31 +21,11 @@ public class Paths {
         }
     }
 
-    /** class that contain configuration for {@link com.serbekun.ss.repo.links.LinksRepo} */
-    public static class LinksConfig {
-        /** Returns the path to the links storage file. 
-         * This file is used to store links data in JSON format.
-         */
-        private static final Path linksStorageFile = Path.of("repository/catalogs/links.json");
+    /** class that contain configuration for {@link com.serbekun.ss.repo.linksrepo.LinkRepositoryRepo} */
+    public static class LinksRepositoryConfig {
+        private static final Path repositoriesStorageFile = Path.of("repository/repositories/links_repositories.json");
 
-        /**
-         * Returns the path to the links local tokens storage file.
-         * This file is used to store local tokens for links.
-         * @return the path to the links local tokens storage file
-         */
-        private static final Path linksLocalTokensStorageFile = Path.of("repository/tokens/links_local_tokens.json");
-
-        /**
-         * Returns the path to the links storage file.
-         * @return the path to the links storage file
-         */
-        public static Path getLinksStorageFile() { return linksStorageFile; }
-
-        /**
-         * Returns the path to the links local tokens storage file.
-         * @return the path to the links local tokens storage file
-         */
-        public static Path getLinksLocalTokensStorageFile() { return linksLocalTokensStorageFile; }
+        public static Path getRepositoriesStorageFile() { return repositoriesStorageFile; }
     }
 
     /** class that contain configuration for {@link com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensRepo} */
@@ -62,24 +42,24 @@ public class Paths {
 
     public static class UploadedFilesConfig {
         /** Returns the path to the folder where raw uploaded files are stored. */
-        private static final Path UploadedFilesRAWFolder = Path.of("repository/uploaded_files_raw/");
+        private static final Path uploadedFilesRAWFolder = Path.of("repository/uploaded_files_raw/");
         /**
          * Returns the path to the uploaded files storage file.
          * This file is used to store uploaded files data in JSON format.
          */
-        private static final Path UploadedFilesStorageFile = Path.of("repository/uploaded_files/uploaded_files.json");
+        private static final Path uploadedFilesStorageFile = Path.of("repository/uploaded_files/uploaded_files.json");
 
         /**
          * Returns the path to the folder where raw uploaded files are stored.
          * @return the path to the folder where raw uploaded files are stored
          */
-        public static Path getUploadedFilesRAWFolder() { return UploadedFilesRAWFolder; }
+        public static Path getUploadedFilesRAWFolder() { return uploadedFilesRAWFolder; }
 
         /**
          * Returns the path to the uploaded files storage file.
          * @return the path to the uploaded files storage file
          */
-        public static Path getUploadedFilesStorageFile() { return UploadedFilesStorageFile; }
+        public static Path getUploadedFilesStorageFile() { return uploadedFilesStorageFile; }
     }
 
     /** class that contain configuration for {@link com.serbekun.ss.repo.shorturl.ShortUrlRepo} */
@@ -99,12 +79,12 @@ public class Paths {
 
     public static class YoutubeConfig {
         /** Returns the path to the YouTube cookies file. */
-        private static final Path CookiesPath = Path.of("repository/www.youtube.com_cookies.txt");
+        private static final Path cookiesPath = Path.of("repository/www.youtube.com_cookies.txt");
 
         /**
          * Returns the path to the YouTube cookies file.
          * @return the path to the YouTube cookies file
          */
-        public static Path getCookiesPath() { return CookiesPath; }
+        public static Path getCookiesPath() { return cookiesPath; }
     }
 }

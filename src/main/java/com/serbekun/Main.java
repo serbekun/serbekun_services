@@ -26,7 +26,6 @@ import com.serbekun.ss.service.autosave.*;
 import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.shorturl.ShortUrlService;
-import com.serbekun.ss.service.tokens.EndpointsAccessTokensService;
 import com.serbekun.ss.service.uploadedfiles.UploadedFilesCleanupService;
 import com.serbekun.ss.service.uploadedfiles.UploadedFilesService;
 import com.serbekun.ss.service.youtube.Youtube;
@@ -149,9 +148,8 @@ public class Main {
      */
     private static Services initializeServices(Repositories repos, Config config) {
         var endpointRegistry = new EndpointRegistry();
-        var endpointAccessTokensService = new EndpointsAccessTokensService(repos.endpointsAccessTokensRepo);
         var linkRepositoryService = new LinkRepositoryService(repos.linkRepositoryRepo);
-        var authService = new AuthService(endpointAccessTokensService, endpointRegistry);
+        var authService = new AuthService(repos.endpointsAccessTokensRepo, endpointRegistry);
         var youtube = new Youtube(
             config.getYoutubeProcessTimeoutSeconds(),
             config.getYtDlpPath(),

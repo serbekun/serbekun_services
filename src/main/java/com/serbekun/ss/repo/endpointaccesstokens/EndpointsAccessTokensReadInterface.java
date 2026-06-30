@@ -14,5 +14,11 @@ public interface EndpointsAccessTokensReadInterface {
      * @return Return all endpoint token data
      */
     Map<String, List<Endpoint>> getEndpointsTokensData();
+
+    /**
+     * @param token Endpoint token
+     * @return Return endpoint data by token
+     */
+    List<Endpoint> getToken(String token);
     
 }

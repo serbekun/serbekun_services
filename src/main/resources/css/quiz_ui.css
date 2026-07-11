@@ -1,11 +1,13 @@
+/* palette matches serbekun.com */
 :root {
-    --panel: rgba(20, 20, 20, 0.85);
-    --text: #ffffff;
-    --muted: #cccccc;
-    --accent: #c0fffc;
-    --accent-strong: #7b61ff;
-    --success: #00ffaa;
-    --error: #ff5555;
+    --panel: rgba(14, 14, 14, 0.85);
+    --text: #c8c8c8;
+    --text-bright: #fff;
+    --muted: #888;
+    --accent: #888;
+    --accent-strong: #333;
+    --success: #80b380;
+    --error: #cc8080;
 }
 
 * {
@@ -15,7 +17,7 @@
 }
 
 html {
-    background-color: black;
+    background-color: #0a0a0a;
 }
 body {
     margin: 0;
@@ -42,8 +44,8 @@ body {
     padding: 2rem;
     background: var(--panel);
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 0 40px rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.05);
 }
 
 header {
@@ -53,8 +55,8 @@ header {
 .logo {
     font-size: 2.6rem;
     font-weight: 700;
-    color: var(--accent);
-    text-shadow: 0 0 15px rgba(140, 235, 235, 0.3);
+    color: var(--text-bright);
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
 }
 .subtitle {
     font-size: 0.95rem;
@@ -109,8 +111,8 @@ header {
 
 .option:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(123, 97, 255, 0.35);
-    border-color: rgba(123, 97, 255, 0.6);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
 .option::before {
@@ -134,21 +136,21 @@ header {
 
 /* Answer colors */
 .option.correct {
-    background: rgba(0, 255, 170, 0.18) !important;
+    background: rgba(128, 179, 128, 0.15) !important;
     border-color: var(--success) !important;
     color: var(--text);
-    box-shadow: 0 0 20px rgba(0, 255, 170, 0.35);
+    box-shadow: 0 0 20px rgba(128, 179, 128, 0.25);
 }
 
 .option.wrong {
-    background: rgba(255, 85, 85, 0.18) !important;
+    background: rgba(204, 128, 128, 0.15) !important;
     border-color: var(--error) !important;
-    box-shadow: 0 0 20px rgba(255, 85, 85, 0.35);
+    box-shadow: 0 0 20px rgba(204, 128, 128, 0.25);
 }
 
 .option.correct .letter,
 .option.wrong .letter {
-    color: var(--text);
+    color: var(--text-bright);
 }
 
 /* Results */
@@ -186,8 +188,8 @@ header {
 
 .restart-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(123, 97, 255, 0.45);
-    border-color: rgba(123, 97, 255, 0.6);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
 .loading {

@@ -1,5 +1,3 @@
-/* ── links.css — terminal/CLI theme (link repository, matching short_url) ── */
-
 /* ── Header ── */
 .header { margin-bottom: 2rem; }
 .prompt-line { margin-bottom: 2rem; }
@@ -9,7 +7,7 @@
     display: flex;
     gap: 4px;
     margin-bottom: 2rem;
-    border-bottom: 1px solid #222;
+    border-bottom: 1px solid var(--border);
     padding-bottom: 0;
 }
 
@@ -20,7 +18,7 @@
     text-transform: uppercase;
     background: transparent;
     border: none;
-    color: #999;
+    color: var(--accent);
     padding: 8px 18px 10px;
     cursor: pointer;
     border-bottom: 2px solid transparent;
@@ -28,10 +26,10 @@
     transition: color 0.15s, border-color 0.15s;
 }
 
-.tab-btn:hover { color: #aaa; }
+.tab-btn:hover { color: var(--text); }
 .tab-btn.active {
-    color: #fff;
-    border-bottom-color: #fff;
+    color: var(--text-bright);
+    border-bottom-color: var(--text-bright);
 }
 
 /* ── Field label ── */
@@ -40,7 +38,7 @@
     font-weight: 500;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #999;
+    color: var(--accent);
     margin-bottom: 8px;
     padding-left: 2px;
 }
@@ -51,10 +49,10 @@
 input[type="text"],
 textarea {
     width: 100%;
-    background: #0b0b0b;
-    border: 1px solid #1e1e1e;
+    background: var(--bg2);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    color: #e0e0e0;
+    color: var(--text);
     font-family: inherit;
     font-size: 0.88rem;
     padding: 12px 14px;
@@ -70,12 +68,12 @@ textarea {
 input:focus,
 textarea:focus {
     outline: none;
-    border-color: #444;
+    border-color: var(--border-hover);
 }
 
 input::placeholder,
 textarea::placeholder {
-    color: #666;
+    color: var(--text-dim);
 }
 
 /* ── Buttons ── */
@@ -87,10 +85,10 @@ textarea::placeholder {
     width: 100%;
     padding: 13px;
     margin-top: 0.4rem;
-    background: #0f0f0f;
-    border: 1px solid #2a2a2a;
+    background: var(--bg2);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    color: #aaa;
+    color: var(--text);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -100,12 +98,12 @@ textarea::placeholder {
 }
 
 .btn-primary:hover {
-    color: #fff;
-    border-color: #555;
-    background: #111;
+    color: var(--text-bright);
+    border-color: var(--text-dim);
+    background: var(--bg3);
 }
 
-.btn-primary:active { background: #1a1a1a; }
+.btn-primary:active { background: var(--bg3); }
 
 .btn-secondary {
     font-family: inherit;
@@ -115,14 +113,14 @@ textarea::placeholder {
     padding: 13px 20px;
     margin-top: 0.4rem;
     background: transparent;
-    border: 1px solid #222;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    color: #888;
+    color: var(--accent);
     cursor: pointer;
     transition: color 0.15s, border-color 0.15s;
 }
 
-.btn-secondary:hover { color: #ccc; border-color: #444; }
+.btn-secondary:hover { color: var(--text); border-color: var(--border-hover); }
 
 /* ── Editor actions (add / update + cancel) ── */
 .editor-actions {
@@ -136,8 +134,8 @@ textarea::placeholder {
 
 /* ── Repository banner ── */
 .repo-banner {
-    background: #0a0a0a;
-    border: 1px solid #222;
+    background: var(--bg2);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 14px 16px;
     margin-bottom: 1.8rem;
@@ -145,14 +143,14 @@ textarea::placeholder {
 
 .repo-banner-name {
     font-size: 0.95rem;
-    color: #e0e0e0;
+    color: var(--text);
     word-break: break-all;
     margin-bottom: 4px;
 }
 
 .repo-banner-meta {
     font-size: 0.72rem;
-    color: #777;
+    color: var(--text-dim);
     letter-spacing: 0.04em;
     word-break: break-all;
 }
@@ -167,8 +165,8 @@ textarea::placeholder {
 .repo-banner-actions button {
     padding: 6px 14px;
     background: transparent;
-    color: #999;
-    border: 1px solid #2a2a2a;
+    color: var(--accent);
+    border: 1px solid var(--border);
     border-radius: 4px;
     cursor: pointer;
     font-family: inherit;
@@ -178,7 +176,7 @@ textarea::placeholder {
     transition: color 0.15s, border-color 0.15s;
 }
 
-.repo-banner-actions button:hover { color: #ccc; border-color: #555; }
+.repo-banner-actions button:hover { color: var(--text); border-color: var(--text-dim); }
 
 .repo-banner-actions button.danger { color: #aa6666; border-color: #3a2020; }
 .repo-banner-actions button.danger:hover { color: #ff8888; border-color: #884444; }
@@ -187,11 +185,11 @@ textarea::placeholder {
 .files-section { margin-top: 2rem; }
 
 .section-hint {
-    color: #999;
+    color: var(--accent);
     font-size: 0.75rem;
+    text-align: center;
     margin-bottom: 1.2rem;
     letter-spacing: 0.06em;
-    padding-left: 2px;
 }
 
 .files-list {
@@ -202,49 +200,49 @@ textarea::placeholder {
 
 .empty-state {
     text-align: center;
-    color: #999;
+    color: var(--accent);
     padding: 2rem 1rem;
     font-size: 0.82rem;
 }
 
 .inline-link {
-    color: #aaa;
+    color: var(--text);
     text-decoration: none;
-    border-bottom: 1px dashed #555;
+    border-bottom: 1px dashed var(--text-dim);
 }
-.inline-link:hover { color: #fff; }
+.inline-link:hover { color: var(--text-bright); }
 
 /* ── Link card ── */
 .file-card {
-    background: #0a0a0a;
-    border: 1px solid #222;
+    background: var(--bg2);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 14px 16px;
     transition: border-color 0.15s;
 }
 
-.file-card:hover { border-color: #3a3a3a; }
+.file-card:hover { border-color: var(--border-hover); }
 
 .file-card-name {
     font-size: 0.95rem;
-    color: #c8c8c8;
+    color: var(--text);
     word-break: break-all;
 }
 
 .file-card-meta {
     margin-top: 6px;
     font-size: 0.75rem;
-    color: #999;
+    color: var(--accent);
     word-break: break-all;
 }
 
-.file-card-meta a { color: #8aa9c8; text-decoration: none; }
+.file-card-meta a { color: var(--text); text-decoration: none; }
 .file-card-meta a:hover { text-decoration: underline; }
 
 .file-card-desc {
     margin-top: 8px;
     font-size: 0.78rem;
-    color: #888;
+    color: var(--accent);
     line-height: 1.5;
     word-break: break-word;
 }
@@ -259,8 +257,8 @@ textarea::placeholder {
 .file-card-actions button {
     padding: 6px 14px;
     background: transparent;
-    color: #999;
-    border: 1px solid #2a2a2a;
+    color: var(--accent);
+    border: 1px solid var(--border);
     border-radius: 4px;
     cursor: pointer;
     font-family: inherit;
@@ -270,7 +268,7 @@ textarea::placeholder {
     transition: color 0.15s, border-color 0.15s;
 }
 
-.file-card-actions button:hover { color: #ccc; border-color: #555; }
+.file-card-actions button:hover { color: var(--text); border-color: var(--text-dim); }
 .file-card-actions button.danger { color: #aa6666; border-color: #3a2020; }
 .file-card-actions button.danger:hover { color: #ff8888; border-color: #884444; }
 
@@ -278,7 +276,7 @@ textarea::placeholder {
 .status-line {
     font-size: 0.78rem;
     letter-spacing: 0.06em;
-    color: #999;
+    color: var(--accent);
     margin-top: 1.2rem;
     min-height: 18px;
     padding-left: 2px;
@@ -300,8 +298,8 @@ textarea::placeholder {
 }
 
 .modal {
-    background: #0d0d0d;
-    border: 1px solid #333;
+    background: var(--bg2);
+    border: 1px solid var(--border-hover);
     border-radius: 8px;
     padding: 2rem 1.8rem;
     max-width: 520px;
@@ -311,13 +309,13 @@ textarea::placeholder {
 .modal h2 {
     font-size: 1.1rem;
     font-weight: 500;
-    color: #e0e0e0;
+    color: var(--text);
     letter-spacing: 0.06em;
     margin-bottom: 0.8rem;
 }
 
 .modal-note {
-    color: #999;
+    color: var(--accent);
     font-size: 0.82rem;
     margin-bottom: 0.8rem;
     line-height: 1.5;
@@ -328,11 +326,11 @@ textarea::placeholder {
     gap: 10px;
     align-items: baseline;
     padding: 8px 0;
-    border-bottom: 1px solid #1a1a1a;
+    border-bottom: 1px solid var(--border);
 }
 
 .cred-label {
-    color: #999;
+    color: var(--accent);
     font-size: 0.68rem;
     font-weight: 500;
     text-transform: uppercase;
@@ -342,12 +340,12 @@ textarea::placeholder {
 }
 
 .cred-value {
-    color: #aaa;
+    color: var(--text);
     font-size: 0.82rem;
     word-break: break-all;
 }
 
-.cred-value.mono { font-size: 0.78rem; }
+.cred-value.mono { font-family: inherit; font-size: 0.78rem; }
 
 .modal-actions {
     margin-top: 1.2rem;
@@ -368,12 +366,12 @@ textarea::placeholder {
     transition: color 0.15s, border-color 0.15s;
     border-radius: 4px;
     background: transparent;
-    border: 1px solid #2a2a2a;
-    color: #999;
+    border: 1px solid var(--border);
+    color: var(--accent);
 }
 
 .copy-btn:hover,
-.close-modal-btn:hover { color: #ccc; border-color: #555; }
+.close-modal-btn:hover { color: var(--text); border-color: var(--text-dim); }
 
 .feedback-text {
     text-align: center;

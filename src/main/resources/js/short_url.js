@@ -127,11 +127,11 @@
         const fb = document.getElementById('modalCopyFeedback');
         copyToClipboard(text).then(() => {
             fb.textContent = okMsg;
-            fb.style.color = '#8f8';
+            fb.style.color = '#80b380';
             setTimeout(() => { fb.textContent = ''; }, 2500);
         }).catch(() => {
             fb.textContent = 'Could not copy. Select and copy manually.';
-            fb.style.color = '#faa';
+            fb.style.color = '#cc8080';
         });
     }
 

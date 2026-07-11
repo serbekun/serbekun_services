@@ -192,12 +192,12 @@ function copyCredentials() {
     copyToClipboard(text).then(() => {
         const fb = document.getElementById('modalCopyFeedback');
         fb.textContent = 'Credentials copied!';
-        fb.style.color = '#8f8';
+        fb.style.color = '#80b380';
         setTimeout(() => { fb.textContent = ''; }, 2500);
     }).catch(() => {
         const fb = document.getElementById('modalCopyFeedback');
         fb.textContent = 'Could not copy. Select and copy manually.';
-        fb.style.color = '#faa';
+        fb.style.color = '#cc8080';
     });
 }
 
@@ -207,11 +207,11 @@ function copyShareLink() {
 
     copyToClipboard(link).then(() => {
         fb.textContent = 'Download link copied!';
-        fb.style.color = '#8f8';
+        fb.style.color = '#80b380';
         setTimeout(() => { fb.textContent = ''; }, 2500);
     }).catch(() => {
         fb.textContent = 'Could not copy. Select and copy manually.';
-        fb.style.color = '#faa';
+        fb.style.color = '#cc8080';
     });
 }
 
@@ -261,7 +261,7 @@ function renderFilesList() {
         <div class="file-card" style="${expired ? 'opacity:0.5;' : ''}">
             <div class="file-card-header">
                 <span class="file-card-name">${escapeHtml(f.name)}</span>
-                ${expired ? '<span style="color:#f66;font-size:0.8rem;">EXPIRED</span>' : ''}
+                ${expired ? '<span style="color:#cc8080;font-size:0.8rem;">EXPIRED</span>' : ''}
             </div>
             <div class="file-card-meta">
                 <span>UUID: ${escapeHtml(f.uuid.substring(0, 8))}…</span>

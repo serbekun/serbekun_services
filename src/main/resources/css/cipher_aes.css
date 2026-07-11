@@ -8,7 +8,7 @@
     display: flex;
     gap: 4px;
     margin-bottom: 2rem;
-    border-bottom: 1px solid #222;
+    border-bottom: 1px solid var(--border);
     padding-bottom: 0;
 }
 .tab-btn {
@@ -18,17 +18,17 @@
     text-transform: uppercase;
     background: transparent;
     border: none;
-    color: #999;
+    color: var(--accent);
     padding: 8px 18px 10px;
     cursor: pointer;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
     transition: color 0.15s, border-color 0.15s;
 }
-.tab-btn:hover { color: #aaa; }
+.tab-btn:hover { color: var(--text); }
 .tab-btn.active {
-    color: #fff;
-    border-bottom-color: #fff;
+    color: var(--text-bright);
+    border-bottom-color: var(--text-bright);
 }
 
 /* ── Inputs ── */
@@ -36,10 +36,10 @@
 
 textarea, .key-wrap input {
     width: 100%;
-    background: #0b0b0b;
-    border: 1px solid #1e1e1e;
+    background: var(--bg2);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    color: #e0e0e0;
+    color: var(--text);
     font-family: inherit;
     font-size: 0.88rem;
     padding: 12px 14px;
@@ -50,22 +50,22 @@ textarea, .key-wrap input {
 textarea { min-height: 110px; }
 textarea:focus, .key-wrap input:focus {
     outline: none;
-    border-color: #444;
+    border-color: var(--border-hover);
 }
 textarea::placeholder, .key-wrap input::placeholder {
-    color: #666;
+    color: var(--text-dim);
 }
 
 /* ── Key row ── */
 .key-wrap {
     display: flex;
-    border: 1px solid #1e1e1e;
+    border: 1px solid var(--border);
     border-radius: 8px;
     overflow: hidden;
-    background: #0b0b0b;
+    background: var(--bg2);
     transition: border-color 0.15s;
 }
-.key-wrap:focus-within { border-color: #444; }
+.key-wrap:focus-within { border-color: var(--border-hover); }
 .key-wrap input {
     flex: 1;
     border: none;
@@ -80,15 +80,15 @@ textarea::placeholder, .key-wrap input::placeholder {
     text-transform: uppercase;
     background: transparent;
     border: none;
-    border-left: 1px solid #1e1e1e;
-    color: #999;
+    border-left: 1px solid var(--border);
+    color: var(--accent);
     padding: 0 14px;
     cursor: pointer;
     transition: color 0.15s, background 0.15s;
     white-space: nowrap;
 }
-.key-action-btn:hover { color: #ccc; background: #111; }
-.key-action-btn:active { color: #fff; }
+.key-action-btn:hover { color: var(--text); background: var(--bg3); }
+.key-action-btn:active { color: var(--text-bright); }
 
 /* ── Gen key button ── */
 .gen-key-btn {
@@ -97,8 +97,8 @@ textarea::placeholder, .key-wrap input::placeholder {
     letter-spacing: 0.1em;
     text-transform: uppercase;
     background: transparent;
-    border: 1px solid #222;
-    color: #999;
+    border: 1px solid var(--border);
+    color: var(--accent);
     padding: 9px 20px;
     border-radius: 6px;
     cursor: pointer;
@@ -108,21 +108,21 @@ textarea::placeholder, .key-wrap input::placeholder {
     transition: color 0.15s, border-color 0.15s;
     margin-bottom: 1.8rem;
 }
-.gen-key-btn::before { content: '$'; color: #777; }
-.gen-key-btn:hover { color: #ccc; border-color: #444; }
-.gen-key-btn:active { color: #fff; }
+.gen-key-btn::before { content: '$'; color: var(--text-dim); }
+.gen-key-btn:hover { color: var(--text); border-color: var(--border-hover); }
+.gen-key-btn:active { color: var(--text-bright); }
 
 /* ── Run button ── */
 .run-btn {
     margin-top: 0.4rem;
 }
-.run-btn::before { content: '▶'; font-size: 0.7rem; color: #555; }
+.run-btn::before { content: '▶'; font-size: 0.7rem; color: var(--text-dim); }
 
 /* ── Result block ── */
 .result-block {
     display: none;
     margin-top: 1.8rem;
-    border: 1px solid #222;
+    border: 1px solid var(--border);
     border-radius: 8px;
     overflow: hidden;
     animation: fadeIn 0.2s ease-out;
@@ -134,8 +134,8 @@ textarea::placeholder, .key-wrap input::placeholder {
     align-items: center;
     justify-content: space-between;
     padding: 8px 14px;
-    background: #0d0d0d;
-    border-bottom: 1px solid #1e1e1e;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
 }
 .result-block.error .result-header { background: #100808; border-bottom-color: #3a1a1a; }
 
@@ -143,7 +143,7 @@ textarea::placeholder, .key-wrap input::placeholder {
     font-size: 0.68rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #999;
+    color: var(--accent);
 }
 .result-block.error .result-label { color: #cc7777; }
 
@@ -153,23 +153,23 @@ textarea::placeholder, .key-wrap input::placeholder {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     background: transparent;
-    border: 1px solid #2a2a2a;
-    color: #999;
+    border: 1px solid var(--border);
+    color: var(--accent);
     padding: 4px 12px;
     border-radius: 4px;
     cursor: pointer;
     transition: color 0.15s, border-color 0.15s;
 }
-.copy-btn:hover { color: #ccc; border-color: #555; }
-.copy-btn.copied { color: #fff; border-color: #fff; }
+.copy-btn:hover { color: var(--text); border-color: var(--text-dim); }
+.copy-btn.copied { color: var(--text-bright); border-color: var(--text-bright); }
 
 .result-body {
     padding: 14px;
     font-size: 0.85rem;
-    color: #c0c0c0;
+    color: var(--text);
     word-break: break-all;
     white-space: pre-wrap;
-    background: #080808;
+    background: var(--bg2);
     line-height: 1.7;
 }
 .result-block.error .result-body { color: #cc7777; }
@@ -177,7 +177,7 @@ textarea::placeholder, .key-wrap input::placeholder {
 /* ── Divider ── */
 .divider {
     height: 1px;
-    background: #1a1a1a;
+    background: var(--border);
     margin: 2rem 0;
 }
 

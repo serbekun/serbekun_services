@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Network — Serbekun</title>
+    <link rel="icon" href="/icon" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/v0/css/shared.css">
+    <link rel="stylesheet" href="/static/v0/css/ip_info.css">
+</head>
+<body>
+
+    <div class="container">
+        <a href="/" class="back-link">back</a>
+
+        <div class="header">
+            <h1 class="header-title">Network</h1>
+            <p class="header-sub">// see how the server sees you</p>
+        </div>
+
+        <div class="prompt-line">
+            <span class="cwd">~/serbekun/network</span>
+            <span>$</span>
+            <span>whoami --ip</span>
+            <span class="prompt-cursor"></span>
+        </div>
+
+        <div class="ip-card">
+            <div class="field-label">your ip address</div>
+            <div class="ip-value" id="ipValue">loading…</div>
+            <div class="ip-actions">
+                <button class="run-btn" onclick="refreshIp()">refresh</button>
+                <button class="run-btn" id="copyBtn" onclick="copyIp()" disabled>copy</button>
+            </div>
+        </div>
+
+        <div class="status-line" id="status"></div>
+
+        <div class="footer">serbekun service // network</div>
+    </div>
+
+    <script src="/static/v0/js/ip_info.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+/* ── ip_info.css — terminal/CLI theme (matching short_url) ── */
+
+/* ── Header ── */
+.header { margin-bottom: 2rem; }
+.prompt-line { margin-bottom: 2rem; }
+
+/* ── IP card ── */
+.ip-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    animation: fadeIn 0.25s ease;
+}
+
+.ip-value {
+    font-size: 1.4rem;
+    color: var(--text-bright);
+    letter-spacing: 0.04em;
+    word-break: break-all;
+    margin-bottom: 1.5rem;
+    min-height: 1.4em;
+}
+
+.ip-value.err { color: #cc8080; font-size: 0.9rem; }
+
+.ip-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.ip-actions .run-btn { flex: 1; }

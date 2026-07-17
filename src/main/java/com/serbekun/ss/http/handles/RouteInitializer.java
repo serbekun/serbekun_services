@@ -3,6 +3,7 @@ package com.serbekun.ss.http.handles;
 import io.javalin.Javalin;
 
 import com.serbekun.ss.http.handles.api.ApiV0CipherAesHttp;
+import com.serbekun.ss.http.handles.api.ApiV0IpInfoHttp;
 import com.serbekun.ss.http.handles.api.ApiV0RepositoryLinksHttp;
 import com.serbekun.ss.http.handles.api.ApiV0ShortUrlHttp;
 import com.serbekun.ss.http.handles.api.ApiV0UploadedFilesHttp;
@@ -47,6 +48,7 @@ public class RouteInitializer {
         ApiV0YoutubeHttp apiV0YoutubeHttp = new ApiV0YoutubeHttp(youtubeService);
         ApiV0UploadedFilesHttp apiV0UploadedFilesHttp = new ApiV0UploadedFilesHttp(uploadedFilesService);
         ApiV0ShortUrlHttp apiV0ShortUrlHttp = new ApiV0ShortUrlHttp(shortUrlService);
+        ApiV0IpInfoHttp apiV0IpInfoHttp = new ApiV0IpInfoHttp();
         ApiVersion apiVersion = new ApiVersion();
 
         AuthInitializer.initHandlesAuthSetting(svr, endpointRegistrar, authService);
@@ -62,7 +64,8 @@ public class RouteInitializer {
             new YoutubeRoutes(apiV0YoutubeHttp),
             new UploadedFilesRoutes(apiV0UploadedFilesHttp),
             new ShortUrlRoutes(apiV0ShortUrlHttp),
-            new VersionRoutes(apiVersion)
+            new VersionRoutes(apiVersion),
+            new NetworkRoutes(apiV0IpInfoHttp)
         );
         apiV0Routes.register(svr);
     }

@@ -38,6 +38,7 @@ public class RouteInitializer {
         StaticV0PdfHttp staticV0PdfHttp = new StaticV0PdfHttp(staticResourcesService);
         StaticV0CssHttp staticV0CssHttp = new StaticV0CssHttp(staticResourcesService);
         StaticV0JsHttp staticV0JsHttp = new StaticV0JsHttp(staticResourcesService);
+        StaticV0SvgHttp staticV0SvgHttp = new StaticV0SvgHttp(staticResourcesService);
         StaticV0DomainHttp staticV0DomainHttp = new StaticV0DomainHttp(staticResourcesService);
 
 
@@ -51,7 +52,7 @@ public class RouteInitializer {
         AuthInitializer.initHandlesAuthSetting(svr, endpointRegistrar, authService);
 
         // routes
-        StaticRoutes staticRoutes = new StaticRoutes(index, staticV0ImagesHttp, staticV0JsonHttp, staticV0HtmlHttp, staticV0PdfHttp, staticV0CssHttp, staticV0JsHttp, staticV0DomainHttp);
+        StaticRoutes staticRoutes = new StaticRoutes(index, staticV0ImagesHttp, staticV0JsonHttp, staticV0HtmlHttp, staticV0PdfHttp, staticV0CssHttp, staticV0JsHttp, staticV0SvgHttp, staticV0DomainHttp);
         staticRoutes.register(svr);
 
         // API

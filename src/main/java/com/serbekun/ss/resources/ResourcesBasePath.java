@@ -8,6 +8,7 @@ public final class ResourcesBasePath {
     public static final String BASE_CSS_PATH = "css/";
     public static final String BASE_JS_PATH = "js/";
 
+    public static final String BASE_SVG_PATH = "svg/";
     public static final String BASE_IMAGES_PATH = "images/";
     public static final String BASE_JSON_PATH = "json/";
     public static final String BASE_PDF_PATH = "pdf/";
@@ -29,6 +30,10 @@ public final class ResourcesBasePath {
 
     public static String resolveJsPath(String filename) {
         return resolve(BASE_JS_PATH, filename);
+    }
+
+    public static String resolveSvgPath(String filename) {
+        return resolve(BASE_SVG_PATH, filename);
     }
     
     /**

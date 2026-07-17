@@ -16,12 +16,13 @@ public class StaticRoutes {
     private final StaticV0PdfHttp staticV0PdfHttp;
     private final StaticV0CssHttp staticV0CssHttp;
     private final StaticV0JsHttp staticV0JsHttp;
+    private final StaticV0SvgHttp staticV0SvgHttp;
     private final StaticV0DomainHttp staticV0DomainHttp;
 
     public StaticRoutes(IndexHttp index, StaticV0ImagesHttp staticV0ImagesHttp,
                         StaticV0JsonHttp staticV0JsonHttp, StaticV0HtmlHttp staticV0HtmlHttp,
                         StaticV0PdfHttp staticV0PdfHttp, StaticV0CssHttp staticV0CssHttp,
-                        StaticV0JsHttp staticV0JsHttp,
+                        StaticV0JsHttp staticV0JsHttp, StaticV0SvgHttp staticV0SvgHttp,
                         StaticV0DomainHttp staticV0DomainHttp) {
         this.index = index;
         this.staticV0ImagesHttp = staticV0ImagesHttp;
@@ -30,6 +31,7 @@ public class StaticRoutes {
         this.staticV0PdfHttp = staticV0PdfHttp;
         this.staticV0CssHttp = staticV0CssHttp;
         this.staticV0JsHttp = staticV0JsHttp;
+        this.staticV0SvgHttp = staticV0SvgHttp;
         this.staticV0DomainHttp = staticV0DomainHttp;
     }
 
@@ -38,6 +40,7 @@ public class StaticRoutes {
      */
     public void register(Javalin svr) {
         svr.get("/", ctx -> index.main(ctx));
+        svr.get("/icon", ctx -> staticV0SvgHttp.main(ctx, "ss_icon.svg"));
 
         // IMAGES
         svr.get("/static/v0/images", ctx -> staticV0ImagesHttp.main(ctx, ""));
@@ -63,6 +66,11 @@ public class StaticRoutes {
         svr.get("/static/v0/js", ctx -> staticV0JsHttp.main(ctx, ""));
         svr.get("/static/v0/js/", ctx -> staticV0JsHttp.main(ctx, ""));
         svr.get("/static/v0/js/{name}", ctx -> staticV0JsHttp.main(ctx));
+
+        // SVG
+        svr.get("/static/v0/svg", ctx -> staticV0SvgHttp.main(ctx, ""));
+        svr.get("/static/v0/svg/", ctx -> staticV0SvgHttp.main(ctx, ""));
+        svr.get("/static/v0/svg/{name}", ctx -> staticV0SvgHttp.main(ctx));
 
         // PDF
         svr.get("/static/v0/pdf", ctx -> staticV0PdfHttp.main(ctx, ""));

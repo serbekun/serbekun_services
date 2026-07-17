@@ -151,6 +151,18 @@ public class ResourcesService {
     }
 
     /**
+     * Returns the SVG content for a given resource name.
+     * If the name is empty, it returns a JSON list of available SVG files.
+     * @param name the name of the SVG resource
+     * @return the SVG content for the resource
+     */
+    public String getSvg(String name) {
+        return getTextResourceWithListing(name,
+            ResourcesBasePath.BASE_SVG_PATH,
+            ResourcesBasePath::resolveSvgPath);
+    }
+
+    /**
      * Returns the binary data for a PDF resource.
      * @param name the name of the PDF resource
      * @return the binary data for the resource

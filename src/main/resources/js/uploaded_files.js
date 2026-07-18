@@ -2,6 +2,33 @@
     'use strict';
 
     const STORAGE_KEY = 'uploaded_files_session';
+    let maxUploadSizeBytes = null;
+    let maxUploadSizeLabel = 'unknown';
+
+async function loadMaxUploadSize() {
+    const limitEl = document.getElementById('uploadLimit');
+    if (!limitEl) return;
+
+    try {
+        const resp = await fetch('/api/v0/uploaded-files/max-size');
+        if (!resp.ok) throw new Error('Failed: ' + resp.status);
+
+        const data = await resp.json();
+        maxUploadSizeBytes = Number(data.bytes);
+        maxUploadSizeLabel = data.megabytes
+                ? data.megabytes + ' MB'
+                : formatSize(maxUploadSizeBytes);
+
+        limitEl.textContent = 'max size: ' + maxUploadSizeLabel;
+        limitEl.classList.remove('err');
+        onFileSelected();
+    } catch (e) {
+        maxUploadSizeBytes = null;
+        maxUploadSizeLabel = 'unknown';
+        limitEl.textContent = 'max size: unavailable';
+        limitEl.classList.add('err');
+    }
+}
 
     function loadSessionFiles() {
     try {
@@ -36,10 +63,13 @@ function onFileSelected() {
     const input = document.getElementById('fileInput');
     const display = document.getElementById('fileNameDisplay');
     if (input.files && input.files.length > 0) {
-        display.textContent = input.files[0].name + ' (' + formatSize(input.files[0].size) + ')';
+        const file = input.files[0];
+        display.textContent = file.name + ' (' + formatSize(file.size) + ')';
+        display.classList.toggle('err', isFileTooLarge(file));
         document.getElementById('dropZoneText').style.display = 'none';
     } else {
         display.textContent = '';
+        display.classList.remove('err');
         document.getElementById('dropZoneText').style.display = '';
     }
 }
@@ -89,6 +119,10 @@ function formatSize(bytes) {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
+function isFileTooLarge(file) {
+    return maxUploadSizeBytes !== null && file.size > maxUploadSizeBytes;
+}
+
 function formatExpiry(epochMs) {
     if (!epochMs || epochMs <= 0) return 'Never';
     const diff = epochMs - Date.now();
@@ -124,6 +158,11 @@ async function uploadFile() {
     }
 
     const file = fileInput.files[0];
+    if (isFileTooLarge(file)) {
+        showStatus('File is larger than max size: ' + maxUploadSizeLabel, true);
+        return;
+    }
+
     const formData = new FormData();
     formData.append('file', file);
     const name = nameInput.value.trim();
@@ -139,7 +178,7 @@ async function uploadFile() {
         });
 
         if (!resp.ok) {
-            const err = await resp.text();
+            const err = await readErrorMessage(resp);
             throw new Error(err || 'Upload failed: ' + resp.status);
         }
 
@@ -400,6 +439,17 @@ function showStatus(msg, isError) {
 
 // ── Helpers ──
 
+async function readErrorMessage(resp) {
+    const text = await resp.text();
+    if (!text) return '';
+    try {
+        const data = JSON.parse(text);
+        return data.error || text;
+    } catch (e) {
+        return text;
+    }
+}
+
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -430,5 +480,6 @@ function showStatus(msg, isError) {
     // ── Init ──
     window.addEventListener('DOMContentLoaded', function() {
         switchTab(0);
+        loadMaxUploadSize();
     });
 })();

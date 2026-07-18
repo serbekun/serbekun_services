@@ -149,6 +149,21 @@ input::placeholder {
     font-size: 0.85rem;
 }
 
+.file-name-display.err {
+    color: #cc8080;
+}
+
+.upload-limit {
+    margin-top: 8px;
+    color: var(--accent);
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+}
+
+.upload-limit.err {
+    color: #cc8080;
+}
+
 /* ── Buttons (matching run-btn from cipher_aes) ── */
 .btn-primary {
     font-family: inherit;

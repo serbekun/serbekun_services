@@ -64,7 +64,13 @@ The project is a Javalin 6 server with token-based auth, JSON-file persistence, 
 
 ## Tests
 
-Single unit test at `src/test/java/com/serbekun/ss/service/resource/ResourceServiceTest.java` — uses Mockito + AssertJ. No integration tests. Run with `./gradlew test`.
+JUnit 5 + AssertJ + Mockito, run with `./gradlew test`. Coverage (as of 2026-07-19):
+
+- **Unit tests** per layer: services (`cipher`, `shorturl`, `linksrepo`, `uploadedfiles`, `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
+- **HTTP integration tests** at `src/test/java/com/serbekun/ss/http/ServerHttpIntegrationTest.java` — full route tree via `RouteInitializer` + `javalin-testtools`, real services over in-memory repos; only the `Youtube` (yt-dlp) wrapper is mocked. Covers index/static, version, cipher, short-url, repository-links, uploaded-files (multipart), and youtube endpoints.
+- `YoutubeTest` contains real yt-dlp integration tests that need `yt-dlp`, Deno, and network access — expect failures without them.
+
+Gotcha: don't use Mockito `verify(mock, timeout(...))` on `synchronized` methods (e.g. `UploadedFilesService.deleteExpiredFiles`) — the verifying thread holds the mock's monitor and deadlocks the thread under test. Use `CountDownLatch` answers instead (see `UploadedFilesCleanupServiceTest`).
 
 ## API endpoints (v0)
 

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -24,14 +25,16 @@ public class Config {
 
     /** {@link com.fasterxml.jackson.databind.ObjectMapper} for serialize and deserialize json. */
     private static final ObjectMapper mapper = new ObjectMapper();
+    private static final int BYTES_PER_MEGABYTE = 1024 * 1024;
+    private static final int DEFAULT_UPLOAD_FILE_MAX_SIZE_MB = 20;
     // endregion
 
     // region Config value
     
     /** Server port value */
     private final int port;
-    /** Server max upload file size value */
-    private final int uploadFileMaxSize;
+    /** Server max upload file size value in megabytes */
+    private final int uploadFileMaxSizeMb;
 
     /** How many time server can download videos from youtube */
     private final long youtubeProcessTimeoutSeconds;
@@ -47,13 +50,14 @@ public class Config {
 
     @JsonCreator
     public Config(@JsonProperty("port") int port,
-    @JsonProperty("upload_file_max_size") int uploadFileMaxSize,
+    @JsonProperty("upload_file_max_size_mb") Integer uploadFileMaxSizeMb,
+    @JsonProperty("upload_file_max_size") Integer legacyUploadFileMaxSizeBytes,
     @JsonProperty("youtube_process_timeout_seconds") long youtubeProcessTimeoutSeconds,
     @JsonProperty("yt_dlp_path") String ytDlpPath,
     @JsonProperty("deno_path") String denoPath
 ) {
         this.port = port;
-        this.uploadFileMaxSize = uploadFileMaxSize;
+        this.uploadFileMaxSizeMb = resolveUploadFileMaxSizeMb(uploadFileMaxSizeMb, legacyUploadFileMaxSizeBytes);
         this.youtubeProcessTimeoutSeconds = youtubeProcessTimeoutSeconds;
         this.ytDlpPath = ytDlpPath;
         this.denoPath = denoPath;
@@ -65,9 +69,13 @@ public class Config {
     @JsonProperty("port")
     public int getPort() { return port; }
 
-    /** @return Server upload file max size */
-    @JsonProperty("upload_file_max_size")
-    public int getUploadFileMaxSize() { return uploadFileMaxSize; }
+    /** @return Server upload file max size in megabytes */
+    @JsonProperty("upload_file_max_size_mb")
+    public int getUploadFileMaxSizeMb() { return uploadFileMaxSizeMb; }
+
+    /** @return Server upload file max size in bytes */
+    @JsonIgnore
+    public long getUploadFileMaxSizeBytes() { return (long) uploadFileMaxSizeMb * BYTES_PER_MEGABYTE; }
 
     /** @return Youtube process timeout in seconds */
     @JsonProperty("youtube_process_timeout_seconds")
@@ -150,7 +158,17 @@ public class Config {
 
     /** @return Config object with default values. */
     private static Config defaultConfig() {
-        return new Config(8080, 20971520, 30, "/usr/local/bin/yt-dlp", "/usr/local/bin/deno");
+        return new Config(8080, DEFAULT_UPLOAD_FILE_MAX_SIZE_MB, null, 30, "/usr/local/bin/yt-dlp", "/usr/local/bin/deno");
+    }
+
+    private static int resolveUploadFileMaxSizeMb(Integer uploadFileMaxSizeMb, Integer legacyUploadFileMaxSizeBytes) {
+        if (uploadFileMaxSizeMb != null) {
+            return uploadFileMaxSizeMb;
+        }
+        if (legacyUploadFileMaxSizeBytes != null) {
+            return (int) Math.ceil((double) legacyUploadFileMaxSizeBytes / BYTES_PER_MEGABYTE);
+        }
+        return DEFAULT_UPLOAD_FILE_MAX_SIZE_MB;
     }
 
     // endregion

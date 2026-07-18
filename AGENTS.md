@@ -90,6 +90,7 @@ All registered in `http/handles/*Routes` classes:
 - `GET /api/v0/short-url/{id}` — redirect (302) to the target url, 404 if unknown
 - `DELETE /api/v0/short-url/{id}` — delete a short url; requires the delete `token` (`?token=` query param or JSON body), 403 on mismatch, 404 if unknown
 - `GET /api/v0/uploaded-files` — list all uploaded files metadata
+- `GET /api/v0/uploaded-files/max-size` — get maximum upload file size as `{"megabytes", "bytes"}`
 - `GET /api/v0/uploaded-files/{uuid}` — get metadata for a single uploaded file
 - `GET /api/v0/uploaded-files/{uuid}/download` — download uploaded file content (returns 404 if expired or not found)
 - `POST /api/v0/uploaded-files` — upload a file (multipart form data), returns metadata with `uuid` and `token`

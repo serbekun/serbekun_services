@@ -20,6 +20,7 @@ public class UploadedFilesRoutes {
      */
     public void register(Javalin svr) {
         svr.get("/api/v0/uploaded-files", ctx -> apiV0UploadedFilesHttp.main(ctx));
+        svr.get("/api/v0/uploaded-files/max-size", ctx -> apiV0UploadedFilesHttp.main(ctx));
         svr.get("/api/v0/uploaded-files/{uuid}", ctx -> apiV0UploadedFilesHttp.main(ctx));
         svr.get("/api/v0/uploaded-files/{uuid}/download", ctx -> apiV0UploadedFilesHttp.main(ctx));
         svr.post("/api/v0/uploaded-files", ctx -> apiV0UploadedFilesHttp.main(ctx));

@@ -2,6 +2,7 @@ package com.serbekun.ss.http.handles;
 
 import io.javalin.Javalin;
 
+import com.serbekun.ss.config.Config;
 import com.serbekun.ss.http.handles.api.ApiV0CipherAesHttp;
 import com.serbekun.ss.http.handles.api.ApiV0IpInfoHttp;
 import com.serbekun.ss.http.handles.api.ApiV0RepositoryLinksHttp;
@@ -28,7 +29,8 @@ public class RouteInitializer {
         CipherService cipherService,
         YoutubeService youtubeService,
         UploadedFilesService uploadedFilesService,
-        ShortUrlService shortUrlService
+        ShortUrlService shortUrlService,
+        Config config
     ) {
 
         // init handles objects
@@ -46,7 +48,7 @@ public class RouteInitializer {
         ApiV0CipherAesHttp apiV0CipherAesHttp = new ApiV0CipherAesHttp(cipherService);
         ApiV0RepositoryLinksHttp apiV0RepositoryLinksHttp = new ApiV0RepositoryLinksHttp(linkRepositoryService);
         ApiV0YoutubeHttp apiV0YoutubeHttp = new ApiV0YoutubeHttp(youtubeService);
-        ApiV0UploadedFilesHttp apiV0UploadedFilesHttp = new ApiV0UploadedFilesHttp(uploadedFilesService);
+        ApiV0UploadedFilesHttp apiV0UploadedFilesHttp = new ApiV0UploadedFilesHttp(uploadedFilesService, config);
         ApiV0ShortUrlHttp apiV0ShortUrlHttp = new ApiV0ShortUrlHttp(shortUrlService);
         ApiV0IpInfoHttp apiV0IpInfoHttp = new ApiV0IpInfoHttp();
         ApiVersion apiVersion = new ApiVersion();

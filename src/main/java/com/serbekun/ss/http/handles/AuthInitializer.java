@@ -18,6 +18,7 @@ public class AuthInitializer {
         Endpoint endpointStaticV0Html = new Endpoint("/static/v0/html/");
         Endpoint endpointApiV0CipherAes = new Endpoint("/api/v0/cipher");
         Endpoint endpointApiV0RepositoryLinks = new Endpoint("/api/v0/repository/links");
+        Endpoint endpointApiV0UploadedFiles = new Endpoint("/api/v0/uploaded-files");
         Endpoint endpointApiV0ShortUrl = new Endpoint("/api/v0/short-url");
         Endpoint endpointApiV0Version = new Endpoint("/api/v0/version");
 
@@ -28,6 +29,7 @@ public class AuthInitializer {
         endpointRegistrar.register(endpointStaticV0Html, false);
         endpointRegistrar.register(endpointApiV0CipherAes, false);
         endpointRegistrar.register(endpointApiV0RepositoryLinks, false);
+        endpointRegistrar.register(endpointApiV0UploadedFiles, false);
         endpointRegistrar.register(endpointApiV0ShortUrl, false);
         endpointRegistrar.register(endpointApiV0Version, false);
 
@@ -44,6 +46,10 @@ public class AuthInitializer {
         svr.before("/api/v0/repository/links/{repositoryId}", ctx -> ctx.attribute("endpoint", endpointApiV0RepositoryLinks));
         svr.before("/api/v0/repository/links/{repositoryId}/links", ctx -> ctx.attribute("endpoint", endpointApiV0RepositoryLinks));
         svr.before("/api/v0/repository/links/{repositoryId}/links/{uuid}", ctx -> ctx.attribute("endpoint", endpointApiV0RepositoryLinks));
+        svr.before("/api/v0/uploaded-files", ctx -> ctx.attribute("endpoint", endpointApiV0UploadedFiles));
+        svr.before("/api/v0/uploaded-files/max-size", ctx -> ctx.attribute("endpoint", endpointApiV0UploadedFiles));
+        svr.before("/api/v0/uploaded-files/{uuid}", ctx -> ctx.attribute("endpoint", endpointApiV0UploadedFiles));
+        svr.before("/api/v0/uploaded-files/{uuid}/download", ctx -> ctx.attribute("endpoint", endpointApiV0UploadedFiles));
         svr.before("/api/v0/short-url", ctx -> ctx.attribute("endpoint", endpointApiV0ShortUrl));
         svr.before("/api/v0/short-url/{id}", ctx -> ctx.attribute("endpoint", endpointApiV0ShortUrl));
         svr.before("/api/v0/version", ctx -> ctx.attribute("endpoint", endpointApiV0Version));

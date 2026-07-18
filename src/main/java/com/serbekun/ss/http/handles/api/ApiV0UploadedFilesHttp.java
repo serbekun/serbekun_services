@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 import io.javalin.http.HttpStatus;
 import io.javalin.http.UploadedFile;
 
@@ -11,8 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.serbekun.ss.config.Config;
 import com.serbekun.ss.domain.dto.http.uploadedfiles.V0UploadedFilesDeleteRequest;
 import com.serbekun.ss.domain.dto.http.uploadedfiles.V0UploadedFilesGetResponse;
+import com.serbekun.ss.domain.dto.http.uploadedfiles.V0UploadedFilesMaxSizeResponse;
 import com.serbekun.ss.domain.dto.http.uploadedfiles.V0UploadedFilesPostResponse;
 import com.serbekun.ss.service.uploadedfiles.UploadedFilesService;
 
@@ -31,23 +34,36 @@ public class ApiV0UploadedFilesHttp {
 
     /** Uploaded files service instance */
     private final UploadedFilesService service;
+    private final Config config;
 
     // endregion
 
-    public ApiV0UploadedFilesHttp(UploadedFilesService service) {
+    public ApiV0UploadedFilesHttp(UploadedFilesService service, Config config) {
         this.service = service;
+        this.config = config;
     }
 
     // region main handler
 
     /** Main handler for the API endpoint */
     public void main(Context ctx) {
+        if (ctx.method() == HandlerType.GET && ctx.path().endsWith("/max-size")) {
+            handleMaxSize(ctx);
+            return;
+        }
+
         switch (ctx.method()) {
             case GET    -> handleGet(ctx);
             case POST   -> handlePost(ctx);
             case DELETE -> handleDelete(ctx);
             default     -> ctx.status(HttpStatus.METHOD_NOT_ALLOWED);
         }
+    }
+
+    private void handleMaxSize(Context ctx) {
+        ctx.json(new V0UploadedFilesMaxSizeResponse(
+                config.getUploadFileMaxSizeMb(),
+                config.getUploadFileMaxSizeBytes()));
     }
 
     // region get
@@ -162,6 +178,11 @@ public class ApiV0UploadedFilesHttp {
         if (uploaded == null) {
             ctx.status(HttpStatus.BAD_REQUEST);
             ctx.result("{\"error\":\"A single file is required (field name 'file')\"}");
+            return;
+        }
+        if (uploaded.size() > config.getUploadFileMaxSizeBytes()) {
+            ctx.status(HttpStatus.CONTENT_TOO_LARGE);
+            ctx.result("{\"error\":\"File is larger than the configured upload limit\"}");
             return;
         }
 

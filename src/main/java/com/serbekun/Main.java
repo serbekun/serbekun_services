@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.javalin.Javalin;
+import io.javalin.config.SizeUnit;
 
 import com.serbekun.ss.config.Config;
 import com.serbekun.ss.config.Paths;
@@ -217,7 +218,10 @@ public class Main {
     */
     private static void startServer(ServerContext ctx, Config config) {
         log.info("Initializing Javalin server");
-        Javalin server = Javalin.create();
+        Javalin server = Javalin.create(javalinConfig -> {
+            javalinConfig.http.maxRequestSize = config.getUploadFileMaxSizeBytes() + 1024L * 1024L;
+            javalinConfig.jetty.multipartConfig.maxFileSize(config.getUploadFileMaxSizeMb(), SizeUnit.MB);
+        });
 
         // Force UTF-8 for every response, independent of the server's default
         // JVM charset. ctx.result(String) encodes with responseCharset(), which
@@ -239,7 +243,8 @@ public class Main {
             ctx.handlers.cipherService,
             ctx.handlers.youtubeService,
             ctx.handlers.uploadedFilesService,
-            ctx.handlers.shortUrlService
+            ctx.handlers.shortUrlService,
+            config
         );
 
         // Autosave

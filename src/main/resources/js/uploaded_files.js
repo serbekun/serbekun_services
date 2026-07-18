@@ -8,9 +8,14 @@
 async function loadMaxUploadSize() {
     const limitEl = document.getElementById('uploadLimit');
     if (!limitEl) return;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     try {
-        const resp = await fetch('/api/v0/uploaded-files/max-size');
+        const resp = await fetch('/api/v0/uploaded-files/max-size', {
+            cache: 'no-store',
+            signal: controller.signal
+        });
         if (!resp.ok) throw new Error('Failed: ' + resp.status);
 
         const data = await resp.json();
@@ -27,6 +32,8 @@ async function loadMaxUploadSize() {
         maxUploadSizeLabel = 'unknown';
         limitEl.textContent = 'max size: unavailable';
         limitEl.classList.add('err');
+    } finally {
+        clearTimeout(timeoutId);
     }
 }
 

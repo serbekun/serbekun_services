@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 import io.javalin.http.Context;
-import io.javalin.http.HandlerType;
 import io.javalin.http.HttpStatus;
 import io.javalin.http.UploadedFile;
 
@@ -47,11 +46,6 @@ public class ApiV0UploadedFilesHttp {
 
     /** Main handler for the API endpoint */
     public void main(Context ctx) {
-        if (ctx.method() == HandlerType.GET && ctx.path().endsWith("/max-size")) {
-            handleMaxSize(ctx);
-            return;
-        }
-
         switch (ctx.method()) {
             case GET    -> handleGet(ctx);
             case POST   -> handlePost(ctx);
@@ -60,7 +54,7 @@ public class ApiV0UploadedFilesHttp {
         }
     }
 
-    private void handleMaxSize(Context ctx) {
+    public void handleMaxSize(Context ctx) {
         ctx.json(new V0UploadedFilesMaxSizeResponse(
                 config.getUploadFileMaxSizeMb(),
                 config.getUploadFileMaxSizeBytes()));

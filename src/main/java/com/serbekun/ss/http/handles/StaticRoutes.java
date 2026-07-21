@@ -4,24 +4,47 @@ import io.javalin.Javalin;
 
 import com.serbekun.ss.http.handles.statics.StaticV0Http;
 import com.serbekun.ss.http.handles.statics.StaticV0Http.StaticResource;
+import com.serbekun.ss.service.auth.api.Endpoint;
+import com.serbekun.ss.service.auth.api.EndpointRegistrar;
+import com.serbekun.ss.service.resource.ResourcesService;
 
 /**
  * Registration of all static routes.
  */
-public class StaticRoutes {
+public class StaticRoutes implements HttpHandler {
 
     private final IndexHttp index;
     private final StaticV0Http staticV0Http;
+    private final EndpointRegistrar endpointRegistrar;
 
-    public StaticRoutes(IndexHttp index, StaticV0Http staticV0Http) {
-        this.index = index;
-        this.staticV0Http = staticV0Http;
+    private final Endpoint endpointIndex = new Endpoint("/index");
+    private final Endpoint endpointStaticV0Images = new Endpoint("/static/v0/images");
+    private final Endpoint endpointStaticV0Json = new Endpoint("/static/v0/json");
+    private final Endpoint endpointStaticV0Html = new Endpoint("/static/v0/html/");
+
+    public StaticRoutes(ResourcesService resourcesService, EndpointRegistrar endpointRegistrar) {
+        this.index = new IndexHttp(resourcesService);
+        this.staticV0Http = new StaticV0Http(resourcesService);
+        this.endpointRegistrar = endpointRegistrar;
     }
 
     /**
      * Registers static routes.
      */
+    @Override
     public void register(Javalin svr) {
+        endpointRegistrar.register(endpointIndex, false);
+        endpointRegistrar.register(endpointStaticV0Images, false);
+        endpointRegistrar.register(endpointStaticV0Json, false);
+        endpointRegistrar.register(endpointStaticV0Html, false);
+
+        svr.before("/", ctx -> ctx.attribute("endpoint", endpointIndex));
+        svr.before("/static/v0/images/{name}", ctx -> ctx.attribute("endpoint", endpointStaticV0Images));
+        svr.before("/static/v0/json", ctx -> ctx.attribute("endpoint", endpointStaticV0Json));
+        svr.before("/static/v0/json/", ctx -> ctx.attribute("endpoint", endpointStaticV0Json));
+        svr.before("/static/v0/json/{name}", ctx -> ctx.attribute("endpoint", endpointStaticV0Json));
+        svr.before("/static/v0/html/{name}", ctx -> ctx.attribute("endpoint", endpointStaticV0Html));
+
         svr.get("/", ctx -> index.main(ctx));
         svr.get("/icon", ctx -> staticV0Http.main(ctx, "ss_icon.svg", StaticResource.SVG));
 

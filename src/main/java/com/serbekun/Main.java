@@ -5,11 +5,10 @@ import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.javalin.Javalin;
-import io.javalin.config.SizeUnit;
 
 import com.serbekun.ss.config.Config;
 import com.serbekun.ss.config.Paths;
-import com.serbekun.ss.http.handles.RouteInitializer;
+import com.serbekun.ss.http.ServerFactory;
 import com.serbekun.ss.infrastructure.fs.ServerStorageInitializer;
 import com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensFileRepo;
 import com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensRepo;
@@ -24,6 +23,7 @@ import com.serbekun.ss.resources.ResourceLoader;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.EndpointRegistry;
 import com.serbekun.ss.service.autosave.*;
+import com.serbekun.ss.service.cipher.CipherService;
 import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.shorturl.ShortUrlService;
@@ -49,6 +49,7 @@ public class Main {
 
         // 0. Config
         Config config = loadConfig();
+        Paths.init(config);
 
         ServerContext context = initializeApplication(config);
 
@@ -58,17 +59,18 @@ public class Main {
     }
 
     /**
-     * Loads the server configuration from the specified config file.
+     * Loads the server configuration from the config file.
+     * The config file path is hardcoded to avoid a circular dependency with Paths.
      * @return Loaded Config object
      * @throws RuntimeException if the config file cannot be loaded
      */
     private static Config loadConfig() {
         log.info("Loading server config");
-        return Config.load(Path.of(Paths.Infrastructure.Fs.getServerStorageFolder(), "config.json"));
+        return Config.load(Path.of("repository", "config.json"));
     }
 
     /**
-     * Initializes the application by setting up storage, repositories, services, resources, and HTTP handlers.
+     * Initializes the application by setting up storage, repositories, services, and resources.
      * @param config The server configuration
      * @return ServerContext containing initialized components
      * @throws RuntimeException if any component fails to initialize
@@ -86,10 +88,7 @@ public class Main {
         // 4. Resources
         Resources resources = initializeResources();
 
-        // 5. HTTP handlers
-        Handlers handlers = initializeHandlers(services, resources, repos);
-
-        return new ServerContext(repos, services, resources, handlers);
+        return new ServerContext(repos, services, resources);
     }
 
     /**
@@ -190,27 +189,6 @@ public class Main {
     }
 
     /**
-     * Initializes the HTTP handlers for the application, including resources, links, cipher, YouTube, and uploaded files.
-     * @param services The services containing business logic for the application
-     * @param resources The resources containing resource management for the application
-     * @param repos The repositories containing data for the application
-     * @return Handlers object containing all initialized HTTP handlers
-     * @throws RuntimeException if any handler fails to initialize
-     */
-    private static Handlers initializeHandlers(Services services, Resources resources, Repositories repos) {
-        log.info("Initializing HTTP handlers");
-
-        return new Handlers(
-            resources.resourcesService,
-            services.linkRepositoryService,
-            new com.serbekun.ss.service.cipher.CipherService(),
-            services.youtubeService,
-            services.uploadedFilesService,
-            services.shortUrlService
-        );
-    }
-
-    /**
      * Starts the Javalin server with the provided context and configuration.
      * @param ctx The server context containing initialized components
      * @param config The server configuration
@@ -218,33 +196,16 @@ public class Main {
     */
     private static void startServer(ServerContext ctx, Config config) {
         log.info("Initializing Javalin server");
-        Javalin server = Javalin.create(javalinConfig -> {
-            javalinConfig.http.maxRequestSize = config.getUploadFileMaxSizeBytes() + 1024L * 1024L;
-            javalinConfig.jetty.multipartConfig.maxFileSize(config.getUploadFileMaxSizeMb(), SizeUnit.MB);
-        });
-
-        // Force UTF-8 for every response, independent of the server's default
-        // JVM charset. ctx.result(String) encodes with responseCharset(), which
-        // falls back to Charset.defaultCharset() when no charset is set on the
-        // response. On a server running under a C/POSIX locale (or a pre-Java-18
-        // JRE) that default is US-ASCII, so non-ASCII characters (─ — → …,
-        // cyrillic) get written as '?'. Setting it up front keeps static assets
-        // and API JSON correct regardless of the host locale.
-        server.before(reqCtx -> reqCtx.res().setCharacterEncoding("UTF-8"));
-
-        RouteInitializer initHandles = new RouteInitializer();
-        initHandles.initHandles(
-            server,
+        Javalin server = ServerFactory.create(
+            config,
             ctx.resources.resourcesService,
+            ctx.services.linkRepositoryService,
+            new CipherService(),
+            ctx.services.youtubeService,
+            ctx.services.uploadedFilesService,
+            ctx.services.shortUrlService,
             ctx.services.authService,
-            ctx.services.endpointRegistry,
-            ctx.handlers.resourcesService,
-            ctx.handlers.linkRepositoryService,
-            ctx.handlers.cipherService,
-            ctx.handlers.youtubeService,
-            ctx.handlers.uploadedFilesService,
-            ctx.handlers.shortUrlService,
-            config
+            ctx.services.endpointRegistry
         );
 
         // Autosave
@@ -292,19 +253,17 @@ public class Main {
     }
 
     /**
-     * Container class for holding all initialized components of the server, including repositories, services, resources, and handlers.
+     * Container class for holding all initialized components of the server, including repositories, services, and resources.
      */
     private static final class ServerContext {
         private final Repositories repos;
         private final Services services;
         private final Resources resources;
-        private final Handlers handlers;
 
-        private ServerContext(Repositories repos, Services services, Resources resources, Handlers handlers) {
+        private ServerContext(Repositories repos, Services services, Resources resources) {
             this.repos = repos;
             this.services = services;
             this.resources = resources;
-            this.handlers = handlers;
         }
     }
 
@@ -383,30 +342,6 @@ public class Main {
         private Resources(
                 ResourcesService resourcesService) {
             this.resourcesService = resourcesService;
-        }
-    }
-
-    private static final class Handlers {
-        private final com.serbekun.ss.service.resource.ResourcesService resourcesService;
-        private final LinkRepositoryService linkRepositoryService;
-        private final com.serbekun.ss.service.cipher.CipherService cipherService;
-        private final YoutubeService youtubeService;
-        private final UploadedFilesService uploadedFilesService;
-        private final ShortUrlService shortUrlService;
-
-        private Handlers(
-                com.serbekun.ss.service.resource.ResourcesService resourcesService,
-                LinkRepositoryService linkRepositoryService,
-                com.serbekun.ss.service.cipher.CipherService cipherService,
-                YoutubeService youtubeService,
-                UploadedFilesService uploadedFilesService,
-                ShortUrlService shortUrlService) {
-            this.resourcesService = resourcesService;
-            this.linkRepositoryService = linkRepositoryService;
-            this.cipherService = cipherService;
-            this.youtubeService = youtubeService;
-            this.uploadedFilesService = uploadedFilesService;
-            this.shortUrlService = shortUrlService;
         }
     }
 }

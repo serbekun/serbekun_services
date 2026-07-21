@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serbekun.ss.BuildInfo;
 import com.serbekun.ss.config.Config;
-import com.serbekun.ss.http.handles.RouteInitializer;
 import com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensRepo;
 import com.serbekun.ss.repo.linksrepo.LinkRepositoryRepo;
 import com.serbekun.ss.repo.shorturl.ShortUrlRepo;
@@ -23,7 +22,6 @@ import com.serbekun.ss.service.youtube.YoutubeDomains;
 import com.serbekun.ss.service.youtube.YoutubeService;
 
 import io.javalin.Javalin;
-import io.javalin.config.SizeUnit;
 import io.javalin.testtools.JavalinTest;
 
 import okhttp3.MediaType;
@@ -48,7 +46,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * End-to-end tests: the full route tree from {@link RouteInitializer} wired
+ * End-to-end tests: the full route tree from {@link ServerFactory} wired
  * with real services on top of in-memory repositories and a temp raw-files dir.
  * Only the yt-dlp binary ({@link Youtube}) is mocked.
  */
@@ -65,7 +63,11 @@ class ServerHttpIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        Config config = new Config(0, 20, null, 30, "yt-dlp", "deno");
+        Config config = new Config(0, 20, null, 30, "yt-dlp", "deno",
+            "repository", "repository/repositories/links_repositories.json",
+            "repository/endpoint_access_tokens.json", "repository/uploaded_files_raw/",
+            "repository/uploaded_files/uploaded_files.json", "repository/short_url/short_url.json",
+            "repository/www.youtube.com_cookies.txt");
 
         var linkRepo = new LinkRepositoryRepo(new HashMap<>());
         var tokensRepo = new EndpointsAccessTokensRepo(new HashMap<>());
@@ -85,16 +87,9 @@ class ServerHttpIntegrationTest {
         var loader = new ResourceLoader();
         var resourcesService = new ResourcesService(loader, new ResourceCache(loader));
 
-        app = Javalin.create(cfg -> {
-            cfg.http.maxRequestSize = config.getUploadFileMaxSizeBytes() + 1024L * 1024L;
-            cfg.jetty.multipartConfig.maxFileSize(config.getUploadFileMaxSizeMb(), SizeUnit.MB);
-        });
-        app.before(ctx -> ctx.res().setCharacterEncoding("UTF-8"));
-
-        new RouteInitializer().initHandles(
-            app, resourcesService, authService, endpointRegistry,
-            resourcesService, linkService, new CipherService(),
-            youtubeService, uploadedService, shortUrlService, config);
+        app = ServerFactory.create(config, resourcesService, linkService,
+            new CipherService(), youtubeService, uploadedService, shortUrlService,
+            authService, endpointRegistry);
     }
 
     private static RequestBody jsonBody(String json) {

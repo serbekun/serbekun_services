@@ -43,6 +43,21 @@ public class Config {
     /** Path to deno */
     private final String denoPath;
 
+    /** Path to the server storage folder. */
+    private final String repositoryFolder;
+    /** Path to the links repositories storage file. */
+    private final String linksRepositoriesStorageFile;
+    /** Path to the endpoint access tokens storage file. */
+    private final String tokensStorageFile;
+    /** Path to the folder where raw uploaded files are stored. */
+    private final String uploadedFilesRawFolder;
+    /** Path to the uploaded files metadata storage file. */
+    private final String uploadedFilesStorageFile;
+    /** Path to the short URL storage file. */
+    private final String shortUrlStorageFile;
+    /** Path to the YouTube cookies file. */
+    private final String youtubeCookiesFile;
+
     // endregion
     // endregion 
 
@@ -54,13 +69,27 @@ public class Config {
     @JsonProperty("upload_file_max_size") Integer legacyUploadFileMaxSizeBytes,
     @JsonProperty("youtube_process_timeout_seconds") long youtubeProcessTimeoutSeconds,
     @JsonProperty("yt_dlp_path") String ytDlpPath,
-    @JsonProperty("deno_path") String denoPath
+    @JsonProperty("deno_path") String denoPath,
+    @JsonProperty("repository_folder") String repositoryFolder,
+    @JsonProperty("links_repositories_storage_file") String linksRepositoriesStorageFile,
+    @JsonProperty("tokens_storage_file") String tokensStorageFile,
+    @JsonProperty("uploaded_files_raw_folder") String uploadedFilesRawFolder,
+    @JsonProperty("uploaded_files_storage_file") String uploadedFilesStorageFile,
+    @JsonProperty("short_url_storage_file") String shortUrlStorageFile,
+    @JsonProperty("youtube_cookies_file") String youtubeCookiesFile
 ) {
         this.port = port;
         this.uploadFileMaxSizeMb = resolveUploadFileMaxSizeMb(uploadFileMaxSizeMb, legacyUploadFileMaxSizeBytes);
         this.youtubeProcessTimeoutSeconds = youtubeProcessTimeoutSeconds;
         this.ytDlpPath = ytDlpPath;
         this.denoPath = denoPath;
+        this.repositoryFolder = repositoryFolder;
+        this.linksRepositoriesStorageFile = linksRepositoriesStorageFile;
+        this.tokensStorageFile = tokensStorageFile;
+        this.uploadedFilesRawFolder = uploadedFilesRawFolder;
+        this.uploadedFilesStorageFile = uploadedFilesStorageFile;
+        this.shortUrlStorageFile = shortUrlStorageFile;
+        this.youtubeCookiesFile = youtubeCookiesFile;
     }
 
     // region Getters
@@ -88,6 +117,34 @@ public class Config {
     /** @return Path to deno */
     @JsonProperty("deno_path")
     public String getDenoPath() { return denoPath; }
+
+    /** @return Path to the server storage folder */
+    @JsonProperty("repository_folder")
+    public String getRepositoryFolder() { return repositoryFolder; }
+
+    /** @return Path to the links repositories storage file */
+    @JsonProperty("links_repositories_storage_file")
+    public String getLinksRepositoriesStorageFile() { return linksRepositoriesStorageFile; }
+
+    /** @return Path to the endpoint access tokens storage file */
+    @JsonProperty("tokens_storage_file")
+    public String getTokensStorageFile() { return tokensStorageFile; }
+
+    /** @return Path to the folder where raw uploaded files are stored */
+    @JsonProperty("uploaded_files_raw_folder")
+    public String getUploadedFilesRawFolder() { return uploadedFilesRawFolder; }
+
+    /** @return Path to the uploaded files metadata storage file */
+    @JsonProperty("uploaded_files_storage_file")
+    public String getUploadedFilesStorageFile() { return uploadedFilesStorageFile; }
+
+    /** @return Path to the short URL storage file */
+    @JsonProperty("short_url_storage_file")
+    public String getShortUrlStorageFile() { return shortUrlStorageFile; }
+
+    /** @return Path to the YouTube cookies file */
+    @JsonProperty("youtube_cookies_file")
+    public String getYoutubeCookiesFile() { return youtubeCookiesFile; }
 
     // endregion
     
@@ -158,7 +215,16 @@ public class Config {
 
     /** @return Config object with default values. */
     private static Config defaultConfig() {
-        return new Config(8080, DEFAULT_UPLOAD_FILE_MAX_SIZE_MB, null, 30, "/usr/local/bin/yt-dlp", "/usr/local/bin/deno");
+        return new Config(8080, DEFAULT_UPLOAD_FILE_MAX_SIZE_MB, null, 30,
+            "/usr/local/bin/yt-dlp", "/usr/local/bin/deno",
+            "repository",
+            "repository/repositories/links_repositories.json",
+            "repository/endpoint_access_tokens.json",
+            "repository/uploaded_files_raw/",
+            "repository/uploaded_files/uploaded_files.json",
+            "repository/short_url/short_url.json",
+            "repository/www.youtube.com_cookies.txt"
+        );
     }
 
     private static int resolveUploadFileMaxSizeMb(Integer uploadFileMaxSizeMb, Integer legacyUploadFileMaxSizeBytes) {

@@ -22,7 +22,7 @@
     min-height: 1.4em;
 }
 
-.ip-value.err { color: #cc8080; font-size: 0.9rem; }
+.ip-value.err { color: var(--err); font-size: 0.9rem; }
 
 .ip-actions {
     display: flex;

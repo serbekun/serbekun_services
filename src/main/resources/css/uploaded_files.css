@@ -150,7 +150,7 @@ input::placeholder {
 }
 
 .file-name-display.err {
-    color: #cc8080;
+    color: var(--err);
 }
 
 .upload-limit {
@@ -161,7 +161,7 @@ input::placeholder {
 }
 
 .upload-limit.err {
-    color: #cc8080;
+    color: var(--err);
 }
 
 /* ── Buttons (matching run-btn from cipher_aes) ── */
@@ -204,9 +204,9 @@ input::placeholder {
     padding: 13px;
     margin-top: 1.8rem;
     background: var(--bg2);
-    border: 1px solid #3a2020;
+    border: 1px solid var(--danger-border);
     border-radius: 8px;
-    color: #aa6666;
+    color: var(--danger);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -216,13 +216,13 @@ input::placeholder {
 }
 
 .btn-danger:hover {
-    color: #ff8888;
-    border-color: #884444;
+    color: var(--danger-hover);
+    border-color: var(--danger-hover-border);
     background: var(--bg3);
 }
 
 .btn-danger:active {
-    background: #1a0a0a;
+    background: var(--danger-bg);
 }
 
 /* ── Token input wrap ── */
@@ -353,13 +353,13 @@ input::placeholder {
 }
 
 .file-card-actions button.danger {
-    color: #aa6666;
-    border-color: #3a2020;
+    color: var(--danger);
+    border-color: var(--danger-border);
 }
 
 .file-card-actions button.danger:hover {
-    color: #ff8888;
-    border-color: #884444;
+    color: var(--danger-hover);
+    border-color: var(--danger-hover-border);
 }
 
 /* ── File Info Panel ── */
@@ -408,14 +408,14 @@ input::placeholder {
     transition: color 0.2s;
 }
 
-.status-line.ok  { color: #80b380; }
-.status-line.err { color: #cc8080; }
+.status-line.ok  { color: var(--ok); }
+.status-line.err { color: var(--err); }
 
 /* ── Modal (terminal themed) ── */
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: var(--overlay);
     z-index: 9999;
     display: flex;
     align-items: center;
@@ -506,7 +506,7 @@ input::placeholder {
     text-align: center;
     margin-top: 10px;
     font-size: 0.75rem;
-    color: #80b380;
+    color: var(--ok);
     min-height: 18px;
 }
 

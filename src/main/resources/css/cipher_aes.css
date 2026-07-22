@@ -127,7 +127,7 @@ textarea::placeholder, .key-wrap input::placeholder {
     overflow: hidden;
     animation: fadeIn 0.2s ease-out;
 }
-.result-block.error { border-color: #4a1a1a; }
+.result-block.error { border-color: var(--err-border); }
 
 .result-header {
     display: flex;
@@ -137,7 +137,7 @@ textarea::placeholder, .key-wrap input::placeholder {
     background: var(--bg2);
     border-bottom: 1px solid var(--border);
 }
-.result-block.error .result-header { background: #100808; border-bottom-color: #3a1a1a; }
+.result-block.error .result-header { background: var(--err-bg); border-bottom-color: var(--err-border-soft); }
 
 .result-label {
     font-size: 0.68rem;
@@ -145,7 +145,7 @@ textarea::placeholder, .key-wrap input::placeholder {
     text-transform: uppercase;
     color: var(--accent);
 }
-.result-block.error .result-label { color: #cc7777; }
+.result-block.error .result-label { color: var(--err-text); }
 
 .copy-btn {
     font-family: inherit;
@@ -172,7 +172,7 @@ textarea::placeholder, .key-wrap input::placeholder {
     background: var(--bg2);
     line-height: 1.7;
 }
-.result-block.error .result-body { color: #cc7777; }
+.result-block.error .result-body { color: var(--err-text); }
 
 /* ── Divider ── */
 .divider {

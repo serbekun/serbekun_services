@@ -1,22 +1,7 @@
 /* ─── Reset ─── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ─── Palette (matches serbekun.com) ─── */
-:root {
-    --bg:     #0a0a0a;
-    --bg2:    #0e0e0e;
-    --bg3:    #111;
-    --border: #1a1a1a;
-    --border-hover: #333;
-    --text:   #c8c8c8;
-    --text-dim:  #555;
-    --text-dimmer: #333;
-    --text-bright: #fff;
-    --accent: #888;
-    --font: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono',
-            'Codelia', 'Iosevka', Consolas, 'Liberation Mono', monospace;
-    --radius: 8px;
-}
+/* Palette lives in theme.css, which every page loads before this file. */
 
 /* ─── Base ─── */
 html { background: var(--bg); min-height: 100%; }
@@ -106,8 +91,8 @@ body {
     padding-left: 2px;
     transition: color 0.2s;
 }
-.status-line.ok  { color: #80b380; }
-.status-line.err { color: #cc8080; }
+.status-line.ok  { color: var(--ok); }
+.status-line.err { color: var(--err); }
 
 /* ─── Fade in animation ─── */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }

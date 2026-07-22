@@ -178,8 +178,8 @@ textarea::placeholder {
 
 .repo-banner-actions button:hover { color: var(--text); border-color: var(--text-dim); }
 
-.repo-banner-actions button.danger { color: #aa6666; border-color: #3a2020; }
-.repo-banner-actions button.danger:hover { color: #ff8888; border-color: #884444; }
+.repo-banner-actions button.danger { color: var(--danger); border-color: var(--danger-border); }
+.repo-banner-actions button.danger:hover { color: var(--danger-hover); border-color: var(--danger-hover-border); }
 
 /* ── Links list ── */
 .files-section { margin-top: 2rem; }
@@ -269,8 +269,8 @@ textarea::placeholder {
 }
 
 .file-card-actions button:hover { color: var(--text); border-color: var(--text-dim); }
-.file-card-actions button.danger { color: #aa6666; border-color: #3a2020; }
-.file-card-actions button.danger:hover { color: #ff8888; border-color: #884444; }
+.file-card-actions button.danger { color: var(--danger); border-color: var(--danger-border); }
+.file-card-actions button.danger:hover { color: var(--danger-hover); border-color: var(--danger-hover-border); }
 
 /* ── Status line ── */
 .status-line {
@@ -283,14 +283,14 @@ textarea::placeholder {
     transition: color 0.2s;
 }
 
-.status-line.ok  { color: #80b380; }
-.status-line.err { color: #cc8080; }
+.status-line.ok  { color: var(--ok); }
+.status-line.err { color: var(--err); }
 
 /* ── Modal (terminal themed) ── */
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: var(--overlay);
     z-index: 9999;
     display: flex;
     align-items: center;
@@ -377,7 +377,7 @@ textarea::placeholder {
     text-align: center;
     margin-top: 10px;
     font-size: 0.75rem;
-    color: #80b380;
+    color: var(--ok);
     min-height: 18px;
 }
 

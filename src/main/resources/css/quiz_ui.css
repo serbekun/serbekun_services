@@ -1,13 +1,24 @@
-/* palette matches serbekun.com */
+/* Palette lives in theme.css, which is loaded before this file. */
 :root {
-    --panel: rgba(14, 14, 14, 0.85);
-    --text: #c8c8c8;
-    --text-bright: #fff;
-    --muted: #888;
-    --accent: #888;
-    --accent-strong: #333;
-    --success: #80b380;
-    --error: #cc8080;
+    --muted: var(--accent);
+    --accent-strong: var(--border-hover);
+    --success: var(--ok);
+    --error: var(--err);
+}
+
+.quiz-back {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 9999;
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border-hover);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    box-shadow: 0 4px 12px var(--shadow);
 }
 
 * {
@@ -17,7 +28,7 @@
 }
 
 html {
-    background-color: #0a0a0a;
+    background-color: var(--bg);
 }
 body {
     margin: 0;
@@ -28,8 +39,8 @@ body {
     min-height: 100vh;
     background:
         linear-gradient(
-            rgba(0, 0, 0, 0.85),
-            rgba(0, 0, 0, 0.75)
+            var(--scrim-top),
+            var(--scrim-bottom)
         ),
         url('/v0/api/images/static/black_hole.jpg');
     background-size: cover;
@@ -44,8 +55,8 @@ body {
     padding: 2rem;
     background: var(--panel);
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 0 40px rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border-soft);
+    box-shadow: 0 0 40px var(--glow);
 }
 
 header {
@@ -56,7 +67,7 @@ header {
     font-size: 2.6rem;
     font-weight: 700;
     color: var(--text-bright);
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+    text-shadow: 0 0 15px var(--glow);
 }
 .subtitle {
     font-size: 0.95rem;
@@ -64,8 +75,8 @@ header {
 }
 
 #quiz-container {
-    background: rgba(12, 12, 12, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--panel2);
+    border: 1px solid var(--glass-border);
     border-radius: 14px;
     padding: 32px 24px;
 }
@@ -93,8 +104,8 @@ header {
 }
 
 .option {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
     border-radius: 14px;
     padding: 18px 16px;
     font-size: 1.05rem;
@@ -111,8 +122,8 @@ header {
 
 .option:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 30px var(--shadow);
+    border-color: var(--glass-border-strong);
 }
 
 .option::before {
@@ -136,16 +147,16 @@ header {
 
 /* Answer colors */
 .option.correct {
-    background: rgba(128, 179, 128, 0.15) !important;
+    background: color-mix(in srgb, var(--success) 15%, transparent) !important;
     border-color: var(--success) !important;
     color: var(--text);
-    box-shadow: 0 0 20px rgba(128, 179, 128, 0.25);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--success) 25%, transparent);
 }
 
 .option.wrong {
-    background: rgba(204, 128, 128, 0.15) !important;
+    background: color-mix(in srgb, var(--error) 15%, transparent) !important;
     border-color: var(--error) !important;
-    box-shadow: 0 0 20px rgba(204, 128, 128, 0.25);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--error) 25%, transparent);
 }
 
 .option.correct .letter,
@@ -158,8 +169,8 @@ header {
     display: none;
     text-align: center;
     padding: 32px 24px;
-    background: rgba(12, 12, 12, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--panel2);
+    border: 1px solid var(--glass-border);
     border-radius: 14px;
 }
 
@@ -178,8 +189,8 @@ header {
     margin-top: 30px;
     padding: 14px 40px;
     font-size: 1.05rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
     color: var(--text);
     border-radius: 10px;
     cursor: pointer;
@@ -188,8 +199,8 @@ header {
 
 .restart-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 30px var(--shadow);
+    border-color: var(--glass-border-strong);
 }
 
 .loading {

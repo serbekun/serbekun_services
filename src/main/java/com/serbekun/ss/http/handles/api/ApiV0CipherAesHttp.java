@@ -50,7 +50,7 @@ public class ApiV0CipherAesHttp {
             return;
         }
 
-        ctx.result("{\"key\":\"" + key + "\"}");
+        ctx.json(new V0CipherAesKeyResponse(key));
     }
 
     private void handlePostEncrypt(Context ctx) {
@@ -73,7 +73,7 @@ public class ApiV0CipherAesHttp {
             return;
         }
 
-        ctx.result("{\"data\":\"" + encrypted + "\"}");
+        ctx.json(new V0CipherAesDataResponse(encrypted));
     }
 
     private void handlePostDecrypt(Context ctx) {
@@ -96,7 +96,7 @@ public class ApiV0CipherAesHttp {
             return;
         }
 
-        ctx.result("{\"data\":\"" + decrypted + "\"}");
+        ctx.json(new V0CipherAesDataResponse(decrypted));
     }
 
 }

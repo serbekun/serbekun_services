@@ -3,6 +3,7 @@ package com.serbekun.ss.http.handles.api;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
+import com.serbekun.ss.domain.dto.http.ErrorResponse;
 import com.serbekun.ss.service.youtube.YoutubeService;
 
 public class ApiV0YoutubeHttp {
@@ -17,7 +18,7 @@ public class ApiV0YoutubeHttp {
         String url = ctx.queryParam("url");
         if (url == null || url.isBlank()) {
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\": \"url parameter is required.\"}");
+            ctx.json(ErrorResponse.of("url parameter is required."));
             return;
         }
 
@@ -27,13 +28,13 @@ public class ApiV0YoutubeHttp {
             ctx.result(info);
         } catch (IllegalArgumentException e) {
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}");
+            ctx.json(ErrorResponse.of(e.getMessage()));
         } catch (IllegalStateException e) {
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}");
+            ctx.json(ErrorResponse.of(e.getMessage()));
         } catch (Exception e) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
-            ctx.result("{\"error\": \"" + e.getClass().getSimpleName() + ": " + e.getMessage().replace("\"", "'") + "\"}");
+            ctx.json(ErrorResponse.of(e.getClass().getSimpleName() + ": " + e.getMessage()));
         }
     }
 
@@ -41,7 +42,7 @@ public class ApiV0YoutubeHttp {
         String url = ctx.queryParam("url");
         if (url == null || url.isBlank()) {
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\": \"url parameter is required.\"}");
+            ctx.json(ErrorResponse.of("url parameter is required."));
             return;
         }
 
@@ -51,13 +52,13 @@ public class ApiV0YoutubeHttp {
             ctx.result(videoBytes);
         } catch (IllegalArgumentException e) {
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}");
+            ctx.json(ErrorResponse.of(e.getMessage()));
         } catch (IllegalStateException e) {
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}");
+            ctx.json(ErrorResponse.of(e.getMessage()));
         } catch (Exception e) {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
-            ctx.result("{\"error\": \"" + e.getClass().getSimpleName() + ": " + e.getMessage().replace("\"", "'") + "\"}");
+            ctx.json(ErrorResponse.of(e.getClass().getSimpleName() + ": " + e.getMessage()));
         }
     }
 }

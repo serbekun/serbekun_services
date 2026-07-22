@@ -10,8 +10,8 @@ import io.javalin.http.UploadedFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serbekun.ss.config.Config;
+import com.serbekun.ss.domain.dto.http.ErrorResponse;
 import com.serbekun.ss.domain.dto.http.uploadedfiles.V0UploadedFilesDeleteRequest;
 import com.serbekun.ss.domain.dto.http.uploadedfiles.V0UploadedFilesGetResponse;
 import com.serbekun.ss.domain.dto.http.uploadedfiles.V0UploadedFilesMaxSizeResponse;
@@ -27,9 +27,6 @@ public class ApiV0UploadedFilesHttp {
 
     /** Logger instance */
     private static final Logger log = LoggerFactory.getLogger(ApiV0UploadedFilesHttp.class);
-    
-    /** Object mapper instance */
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     /** Uploaded files service instance */
     private final UploadedFilesService service;
@@ -78,7 +75,7 @@ public class ApiV0UploadedFilesHttp {
             // Listing all files is forbidden
             ctx.contentType("application/json");
             ctx.status(HttpStatus.FORBIDDEN);
-            ctx.result("{\"error\":\"Listing all files is not allowed\"}");
+            ctx.json(ErrorResponse.of("Listing all files is not allowed"));
             return;
         }
 
@@ -108,14 +105,7 @@ public class ApiV0UploadedFilesHttp {
      * @param f
      */
     private void handleGetOne(Context ctx, com.serbekun.ss.domain.models.UploadedFile f) {
-        ctx.contentType("application/json");
-        try {
-            var response = new V0UploadedFilesGetResponse(f.uuid(), f.name(), f.expiredTime());
-            ctx.result(mapper.writeValueAsString(response));
-        } catch (Exception e) {
-            log.error("Failed to serialize uploaded file {}", f.uuid(), e);
-            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        ctx.json(new V0UploadedFilesGetResponse(f.uuid(), f.name(), f.expiredTime()));
     }
 
     /**
@@ -141,7 +131,7 @@ public class ApiV0UploadedFilesHttp {
 
         if (content == null) {
             ctx.status(HttpStatus.NOT_FOUND);
-            ctx.result("{\"error\":\"File data not found on disk\"}");
+            ctx.json(ErrorResponse.of("File data not found on disk"));
             return;
         }
 
@@ -171,12 +161,12 @@ public class ApiV0UploadedFilesHttp {
         UploadedFile uploaded = getSingleUploadedFile(ctx);
         if (uploaded == null) {
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\":\"A single file is required (field name 'file')\"}");
+            ctx.json(ErrorResponse.of("A single file is required (field name 'file')"));
             return;
         }
         if (uploaded.size() > config.getUploadFileMaxSizeBytes()) {
             ctx.status(HttpStatus.CONTENT_TOO_LARGE);
-            ctx.result("{\"error\":\"File is larger than the configured upload limit\"}");
+            ctx.json(ErrorResponse.of("File is larger than the configured upload limit"));
             return;
         }
 
@@ -201,18 +191,12 @@ public class ApiV0UploadedFilesHttp {
         } catch (IOException e) {
             log.error("Failed to store uploaded file", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
-            ctx.result("{\"error\":\"Failed to store file\"}");
+            ctx.json(ErrorResponse.of("Failed to store file"));
             return;
         }
 
         ctx.status(HttpStatus.CREATED);
-        try {
-            ctx.result(mapper.writeValueAsString(
-                    new V0UploadedFilesPostResponse(uuid, token, name, expiredTime)));
-        } catch (Exception e) {
-            log.error("Failed to serialize upload response", e);
-            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        ctx.json(new V0UploadedFilesPostResponse(uuid, token, name, expiredTime));
     }
 
     // endregion
@@ -233,7 +217,7 @@ public class ApiV0UploadedFilesHttp {
         String uuidStr = pathParam(ctx, "uuid");
         if (uuidStr == null) {
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\":\"UUID path parameter is required\"}");
+            ctx.json(ErrorResponse.of("UUID path parameter is required"));
             return;
         }
 
@@ -253,15 +237,15 @@ public class ApiV0UploadedFilesHttp {
         switch (status) {
             case 404 -> {
                 ctx.status(HttpStatus.NOT_FOUND);
-                ctx.result("{\"error\":\"File not found\"}");
+                ctx.json(ErrorResponse.of("File not found"));
             }
             case 403 -> {
                 ctx.status(HttpStatus.FORBIDDEN);
-                ctx.result("{\"error\":\"Invalid token\"}");
+                ctx.json(ErrorResponse.of("Invalid token"));
             }
             case 500 -> {
                 ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
-                ctx.result("{\"error\":\"Failed to delete file from disk\"}");
+                ctx.json(ErrorResponse.of("Failed to delete file from disk"));
             }
             default -> ctx.status(HttpStatus.NO_CONTENT);
         }
@@ -282,7 +266,7 @@ public class ApiV0UploadedFilesHttp {
             return UUID.fromString(uuidStr);
         } catch (IllegalArgumentException e) {
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\":\"Invalid UUID format\"}");
+            ctx.json(ErrorResponse.of("Invalid UUID format"));
             return null;
         }
     }
@@ -296,10 +280,10 @@ public class ApiV0UploadedFilesHttp {
         ctx.contentType("application/json");
         if (!service.exists(uuid)) {
             ctx.status(HttpStatus.NOT_FOUND);
-            ctx.result("{\"error\":\"File not found\"}");
+            ctx.json(ErrorResponse.of("File not found"));
         } else {
             ctx.status(HttpStatus.FORBIDDEN);
-            ctx.result("{\"error\":\"Invalid or missing token\"}");
+            ctx.json(ErrorResponse.of("Invalid or missing token"));
         }
     }
 

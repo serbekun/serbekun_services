@@ -6,7 +6,7 @@ import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.serbekun.ss.domain.dto.http.ErrorResponse;
 import com.serbekun.ss.domain.dto.http.shorturl.V0ShortUrlDeleteRequest;
 import com.serbekun.ss.domain.dto.http.shorturl.V0ShortUrlPostRequest;
 import com.serbekun.ss.domain.dto.http.shorturl.V0ShortUrlPostResponse;
@@ -22,9 +22,6 @@ public class ApiV0ShortUrlHttp {
 
     /** Logger instance */
     private static final Logger log = LoggerFactory.getLogger(ApiV0ShortUrlHttp.class);
-
-    /** Object mapper instance */
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     /** Short url service instance */
     private final ShortUrlService service;
@@ -60,7 +57,7 @@ public class ApiV0ShortUrlHttp {
         if (id == null) {
             ctx.contentType("application/json");
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\":\"id path parameter is required\"}");
+            ctx.json(ErrorResponse.of("id path parameter is required"));
             return;
         }
 
@@ -68,7 +65,7 @@ public class ApiV0ShortUrlHttp {
         if (shortUrl == null) {
             ctx.contentType("application/json");
             ctx.status(HttpStatus.NOT_FOUND);
-            ctx.result("{\"error\":\"Short url not found\"}");
+            ctx.json(ErrorResponse.of("Short url not found"));
             return;
         }
 
@@ -92,7 +89,7 @@ public class ApiV0ShortUrlHttp {
         V0ShortUrlPostRequest body = parseBody(ctx, V0ShortUrlPostRequest.class);
         if (body == null || body.url() == null || body.url().isBlank()) {
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\":\"'url' is required\"}");
+            ctx.json(ErrorResponse.of("'url' is required"));
             return;
         }
 
@@ -101,18 +98,12 @@ public class ApiV0ShortUrlHttp {
             shortUrl = service.createShortUrl(body.url(), body.name(), body.description());
         } catch (IllegalArgumentException e) {
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\":\"" + e.getMessage() + "\"}");
+            ctx.json(ErrorResponse.of(e.getMessage()));
             return;
         }
 
         ctx.status(HttpStatus.CREATED);
-        try {
-            ctx.result(mapper.writeValueAsString(
-                    new V0ShortUrlPostResponse(shortUrl.id(), shortUrl.token())));
-        } catch (Exception e) {
-            log.error("Failed to serialize short url response", e);
-            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        ctx.json(new V0ShortUrlPostResponse(shortUrl.id(), shortUrl.token()));
     }
 
     // endregion
@@ -133,7 +124,7 @@ public class ApiV0ShortUrlHttp {
         String id = pathParam(ctx, "id");
         if (id == null) {
             ctx.status(HttpStatus.BAD_REQUEST);
-            ctx.result("{\"error\":\"id path parameter is required\"}");
+            ctx.json(ErrorResponse.of("id path parameter is required"));
             return;
         }
 
@@ -150,11 +141,11 @@ public class ApiV0ShortUrlHttp {
         switch (status) {
             case 404 -> {
                 ctx.status(HttpStatus.NOT_FOUND);
-                ctx.result("{\"error\":\"Short url not found\"}");
+                ctx.json(ErrorResponse.of("Short url not found"));
             }
             case 403 -> {
                 ctx.status(HttpStatus.FORBIDDEN);
-                ctx.result("{\"error\":\"Invalid token\"}");
+                ctx.json(ErrorResponse.of("Invalid token"));
             }
             default -> ctx.status(HttpStatus.NO_CONTENT);
         }

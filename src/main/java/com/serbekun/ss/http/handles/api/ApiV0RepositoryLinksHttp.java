@@ -6,9 +6,13 @@ import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 import io.javalin.http.HttpStatus;
 
+import com.serbekun.ss.domain.dto.http.ErrorResponse;
+import com.serbekun.ss.domain.dto.http.linksrepo.V0LinkResponse;
+import com.serbekun.ss.domain.dto.http.linksrepo.V0RepositoryGetResponse;
 import com.serbekun.ss.domain.dto.http.linksrepo.V0RepositoryLinksPostRequest;
 import com.serbekun.ss.domain.dto.http.linksrepo.V0RepositoryLinksPutRequest;
 import com.serbekun.ss.domain.dto.http.linksrepo.V0RepositoryPostRequest;
+import com.serbekun.ss.domain.dto.http.linksrepo.V0RepositoryPostResponse;
 import com.serbekun.ss.domain.models.Link;
 import com.serbekun.ss.domain.models.LinkRepository;
 import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
@@ -70,10 +74,8 @@ public class ApiV0RepositoryLinksHttp {
         String name = (body != null) ? body.name() : null;
         LinkRepository repo = service.createRepository(name);
         ctx.status(HttpStatus.CREATED);
-        ctx.result("{\"repositoryId\":\"" + repo.repositoryId()
-            + "\",\"token\":\"" + repo.token()
-            + "\",\"name\":\"" + escapeJson(repo.name())
-            + "\",\"createdAt\":\"" + repo.createdAt() + "\"}");
+        ctx.json(new V0RepositoryPostResponse(
+                repo.repositoryId(), repo.token(), repo.name(), repo.createdAt()));
     }
 
     /**
@@ -93,7 +95,7 @@ public class ApiV0RepositoryLinksHttp {
             case 200 -> ctx.status(HttpStatus.NO_CONTENT);
             default -> {
                 ctx.status(HttpStatus.NOT_FOUND);
-                ctx.result("{\"error\":\"NOT_FOUND\",\"message\":\"Repository not found or token is invalid\"}");
+                ctx.json(new ErrorResponse("NOT_FOUND", "Repository not found or token is invalid"));
             }
         }
     }
@@ -114,26 +116,10 @@ public class ApiV0RepositoryLinksHttp {
         LinkRepository repo = service.getRepository(repoId, token);
         if (repo == null) {
             ctx.status(HttpStatus.NOT_FOUND);
-            ctx.result("{\"error\":\"NOT_FOUND\",\"message\":\"Repository not found or token is invalid\"}");
+            ctx.json(new ErrorResponse("NOT_FOUND", "Repository not found or token is invalid"));
             return;
         }
-        StringBuilder json = new StringBuilder();
-        json.append("{\"repositoryId\":\"").append(repo.repositoryId())
-            .append("\",\"name\":\"").append(escapeJson(repo.name()))
-            .append("\",\"createdAt\":\"").append(repo.createdAt())
-            .append("\",\"links\":[");
-        boolean first = true;
-        for (Link link : repo.links().values()) {
-            if (!first) json.append(",");
-            first = false;
-            json.append("{\"uuid\":\"").append(link.uuid())
-                .append("\",\"url\":\"").append(escapeJson(link.url()))
-                .append("\",\"name\":\"").append(escapeJson(link.name() != null ? link.name() : ""))
-                .append("\",\"description\":\"").append(escapeJson(link.description() != null ? link.description() : ""))
-                .append("\"}");
-        }
-        json.append("]}");
-        ctx.result(json.toString());
+        ctx.json(V0RepositoryGetResponse.from(repo));
     }
 
     /**
@@ -155,15 +141,11 @@ public class ApiV0RepositoryLinksHttp {
         Link link = service.addLink(repoId, token, body.url(), body.name(), body.description());
         if (link == null) {
             ctx.status(HttpStatus.NOT_FOUND);
-            ctx.result("{\"error\":\"NOT_FOUND\",\"message\":\"Repository not found or token is invalid\"}");
+            ctx.json(new ErrorResponse("NOT_FOUND", "Repository not found or token is invalid"));
             return;
         }
         ctx.status(HttpStatus.CREATED);
-        ctx.result("{\"uuid\":\"" + link.uuid()
-            + "\",\"url\":\"" + escapeJson(link.url())
-            + "\",\"name\":\"" + escapeJson(link.name() != null ? link.name() : "")
-            + "\",\"description\":\"" + escapeJson(link.description() != null ? link.description() : "")
-            + "\"}");
+        ctx.json(V0LinkResponse.from(link));
     }
 
     /**
@@ -220,11 +202,11 @@ public class ApiV0RepositoryLinksHttp {
             case 200 -> ctx.status(HttpStatus.NO_CONTENT);
             case 400 -> {
                 ctx.status(HttpStatus.BAD_REQUEST);
-                ctx.result("{\"error\":\"INVALID_REQUEST\",\"message\":\"Required fields are missing\"}");
+                ctx.json(new ErrorResponse("INVALID_REQUEST", "Required fields are missing"));
             }
             default -> {
                 ctx.status(HttpStatus.NOT_FOUND);
-                ctx.result("{\"error\":\"NOT_FOUND\",\"message\":\"Repository or link not found\"}");
+                ctx.json(new ErrorResponse("NOT_FOUND", "Repository or link not found"));
             }
         }
     }
@@ -268,22 +250,7 @@ public class ApiV0RepositoryLinksHttp {
      */
     private void writeInvalidRequest(Context ctx) {
         ctx.status(HttpStatus.BAD_REQUEST);
-        ctx.result("{\"error\":\"INVALID_REQUEST\",\"message\":\"Required fields are missing\"}");
-    }
-
-    /**
-     * Escapes special characters in a string for safe inclusion in JSON.
-     * @param value the string value to escape
-     * @return the escaped string, or an empty string if the input value is null
-     */
-    private static String escapeJson(String value) {
-        if (value == null) return "";
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t");
+        ctx.json(new ErrorResponse("INVALID_REQUEST", "Required fields are missing"));
     }
 
     // endregion Helper Methods

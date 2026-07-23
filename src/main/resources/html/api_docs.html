@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>API Docs — Serbekun</title>
+    <link rel="icon" href="/icon" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/v0/css/theme.css">
+    <link rel="stylesheet" href="/static/v0/css/shared.css">
+    <link rel="stylesheet" href="/static/v0/css/api_docs.css">
+    <script src="/static/v0/js/theme.js"></script>
+</head>
+<body>
+
+    <button class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="tt-sun">☀</span><span class="tt-moon">☾</span>
+    </button>
+
+    <div class="container">
+        <a href="/" class="back-link">back</a>
+
+        <div class="header">
+            <h1 class="header-title">API Reference</h1>
+            <p class="header-sub">// every endpoint of the server, v0</p>
+        </div>
+
+        <div class="prompt-line">
+            <span class="cwd">~/serbekun/api</span>
+            <span>$</span>
+            <span>man api --version 0</span>
+            <span class="prompt-cursor"></span>
+        </div>
+
+        <div class="toolbar">
+            <input type="text" class="search-input" id="search"
+                   placeholder="filter endpoints — path, method, keyword…"
+                   autocomplete="off" spellcheck="false">
+            <button class="run-btn" id="toggle-all" type="button">expand all</button>
+        </div>
+
+        <div class="base-url">
+            base url <b id="base-url">—</b>
+        </div>
+
+        <nav class="toc">
+            <a href="#general">general</a>
+            <a href="#cipher">cipher</a>
+            <a href="#short-url">short url</a>
+            <a href="#repository-links">link repository</a>
+            <a href="#uploaded-files">uploaded files</a>
+            <a href="#youtube">youtube</a>
+            <a href="#network">network</a>
+            <a href="#static">static</a>
+        </nav>
+
+        <p class="no-results" id="no-results">no endpoints match the filter.</p>
+
+        <!-- ══════════ GENERAL ══════════ -->
+        <section class="group" id="general">
+            <div class="group-label">01 — general</div>
+            <p class="group-note">
+                All API responses are JSON unless stated otherwise. Errors use the shape
+                <code>{"error": "...", "message": "..."}</code>, where <code>message</code> is omitted when absent.
+                Auth is registered per endpoint but currently disabled for all of them — no
+                <code>Authorization</code> header is required. Resource tokens
+                (repository, short url, file) are separate from that and always required where listed.
+            </p>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/api/v0/version</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Returns the build version of the running server.</p>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "version": "1.4.0"
+}</pre>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s $BASE/api/v0/version</pre>
+                </div>
+            </details>
+        </section>
+
+        <!-- ══════════ CIPHER ══════════ -->
+        <section class="group" id="cipher">
+            <div class="group-label">02 — cipher / aes</div>
+            <p class="group-note">AES-GCM helpers. Keys and payloads travel as Base64 strings; the server never stores them.</p>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/api/v0/cipher/aes</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Generates a fresh AES key. The key is returned once and never persisted.</p>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "key": "b64-encoded-aes-key"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>key generated</span>
+                        <span class="status-chip err"><b>500</b>key generation failed</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s $BASE/api/v0/cipher/aes</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/cipher/aes/encrypt</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Encrypts <code>data</code> with the given AES <code>key</code>.</p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>data</td><td>string</td><td><span class="req">required</span></td><td>plain text to encrypt</td></tr>
+                        <tr><td>key</td><td>string</td><td><span class="req">required</span></td><td>Base64 AES key</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "data": "b64-cipher-text"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>encrypted</span>
+                        <span class="status-chip err"><b>400</b><code>data</code> or <code>key</code> blank</span>
+                        <span class="status-chip err"><b>500</b>encryption failed</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/cipher/aes/encrypt \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"hello","key":"&lt;key&gt;"}'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/cipher/aes/decrypt</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Decrypts <code>data</code> produced by the encrypt endpoint using the same key.</p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>data</td><td>string</td><td><span class="req">required</span></td><td>Base64 cipher text</td></tr>
+                        <tr><td>key</td><td>string</td><td><span class="req">required</span></td><td>the same Base64 AES key</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "data": "hello"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>decrypted</span>
+                        <span class="status-chip err"><b>400</b><code>data</code> or <code>key</code> blank</span>
+                        <span class="status-chip err"><b>500</b>wrong key or corrupted payload</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/cipher/aes/decrypt \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"&lt;cipher&gt;","key":"&lt;key&gt;"}'</pre>
+                </div>
+            </details>
+        </section>
+
+        <!-- ══════════ SHORT URL ══════════ -->
+        <section class="group" id="short-url">
+            <div class="group-label">03 — short url</div>
+            <p class="group-note">The delete <code>token</code> is returned only once, at creation time. Without it a short url cannot be removed.</p>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/short-url</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Creates a short url pointing at <code>url</code>.</p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>url</td><td>string</td><td><span class="req">required</span></td><td>target url</td></tr>
+                        <tr><td>name</td><td>string</td><td><span class="opt">optional</span></td><td>human readable label</td></tr>
+                        <tr><td>description</td><td>string</td><td><span class="opt">optional</span></td><td>free form note</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 201</div>
+<pre class="code">{
+  "id": "aB3xY",
+  "token": "8f14e45f-…"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>201</b>created</span>
+                        <span class="status-chip err"><b>400</b><code>url</code> missing or invalid</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/short-url \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://example.com"}'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/api/v0/short-url/<span class="param">{id}</span></span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Resolves a short url and redirects to the target. This is the link you share.</p>
+
+                    <div class="sub-label">path params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>id</td><td>string</td><td><span class="req">required</span></td><td>short id from creation</td></tr>
+                    </table>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>302</b>redirect to target url</span>
+                        <span class="status-chip err"><b>400</b><code>id</code> missing</span>
+                        <span class="status-chip err"><b>404</b>unknown id</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -sI $BASE/api/v0/short-url/aB3xY</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method delete">del</span>
+                    <span class="path">/api/v0/short-url/<span class="param">{id}</span></span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Deletes a short url. The token may be passed as a query param or in the JSON body.</p>
+
+                    <div class="sub-label">params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>in</th><th></th><th>description</th></tr>
+                        <tr><td>id</td><td>path</td><td><span class="req">required</span></td><td>short id</td></tr>
+                        <tr><td>token</td><td>query / body</td><td><span class="req">required</span></td><td>delete token from creation</td></tr>
+                    </table>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>204</b>deleted</span>
+                        <span class="status-chip err"><b>403</b>token mismatch</span>
+                        <span class="status-chip err"><b>404</b>unknown id</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X DELETE "$BASE/api/v0/short-url/aB3xY?token=&lt;token&gt;"</pre>
+                </div>
+            </details>
+        </section>
+
+        <!-- ══════════ REPOSITORY LINKS ══════════ -->
+        <section class="group" id="repository-links">
+            <div class="group-label">04 — link repository</div>
+            <p class="group-note">
+                A repository is a token-protected bag of links. The <code>token</code> is shown only in the
+                create response — every other call needs it as <code>?token=</code>. A wrong token is answered
+                with <code>404</code> on purpose, so repository ids cannot be probed.
+            </p>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/repository/links/</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Creates a new link repository. Note the trailing slash — it is part of the route.</p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>name</td><td>string</td><td><span class="opt">optional</span></td><td>repository label</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 201</div>
+<pre class="code">{
+  "repositoryId": "3f1c…-uuid",
+  "token": "1a2b…-uuid",
+  "name": "my links",
+  "createdAt": "2026-07-22T10:15:30Z"
+}</pre>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/repository/links/ \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"my links"}'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/api/v0/repository/links/<span class="param">{repositoryId}</span></span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Returns the repository with all of its links. The token is never echoed back.</p>
+
+                    <div class="sub-label">params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>in</th><th></th><th>description</th></tr>
+                        <tr><td>repositoryId</td><td>path</td><td><span class="req">required</span></td><td>repository uuid</td></tr>
+                        <tr><td>token</td><td>query</td><td><span class="req">required</span></td><td>repository token</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "repositoryId": "3f1c…-uuid",
+  "name": "my links",
+  "createdAt": "2026-07-22T10:15:30Z",
+  "links": [
+    {
+      "uuid": "9d0e…-uuid",
+      "url": "https://example.com",
+      "name": "example",
+      "description": ""
+    }
+  ]
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>found</span>
+                        <span class="status-chip err"><b>400</b>bad request</span>
+                        <span class="status-chip err"><b>404</b>not found or bad token</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s "$BASE/api/v0/repository/links/&lt;id&gt;?token=&lt;token&gt;"</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method delete">del</span>
+                    <span class="path">/api/v0/repository/links/<span class="param">{repositoryId}</span></span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Deletes a repository together with all links inside it.</p>
+
+                    <div class="sub-label">params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>in</th><th></th><th>description</th></tr>
+                        <tr><td>repositoryId</td><td>path</td><td><span class="req">required</span></td><td>repository uuid</td></tr>
+                        <tr><td>token</td><td>query</td><td><span class="req">required</span></td><td>repository token</td></tr>
+                    </table>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>204</b>deleted</span>
+                        <span class="status-chip err"><b>400</b>id or token missing</span>
+                        <span class="status-chip err"><b>404</b>not found or bad token</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X DELETE "$BASE/api/v0/repository/links/&lt;id&gt;?token=&lt;token&gt;"</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/repository/links/<span class="param">{repositoryId}</span>/links</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Adds a link to the repository.</p>
+
+                    <div class="sub-label">params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>in</th><th></th><th>description</th></tr>
+                        <tr><td>repositoryId</td><td>path</td><td><span class="req">required</span></td><td>repository uuid</td></tr>
+                        <tr><td>token</td><td>query</td><td><span class="req">required</span></td><td>repository token</td></tr>
+                        <tr><td>url</td><td>body</td><td><span class="req">required</span></td><td>link target</td></tr>
+                        <tr><td>name</td><td>body</td><td><span class="opt">optional</span></td><td>link label</td></tr>
+                        <tr><td>description</td><td>body</td><td><span class="opt">optional</span></td><td>free form note</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 201</div>
+<pre class="code">{
+  "uuid": "9d0e…-uuid",
+  "url": "https://example.com",
+  "name": "example",
+  "description": ""
+}</pre>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST "$BASE/api/v0/repository/links/&lt;id&gt;/links?token=&lt;token&gt;" \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://example.com","name":"example"}'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method put">put</span>
+                    <span class="path">/api/v0/repository/links/<span class="param">{repositoryId}</span>/links/<span class="param">{uuid}</span></span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Replaces the stored link with the values from the body.</p>
+
+                    <div class="sub-label">params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>in</th><th></th><th>description</th></tr>
+                        <tr><td>repositoryId</td><td>path</td><td><span class="req">required</span></td><td>repository uuid</td></tr>
+                        <tr><td>uuid</td><td>path</td><td><span class="req">required</span></td><td>link uuid</td></tr>
+                        <tr><td>token</td><td>query</td><td><span class="req">required</span></td><td>repository token</td></tr>
+                        <tr><td>url</td><td>body</td><td><span class="req">required</span></td><td>new link target</td></tr>
+                        <tr><td>name</td><td>body</td><td><span class="opt">optional</span></td><td>new label</td></tr>
+                        <tr><td>description</td><td>body</td><td><span class="opt">optional</span></td><td>new note</td></tr>
+                    </table>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>204</b>updated</span>
+                        <span class="status-chip err"><b>400</b><code>url</code> blank</span>
+                        <span class="status-chip err"><b>404</b>repository or link not found</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X PUT "$BASE/api/v0/repository/links/&lt;id&gt;/links/&lt;uuid&gt;?token=&lt;token&gt;" \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://example.org"}'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method delete">del</span>
+                    <span class="path">/api/v0/repository/links/<span class="param">{repositoryId}</span>/links/<span class="param">{uuid}</span></span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Removes a single link from the repository.</p>
+
+                    <div class="sub-label">params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>in</th><th></th><th>description</th></tr>
+                        <tr><td>repositoryId</td><td>path</td><td><span class="req">required</span></td><td>repository uuid</td></tr>
+                        <tr><td>uuid</td><td>path</td><td><span class="req">required</span></td><td>link uuid</td></tr>
+                        <tr><td>token</td><td>query</td><td><span class="req">required</span></td><td>repository token</td></tr>
+                    </table>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>204</b>deleted</span>
+                        <span class="status-chip err"><b>404</b>repository or link not found</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X DELETE "$BASE/api/v0/repository/links/&lt;id&gt;/links/&lt;uuid&gt;?token=&lt;token&gt;"</pre>
+                </div>
+            </details>
+        </section>
+
+        <!-- ══════════ UPLOADED FILES ══════════ -->
+        <section class="group" id="uploaded-files">
+            <div class="group-label">05 — uploaded files</div>
+            <p class="group-note">
+                Files are stored with an optional TTL and are swept by a background cleanup task once expired.
+                Every read and delete needs the <code>token</code> handed out at upload time.
+            </p>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/uploaded-files</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Uploads a single file as <code>multipart/form-data</code>.</p>
+
+                    <div class="sub-label">form fields</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>file</td><td>file</td><td><span class="req">required</span></td><td>the file itself; exactly one</td></tr>
+                        <tr><td>name</td><td>string</td><td><span class="opt">optional</span></td><td>display name, defaults to the original filename</td></tr>
+                        <tr><td>ttl</td><td>number</td><td><span class="opt">optional</span></td><td>lifetime in seconds; <code>0</code> or absent means no expiry</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 201</div>
+<pre class="code">{
+  "uuid": "7c2d…-uuid",
+  "token": "4e5f…-uuid",
+  "name": "report.pdf",
+  "expiredTime": 1785000000000
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>201</b>uploaded</span>
+                        <span class="status-chip err"><b>400</b>no file in the request</span>
+                        <span class="status-chip err"><b>413</b>over the configured size limit</span>
+                        <span class="status-chip err"><b>500</b>failed to store the file</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/uploaded-files \
+  -F 'file=@report.pdf' \
+  -F 'name=report.pdf' \
+  -F 'ttl=3600'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/api/v0/uploaded-files/max-size</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Returns the configured upload limit, so clients can reject oversized files before sending them.</p>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "megabytes": 100,
+  "bytes": 104857600
+}</pre>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s $BASE/api/v0/uploaded-files/max-size</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/api/v0/uploaded-files/<span class="param">{uuid}</span></span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Metadata of one file. The token is never included in the response.</p>
+
+                    <div class="sub-label">params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>in</th><th></th><th>description</th></tr>
+                        <tr><td>uuid</td><td>path</td><td><span class="req">required</span></td><td>file uuid</td></tr>
+                        <tr><td>token</td><td>query</td><td><span class="req">required</span></td><td>file access token</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "uuid": "7c2d…-uuid",
+  "name": "report.pdf",
+  "expiredTime": 1785000000000
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>found</span>
+                        <span class="status-chip err"><b>400</b>malformed uuid</span>
+                        <span class="status-chip err"><b>403</b>invalid or missing token</span>
+                        <span class="status-chip err"><b>404</b>unknown or expired file</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s "$BASE/api/v0/uploaded-files/&lt;uuid&gt;?token=&lt;token&gt;"</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/api/v0/uploaded-files/<span class="param">{uuid}</span>/download</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">
+                        Streams the file content as <code>application/octet-stream</code> with a
+                        <code>Content-Disposition</code> attachment header.
+                    </p>
+
+                    <div class="sub-label">params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>in</th><th></th><th>description</th></tr>
+                        <tr><td>uuid</td><td>path</td><td><span class="req">required</span></td><td>file uuid</td></tr>
+                        <tr><td>token</td><td>query</td><td><span class="req">required</span></td><td>file access token</td></tr>
+                    </table>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>file bytes</span>
+                        <span class="status-chip err"><b>403</b>invalid or missing token</span>
+                        <span class="status-chip err"><b>404</b>unknown, expired, or missing on disk</span>
+                        <span class="status-chip err"><b>500</b>read error</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -sOJ "$BASE/api/v0/uploaded-files/&lt;uuid&gt;/download?token=&lt;token&gt;"</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method delete">del</span>
+                    <span class="path">/api/v0/uploaded-files/<span class="param">{uuid}</span></span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Deletes the file and its metadata. The token may be a query param or a JSON body field.</p>
+
+                    <div class="sub-label">params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>in</th><th></th><th>description</th></tr>
+                        <tr><td>uuid</td><td>path</td><td><span class="req">required</span></td><td>file uuid</td></tr>
+                        <tr><td>token</td><td>query / body</td><td><span class="req">required</span></td><td>file access token</td></tr>
+                    </table>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>204</b>deleted</span>
+                        <span class="status-chip err"><b>403</b>token mismatch</span>
+                        <span class="status-chip err"><b>404</b>unknown file</span>
+                        <span class="status-chip err"><b>500</b>failed to delete from disk</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X DELETE "$BASE/api/v0/uploaded-files/&lt;uuid&gt;?token=&lt;token&gt;"</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/api/v0/uploaded-files</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">
+                        Listing every uploaded file is deliberately not allowed — the route exists but always
+                        refuses. Files are reachable only by uuid plus token.
+                    </p>
+
+                    <div class="sub-label">response 403</div>
+<pre class="code">{
+  "error": "Listing all files is not allowed"
+}</pre>
+                </div>
+            </details>
+        </section>
+
+        <!-- ══════════ YOUTUBE ══════════ -->
+        <section class="group" id="youtube">
+            <div class="group-label">06 — youtube</div>
+            <p class="group-note">
+                Backed by <code>yt-dlp</code> on the server. Playlist parameters are ignored, age-restricted
+                videos need server-side cookies, and each call is capped at a 120 second timeout.
+            </p>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/api/v0/youtube/info</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Returns the raw <code>yt-dlp</code> metadata JSON for a video.</p>
+
+                    <div class="sub-label">query params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>url</td><td>string</td><td><span class="req">required</span></td><td>video url</td></tr>
+                    </table>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>metadata json</span>
+                        <span class="status-chip err"><b>400</b><code>url</code> missing or rejected</span>
+                        <span class="status-chip err"><b>500</b>yt-dlp failure</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s "$BASE/api/v0/youtube/info?url=https://youtu.be/&lt;id&gt;"</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/api/v0/youtube/download</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Downloads the video on the server and returns the MP4 bytes (<code>video/mp4</code>).</p>
+
+                    <div class="sub-label">query params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>url</td><td>string</td><td><span class="req">required</span></td><td>video url</td></tr>
+                    </table>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>mp4 bytes</span>
+                        <span class="status-chip err"><b>400</b><code>url</code> missing or rejected</span>
+                        <span class="status-chip err"><b>500</b>yt-dlp failure</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -o video.mp4 "$BASE/api/v0/youtube/download?url=https://youtu.be/&lt;id&gt;"</pre>
+                </div>
+            </details>
+        </section>
+
+        <!-- ══════════ NETWORK ══════════ -->
+        <section class="group" id="network">
+            <div class="group-label">07 — network</div>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/api/v0/network/ip</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">
+                        Returns the caller's ip as the server sees it. Behind a proxy the value comes from
+                        <code>CF-Connecting-IP</code>, then <code>X-Forwarded-For</code>, then the socket address —
+                        good enough to show users their own ip, not for auth or rate limiting.
+                    </p>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "ip": "203.0.113.7"
+}</pre>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s $BASE/api/v0/network/ip</pre>
+                </div>
+            </details>
+        </section>
+
+        <!-- ══════════ STATIC ══════════ -->
+        <section class="group" id="static">
+            <div class="group-label">08 — static</div>
+            <p class="group-note">
+                Classpath resources served straight from the jar. Every category behaves the same way:
+                without a name it lists what is available, with a name it returns the file.
+            </p>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">The index page listing every service.</p>
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>html</span>
+                        <span class="status-chip err"><b>404</b>index resource missing</span>
+                    </div>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/icon</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">The site favicon (<code>ss_icon.svg</code>).</p>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/static/v0/<span class="param">{category}</span></span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Lists the files available in a category.</p>
+
+                    <div class="sub-label">categories</div>
+                    <table class="params">
+                        <tr><th>category</th><th>content</th></tr>
+                        <tr><td>html</td><td>service pages</td></tr>
+                        <tr><td>css</td><td>stylesheets</td></tr>
+                        <tr><td>js</td><td>client scripts</td></tr>
+                        <tr><td>images</td><td>raster images</td></tr>
+                        <tr><td>svg</td><td>vector images</td></tr>
+                        <tr><td>json</td><td>static datasets</td></tr>
+                        <tr><td>pdf</td><td>documents</td></tr>
+                        <tr><td>domain</td><td>domain files</td></tr>
+                    </table>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s $BASE/static/v0/json</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/static/v0/<span class="param">{category}</span>/<span class="param">{name}</span></span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Returns one static file with the content type of its category.</p>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>file content</span>
+                        <span class="status-chip err"><b>404</b>no such resource</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s $BASE/static/v0/html/api_docs.html</pre>
+                </div>
+            </details>
+        </section>
+
+        <div class="footer">serbekun service // api v0</div>
+    </div>
+
+    <script src="/static/v0/js/api_docs.js"></script>
+</body>
+</html>

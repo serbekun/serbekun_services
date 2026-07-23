@@ -58,6 +58,8 @@ The project now strictly follows **Clean Layered Architecture** with clear separ
 
 All previous violations (business logic in HTTP-related packages) have been eliminated.
 
+For standalone frontend tools that do not need backend behavior, add only static files under `src/main/resources` and rely on existing static routing instead of changing server code.
+
 ## URLs
 
 The project is a Javalin 6 server with token-based auth, JSON-file persistence, and static resource serving.

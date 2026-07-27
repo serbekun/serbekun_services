@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.serbekun.ss.domain.models.UploadedFile;
 import com.serbekun.ss.repo.uploadedfiles.UploadedFilesRepo;
+import com.serbekun.ss.service.security.Secrets;
 
 /**
  * Service for managing uploaded files: CRUD operations on metadata
@@ -76,7 +77,7 @@ public class UploadedFilesService {
      */
     public synchronized UploadedFile verifyFileAccess(UUID uuid, String token) {
         UploadedFile f = repo.getUploadedFile(uuid);
-        if (f == null || token == null || !token.equals(f.token())) {
+        if (f == null || !Secrets.constantTimeEquals(token, f.token())) {
             return null;
         }
         return f;
@@ -147,7 +148,7 @@ public class UploadedFilesService {
         if (existing == null) {
             return 404;
         }
-        if (token == null || !token.equals(existing.token())) {
+        if (!Secrets.constantTimeEquals(token, existing.token())) {
             return 403;
         }
 

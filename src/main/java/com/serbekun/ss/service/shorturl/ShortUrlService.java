@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.serbekun.ss.domain.models.ShortUrl;
 import com.serbekun.ss.repo.shorturl.ShortUrlRepo;
+import com.serbekun.ss.service.security.Secrets;
 
 /**
  * Service for managing shortened URLs: create, resolve and delete.
@@ -86,7 +87,7 @@ public class ShortUrlService {
         if (existing == null) {
             return 404;
         }
-        if (token == null || !token.equals(existing.token())) {
+        if (!Secrets.constantTimeEquals(token, existing.token())) {
             return 403;
         }
         repo.removeShortUrl(id);

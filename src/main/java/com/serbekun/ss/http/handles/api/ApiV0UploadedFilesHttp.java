@@ -1,6 +1,8 @@
 package com.serbekun.ss.http.handles.api;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import io.javalin.http.Context;
@@ -120,9 +122,9 @@ public class ApiV0UploadedFilesHttp {
      */
     private void handleDownload(Context ctx, UUID uuid,
                                 com.serbekun.ss.domain.models.UploadedFile meta) {
-        byte[] content;
+        java.io.InputStream content;
         try {
-            content = service.getFileContent(uuid);
+            content = service.openFileContent(uuid);
         } catch (IOException e) {
             log.error("Failed to read file content for uuid={}", uuid, e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -136,7 +138,7 @@ public class ApiV0UploadedFilesHttp {
         }
 
         ctx.contentType("application/octet-stream");
-        ctx.header("Content-Disposition", "attachment; filename=\"" + meta.name() + "\"");
+        ctx.header("Content-Disposition", contentDispositionAttachment(meta.name()));
         ctx.result(content);
     }
 
@@ -187,7 +189,7 @@ public class ApiV0UploadedFilesHttp {
                 new com.serbekun.ss.domain.models.UploadedFile(uuid, name, token, expiredTime);
 
         try {
-            service.uploadFile(meta, uploaded.content().readAllBytes());
+            service.uploadFile(meta, uploaded.content());
         } catch (IOException e) {
             log.error("Failed to store uploaded file", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -340,6 +342,34 @@ public class ApiV0UploadedFilesHttp {
             return ctx.pathParamMap().get(name);
         }
         return null;
+    }
+
+    /**
+     * Builds a safe {@code Content-Disposition} header value for a download.
+     * <p>
+     * The user-controlled file name must never be inlined verbatim: control
+     * characters (including CR/LF) would allow header injection, and quotes or
+     * backslashes would break the quoted-string. We emit a sanitized ASCII
+     * {@code filename} fallback plus an RFC 5987 {@code filename*} value so the
+     * original unicode name is still preserved for modern clients.
+     *
+     * @param name the stored file name (may be null)
+     * @return a safe header value
+     */
+    private String contentDispositionAttachment(String name) {
+        String raw = (name == null || name.isBlank()) ? "download" : name;
+
+        String fallback = raw
+                .replaceAll("\\p{Cntrl}", "")
+                .replace("\\", "_")
+                .replace("\"", "_");
+        if (fallback.isBlank()) {
+            fallback = "download";
+        }
+
+        String encoded = URLEncoder.encode(raw, StandardCharsets.UTF_8).replace("+", "%20");
+
+        return "attachment; filename=\"" + fallback + "\"; filename*=UTF-8''" + encoded;
     }
 
     // endregion

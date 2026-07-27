@@ -7,6 +7,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.serbekun.ss.service.autosave.interfaces.AutoSavable;
 
 
@@ -33,6 +36,8 @@ import com.serbekun.ss.service.autosave.interfaces.AutoSavable;
  * </p>
  */
 public class AutosaveService {
+
+    private static final Logger log = LoggerFactory.getLogger(AutosaveService.class);
 
     /**
      * List of repository {@link com.serbekun.ss.repo} that implement {@link com.serbekun.ss.service.autosave.interfaces.AutoSavable}
@@ -68,7 +73,7 @@ public class AutosaveService {
                 try {
                     s.save();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("Autosave failed for {}", s.getClass().getSimpleName(), e);
                 }
             }
         }, 20, 20, TimeUnit.SECONDS);

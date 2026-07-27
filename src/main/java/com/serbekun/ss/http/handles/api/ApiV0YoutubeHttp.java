@@ -3,10 +3,15 @@ package com.serbekun.ss.http.handles.api;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.serbekun.ss.domain.dto.http.ErrorResponse;
 import com.serbekun.ss.service.youtube.YoutubeService;
 
 public class ApiV0YoutubeHttp {
+
+    private static final Logger log = LoggerFactory.getLogger(ApiV0YoutubeHttp.class);
 
     private final YoutubeService youtubeService;
 
@@ -33,8 +38,9 @@ public class ApiV0YoutubeHttp {
             ctx.status(HttpStatus.BAD_REQUEST);
             ctx.json(ErrorResponse.of(e.getMessage()));
         } catch (Exception e) {
+            log.error("YouTube info request failed", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
-            ctx.json(ErrorResponse.of(e.getClass().getSimpleName() + ": " + e.getMessage()));
+            ctx.json(ErrorResponse.of("Internal server error"));
         }
     }
 
@@ -57,8 +63,9 @@ public class ApiV0YoutubeHttp {
             ctx.status(HttpStatus.BAD_REQUEST);
             ctx.json(ErrorResponse.of(e.getMessage()));
         } catch (Exception e) {
+            log.error("YouTube download request failed", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
-            ctx.json(ErrorResponse.of(e.getClass().getSimpleName() + ": " + e.getMessage()));
+            ctx.json(ErrorResponse.of("Internal server error"));
         }
     }
 }

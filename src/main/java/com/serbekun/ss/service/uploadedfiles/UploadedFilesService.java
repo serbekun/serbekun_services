@@ -1,8 +1,10 @@
 package com.serbekun.ss.service.uploadedfiles;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -52,10 +54,14 @@ public class UploadedFilesService {
     // region CRUD operations
 
     /**
-     * Upload a file: persist metadata and write raw bytes to disk.
+     * Upload a file: persist metadata and stream raw bytes to disk.
+     * <p>
+     * The content is copied straight from the stream to the target file, so the
+     * whole payload is never held in memory at once.
+     *
      * @return the created {@link UploadedFile} metadata.
      */
-    public synchronized UploadedFile uploadFile(UploadedFile meta, byte[] content) throws IOException {
+    public synchronized UploadedFile uploadFile(UploadedFile meta, InputStream content) throws IOException {
         if (meta == null || meta.uuid() == null) {
             throw new IllegalArgumentException("UploadedFile metadata must have a non-null uuid");
         }
@@ -64,7 +70,7 @@ public class UploadedFilesService {
         }
 
         Path target = rawFilesDir.resolve(meta.uuid().toString());
-        Files.write(target, content);
+        Files.copy(content, target, StandardCopyOption.REPLACE_EXISTING);
 
         repo.addUploadedFile(meta);
         log.info("Uploaded file '{}' (uuid={})", meta.name(), meta.uuid());
@@ -93,15 +99,18 @@ public class UploadedFilesService {
         return repo.getUploadedFilesData();
     }
 
-    /** Read raw file content from disk. Returns null if the file does not exist. */
-    public synchronized byte[] getFileContent(UUID uuid) throws IOException {
-
-        
+    /**
+     * Resolve the on-disk path of a readable file: the metadata must exist, the
+     * file must not be expired (expired entries are removed as a side effect),
+     * and the raw bytes must be present on disk.
+     *
+     * @return the path to read, or null if the file is unavailable.
+     */
+    private Path resolveReadableFile(UUID uuid) throws IOException {
         UploadedFile uploadedFile = getFileMetadata(uuid);
         if (uploadedFile == null) {
             return null;
         }
-
 
         long now = Instant.now().toEpochMilli();
         if (now >= uploadedFile.expiredTime() && uploadedFile.expiredTime() != 0) {
@@ -114,7 +123,23 @@ public class UploadedFilesService {
         if (!Files.exists(source)) {
             return null;
         }
-        return Files.readAllBytes(source);
+        return source;
+    }
+
+    /** Read raw file content from disk. Returns null if the file does not exist. */
+    public synchronized byte[] getFileContent(UUID uuid) throws IOException {
+        Path source = resolveReadableFile(uuid);
+        return source == null ? null : Files.readAllBytes(source);
+    }
+
+    /**
+     * Open a stream over the raw file content on disk, avoiding loading the
+     * whole payload into memory. The caller is responsible for closing the
+     * returned stream. Returns null if the file does not exist or is expired.
+     */
+    public synchronized InputStream openFileContent(UUID uuid) throws IOException {
+        Path source = resolveReadableFile(uuid);
+        return source == null ? null : Files.newInputStream(source);
     }
 
     /** Check whether a file with the given UUID exists in the repository. */

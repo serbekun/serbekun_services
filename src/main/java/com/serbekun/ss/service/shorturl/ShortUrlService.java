@@ -52,11 +52,17 @@ public class ShortUrlService {
             throw new IllegalArgumentException("targetUrl must not be null or blank");
         }
 
+        String trimmed = targetUrl.trim();
+        String lower = trimmed.toLowerCase();
+        if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
+            throw new IllegalArgumentException("targetUrl must start with http:// or https://");
+        }
+
         String id = generateUniqueId();
         String token = UUID.randomUUID().toString();
         ShortUrl shortUrl = new ShortUrl(
                 id,
-                targetUrl.trim(),
+                trimmed,
                 token,
                 name,
                 description,

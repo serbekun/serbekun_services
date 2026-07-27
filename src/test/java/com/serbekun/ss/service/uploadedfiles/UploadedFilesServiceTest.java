@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -34,7 +35,7 @@ class UploadedFilesServiceTest {
 
     private UploadedFile upload(String name, String token, long expiredTime, byte[] content) throws IOException {
         UploadedFile meta = new UploadedFile(UUID.randomUUID(), name, token, expiredTime);
-        return service.uploadFile(meta, content);
+        return service.uploadFile(meta, new ByteArrayInputStream(content));
     }
 
     // region uploadFile
@@ -52,7 +53,7 @@ class UploadedFilesServiceTest {
     void uploadFileRejectsNullMetadataOrContent() {
         UploadedFile meta = new UploadedFile(UUID.randomUUID(), "a", "t", 0);
 
-        assertThatThrownBy(() -> service.uploadFile(null, new byte[0]))
+        assertThatThrownBy(() -> service.uploadFile(null, new ByteArrayInputStream(new byte[0])))
             .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> service.uploadFile(meta, null))
             .isInstanceOf(IllegalArgumentException.class);

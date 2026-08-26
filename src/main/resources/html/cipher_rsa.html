@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>RSA Cipher — Serbekun</title>
+    <link rel="icon" href="/icon" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/v0/css/theme.css">
+    <link rel="stylesheet" href="/static/v0/css/shared.css">
+    <link rel="stylesheet" href="/static/v0/css/cipher_rsa.css">
+    <script src="/static/v0/js/theme.js"></script>
+</head>
+<body>
+
+    <button class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="tt-sun">☀</span><span class="tt-moon">☾</span>
+    </button>
+
+    <div class="container">
+        <a href="/" class="back-link">back</a>
+
+        <div class="header">
+            <h1 class="header-title">RSA Cipher</h1>
+            <p class="header-sub">// rsa-2048 · oaep-sha256 · sha256withrsa signatures</p>
+        </div>
+
+        <div class="prompt-line">
+            <span class="cwd">~/serbekun/cipher</span>
+            <span>$</span>
+            <span>rsa --interactive</span>
+            <span class="prompt-cursor"></span>
+        </div>
+
+        <!-- Key pair — shared by every panel below -->
+        <div class="keys-panel">
+            <div class="keys-title">
+                <div class="field-label">key pair</div>
+                <button class="gen-key-btn" id="genKeyBtn" type="button">generate key pair</button>
+            </div>
+
+            <div class="field">
+                <div class="field-label">public key (base64 x.509)</div>
+                <textarea id="publicKey" class="key-area" placeholder="generate or paste a public key..." spellcheck="false"></textarea>
+                <div class="mini-actions">
+                    <button class="mini-btn" type="button" data-copy="publicKey">copy</button>
+                    <button class="mini-btn" type="button" data-save="publicKey" data-filename="rsa_public_key.txt">save</button>
+                    <button class="mini-btn" type="button" data-load="publicKey">load file</button>
+                </div>
+            </div>
+
+            <div class="field" style="margin-bottom: 0;">
+                <div class="field-label">private key (base64 pkcs#8)</div>
+                <textarea id="privateKey" class="key-area" placeholder="generate or paste a private key..." spellcheck="false"></textarea>
+                <div class="mini-actions">
+                    <button class="mini-btn" type="button" data-copy="privateKey">copy</button>
+                    <button class="mini-btn" type="button" data-save="privateKey" data-filename="rsa_private_key.txt">save</button>
+                    <button class="mini-btn" type="button" data-load="privateKey">load file</button>
+                </div>
+            </div>
+
+            <p class="keys-note">
+                Keys are generated on the server and returned once — nothing is stored.
+                Save the private key now: without it nothing encrypted for this public key can be read back.
+            </p>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" type="button" data-panel="encryptPanel">encrypt</button>
+            <button class="tab-btn" type="button" data-panel="decryptPanel">decrypt</button>
+            <button class="tab-btn" type="button" data-panel="signPanel">sign</button>
+            <button class="tab-btn" type="button" data-panel="verifyPanel">verify</button>
+            <button class="tab-btn" type="button" data-panel="hybridEncryptPanel">hybrid enc</button>
+            <button class="tab-btn" type="button" data-panel="hybridDecryptPanel">hybrid dec</button>
+        </div>
+
+        <!-- Encrypt -->
+        <div id="encryptPanel" class="panel active">
+            <p class="panel-note">
+                Encrypts with the <b>public key</b>. A 2048-bit key with OAEP-SHA256 padding holds at most
+                <b>190 bytes</b> — for anything bigger use the hybrid tab.
+            </p>
+            <div class="field">
+                <div class="field-label">plaintext input</div>
+                <textarea id="encryptInput" placeholder="enter text to encrypt..."></textarea>
+            </div>
+            <button class="run-btn" type="button" id="encryptBtn">run encrypt</button>
+            <div id="encryptResult" class="result-block">
+                <div class="result-header">
+                    <span class="result-label">ciphertext (base64)</span>
+                    <div class="result-actions">
+                        <button class="copy-btn" type="button" data-copy-result="encryptResultText">copy</button>
+                    </div>
+                </div>
+                <div class="result-body" id="encryptResultText"></div>
+            </div>
+        </div>
+
+        <!-- Decrypt -->
+        <div id="decryptPanel" class="panel">
+            <p class="panel-note">Decrypts with the <b>private key</b>.</p>
+            <div class="field">
+                <div class="field-label">ciphertext input (base64)</div>
+                <textarea id="decryptInput" placeholder="paste encrypted data..."></textarea>
+            </div>
+            <button class="run-btn" type="button" id="decryptBtn">run decrypt</button>
+            <div id="decryptResult" class="result-block">
+                <div class="result-header">
+                    <span class="result-label">plaintext</span>
+                    <div class="result-actions">
+                        <button class="copy-btn" type="button" data-copy-result="decryptResultText">copy</button>
+                    </div>
+                </div>
+                <div class="result-body" id="decryptResultText"></div>
+            </div>
+        </div>
+
+        <!-- Sign -->
+        <div id="signPanel" class="panel">
+            <p class="panel-note">
+                Signs with the <b>private key</b> using SHA256withRSA. The message is hashed first,
+                so there is no size limit. A signature proves authorship — it does not hide the message.
+            </p>
+            <div class="field">
+                <div class="field-label">message to sign</div>
+                <textarea id="signInput" placeholder="enter the message..."></textarea>
+            </div>
+            <button class="run-btn" type="button" id="signBtn">run sign</button>
+            <div id="signResult" class="result-block">
+                <div class="result-header">
+                    <span class="result-label">signature (base64)</span>
+                    <div class="result-actions">
+                        <button class="copy-btn" type="button" data-copy-result="signResultText">copy</button>
+                        <button class="copy-btn" type="button" data-save-result="signResultText" data-filename="signature.txt">save</button>
+                    </div>
+                </div>
+                <div class="result-body" id="signResultText"></div>
+            </div>
+        </div>
+
+        <!-- Verify -->
+        <div id="verifyPanel" class="panel">
+            <p class="panel-note">Checks a signature against the message with the <b>public key</b>.</p>
+            <div class="field">
+                <div class="field-label">signed message</div>
+                <textarea id="verifyInput" placeholder="enter the original message..."></textarea>
+            </div>
+            <div class="field">
+                <div class="field-label">signature (base64)</div>
+                <textarea id="verifySignature" class="key-area" placeholder="paste the signature..." spellcheck="false"></textarea>
+            </div>
+            <button class="run-btn" type="button" id="verifyBtn">run verify</button>
+            <div id="verifyVerdict" class="verdict">
+                <span class="verdict-mark" id="verifyMark"></span>
+                <span id="verifyText"></span>
+            </div>
+        </div>
+
+        <!-- Hybrid encrypt -->
+        <div id="hybridEncryptPanel" class="panel">
+            <p class="panel-note">
+                For data of any size: a fresh AES-256-GCM key encrypts the payload and the
+                <b>public key</b> wraps only that key. The result is an envelope holding both —
+                keep them together, either half alone is useless.
+            </p>
+
+            <div class="source-switch">
+                <button class="source-btn active" type="button" data-source="text" data-target="hybridEncrypt">text</button>
+                <button class="source-btn" type="button" data-source="file" data-target="hybridEncrypt">file</button>
+            </div>
+
+            <div class="field" id="hybridEncryptTextField">
+                <div class="field-label">plaintext input</div>
+                <textarea id="hybridEncryptInput" placeholder="enter text to encrypt..."></textarea>
+            </div>
+
+            <div class="field" id="hybridEncryptFileField" style="display: none;">
+                <div class="field-label">file input</div>
+                <input type="file" id="hybridEncryptFile" class="file-input">
+                <label class="file-drop" for="hybridEncryptFile" id="hybridEncryptFileLabel">choose a file…</label>
+            </div>
+
+            <button class="run-btn" type="button" id="hybridEncryptBtn">run hybrid encrypt</button>
+
+            <div id="hybridEncryptResult" class="result-block">
+                <div class="result-header">
+                    <span class="result-label">envelope (json)</span>
+                    <div class="result-actions">
+                        <button class="copy-btn" type="button" data-copy-result="hybridEncryptResultText">copy</button>
+                        <button class="copy-btn" type="button" id="hybridEncryptSaveBtn">save</button>
+                    </div>
+                </div>
+                <div class="result-body" id="hybridEncryptResultText"></div>
+            </div>
+        </div>
+
+        <!-- Hybrid decrypt -->
+        <div id="hybridDecryptPanel" class="panel">
+            <p class="panel-note">
+                Unwraps the AES key with the <b>private key</b>, then decrypts the payload.
+                Paste the envelope produced by the hybrid encrypt tab, or load it from a file.
+            </p>
+
+            <div class="field">
+                <div class="field-label">envelope (json)</div>
+                <textarea id="hybridDecryptInput" placeholder='{"encryptedKey":"...","data":"..."}' spellcheck="false"></textarea>
+                <div class="mini-actions">
+                    <button class="mini-btn" type="button" data-load="hybridDecryptInput">load file</button>
+                </div>
+            </div>
+
+            <button class="run-btn" type="button" id="hybridDecryptBtn">run hybrid decrypt</button>
+
+            <div id="hybridDecryptResult" class="result-block">
+                <div class="result-header">
+                    <span class="result-label" id="hybridDecryptResultLabel">plaintext</span>
+                    <div class="result-actions">
+                        <button class="copy-btn" type="button" data-copy-result="hybridDecryptResultText">copy</button>
+                        <button class="copy-btn" type="button" id="hybridDecryptSaveBtn">save</button>
+                    </div>
+                </div>
+                <div class="result-body" id="hybridDecryptResultText"></div>
+            </div>
+        </div>
+
+        <div class="status-line" id="status"></div>
+
+        <div class="footer">serbekun service // rsa cipher</div>
+    </div>
+
+    <input type="file" id="fileLoader" class="file-input">
+    <script src="/static/v0/js/cipher_rsa.js"></script>
+</body>
+</html>

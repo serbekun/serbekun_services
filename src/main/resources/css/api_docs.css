@@ -85,6 +85,15 @@
     padding-left: 2px;
 }
 
+/* Cross-links between related groups. */
+.group-note a {
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-hover);
+    transition: color 0.15s, border-color 0.15s;
+}
+.group-note a:hover { color: var(--text-bright); border-bottom-color: var(--text-bright); }
+
 /* ─── Endpoint card ─── */
 .endpoint {
     background: var(--bg2);

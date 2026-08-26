@@ -5,6 +5,9 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -18,6 +21,7 @@ public class RsaService {
 
     private static final String KEY_ALGORITHM = "RSA";
     private static final String TRANSFORMATION = "RSA/ECB/OAEPPadding";
+    private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final int KEY_SIZE_BITS = 2048;
     private static final OAEPParameterSpec OAEP_SHA_256_SPEC = new OAEPParameterSpec(
         "SHA-256",
@@ -93,13 +97,75 @@ public class RsaService {
         }
     }
 
+    /**
+     * Signs Base64-encoded data with a Base64-encoded PKCS#8 private key
+     * using SHA256withRSA.
+     *
+     * @param dataBase64 the data to sign in Base64
+     * @param privateKeyBase64 the RSA private key in Base64
+     * @return the signature in Base64
+     */
+    public static String sign(String dataBase64, String privateKeyBase64) {
+        try {
+            byte[] dataBytes = Base64.getDecoder().decode(dataBase64);
+            PrivateKey privateKey = readPrivateKey(privateKeyBase64);
+
+            Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
+            signature.initSign(privateKey);
+            signature.update(dataBytes);
+            return Base64.getEncoder().encodeToString(signature.sign());
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Verifies a SHA256withRSA signature against Base64-encoded data using a
+     * Base64-encoded X.509 public key. A signature that simply does not match
+     * — including a structurally broken one — is reported as {@code false};
+     * only unusable input (bad Base64, unparsable key) raises an exception.
+     *
+     * @param dataBase64 the signed data in Base64
+     * @param signatureBase64 the signature in Base64
+     * @param publicKeyBase64 the RSA public key in Base64
+     * @return true when the signature matches the data and the key
+     */
+    public static boolean verify(String dataBase64, String signatureBase64, String publicKeyBase64) {
+        try {
+            byte[] dataBytes = Base64.getDecoder().decode(dataBase64);
+            byte[] signatureBytes = Base64.getDecoder().decode(signatureBase64);
+            PublicKey publicKey = readPublicKey(publicKeyBase64);
+
+            Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
+            signature.initVerify(publicKey);
+            signature.update(dataBytes);
+            return signature.verify(signatureBytes);
+        } catch (SignatureException e) {
+            return false;
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static PublicKey readPublicKey(String publicKeyBase64) throws Exception {
         byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyBase64);
-        return KeyFactory.getInstance(KEY_ALGORITHM).generatePublic(new X509EncodedKeySpec(publicKeyBytes));
+        try {
+            return KeyFactory.getInstance(KEY_ALGORITHM).generatePublic(new X509EncodedKeySpec(publicKeyBytes));
+        } catch (InvalidKeySpecException e) {
+            throw new IllegalArgumentException("Invalid RSA public key", e);
+        }
     }
 
     private static PrivateKey readPrivateKey(String privateKeyBase64) throws Exception {
         byte[] privateKeyBytes = Base64.getDecoder().decode(privateKeyBase64);
-        return KeyFactory.getInstance(KEY_ALGORITHM).generatePrivate(new PKCS8EncodedKeySpec(privateKeyBytes));
+        try {
+            return KeyFactory.getInstance(KEY_ALGORITHM).generatePrivate(new PKCS8EncodedKeySpec(privateKeyBytes));
+        } catch (InvalidKeySpecException e) {
+            throw new IllegalArgumentException("Invalid RSA private key", e);
+        }
     }
 }

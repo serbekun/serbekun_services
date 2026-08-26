@@ -68,7 +68,7 @@ The project is a Javalin 6 server with token-based auth, JSON-file persistence, 
 
 JUnit 5 + AssertJ + Mockito, run with `./gradlew test`. Coverage (as of 2026-07-19):
 
-- **Unit tests** per layer: services (`cipher`, `shorturl`, `linksrepo`, `uploadedfiles`, `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
+- **Unit tests** per layer: services (`cipher` — AES, RSA, hybrid, `shorturl`, `linksrepo`, `uploadedfiles`, `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
 - **HTTP integration tests** at `src/test/java/com/serbekun/ss/http/ServerHttpIntegrationTest.java` — full route tree via `RouteInitializer` + `javalin-testtools`, real services over in-memory repos; only the `Youtube` (yt-dlp) wrapper is mocked. Covers index/static, version, cipher, short-url, repository-links, uploaded-files (multipart), and youtube endpoints.
 - `YoutubeTest` contains real yt-dlp integration tests that need `yt-dlp`, Deno, and network access — expect failures without them.
 
@@ -86,6 +86,13 @@ All registered in `http/handles/*Routes` classes:
 - `GET /api/v0/cipher/aes` — cipher info
 - `POST /api/v0/cipher/aes/encrypt` — AES encrypt
 - `POST /api/v0/cipher/aes/decrypt` — AES decrypt
+- `GET /api/v0/cipher/rsa/keypair` — generate an RSA-2048 key pair, returns `{"publicKey", "privateKey"}` (Base64 X.509 / PKCS#8, never stored)
+- `POST /api/v0/cipher/rsa/encrypt` — RSA-OAEP-SHA256 encrypt (JSON body `{"data", "publicKey"}`), max 190 bytes of payload
+- `POST /api/v0/cipher/rsa/decrypt` — RSA decrypt (JSON body `{"data", "privateKey"}`)
+- `POST /api/v0/cipher/rsa/sign` — SHA256withRSA sign (JSON body `{"data", "privateKey"}`), returns `{"signature"}`
+- `POST /api/v0/cipher/rsa/verify` — verify a signature (JSON body `{"data", "signature", "publicKey"}`), returns `{"valid"}`; a mismatch is a 200 with `valid: false`, not an error
+- `POST /api/v0/cipher/hybrid/encrypt` — hybrid encrypt of any size (JSON body `{"data", "publicKey"}`), returns `{"data", "encryptedKey"}`
+- `POST /api/v0/cipher/hybrid/decrypt` — hybrid decrypt (JSON body `{"data", "encryptedKey", "privateKey"}`)
 - `POST /api/v0/repository/links/` — create a link repository (JSON body `{"name"?}`), returns `{"repositoryId", "token", "name", "createdAt"}` (the `token` is shown only here)
 - `GET /api/v0/repository/links/{repositoryId}?token=...` — get a repository with all its links, 404 if not found or token is invalid
 - `DELETE /api/v0/repository/links/{repositoryId}?token=...` — delete a repository, 204 on success, 404 if not found or token is invalid
@@ -103,6 +110,26 @@ All registered in `http/handles/*Routes` classes:
 - `GET /api/v0/uploaded-files/{uuid}/download` — download uploaded file content (returns 404 if expired or not found)
 - `POST /api/v0/uploaded-files` — upload a file (multipart form data), returns metadata with `uuid` and `token`
 - `DELETE /api/v0/uploaded-files/{uuid}` — delete uploaded file; requires the delete `token` (`?token=` query param), 403 on mismatch, 404 if unknown
+
+## Cipher functionality
+
+All crypto lives in `service/cipher/` and is stateless — no key is ever written to disk, so whatever
+a call needs must travel in the request. Every key and payload crosses the wire as Base64.
+
+- `AesService` — AES-256-GCM, random 12-byte IV per call prepended to the cipher text.
+- `RsaService` — RSA-2048; `RSA/ECB/OAEPPadding` with SHA-256 for encryption, `SHA256withRSA` for
+  signatures. Keys are Base64 DER (X.509 public / PKCS#8 private). Unusable Base64 or an unparsable
+  key raises `IllegalArgumentException`, which the HTTP layer maps to `400`; everything else is a
+  `RuntimeException` and becomes `500`. `verify` returns `false` for a non-matching signature
+  instead of throwing — a bad signature is an answer, not a failure.
+- `HybridService` — the answer to RSA's ~190 byte ceiling: a fresh single-use AES key encrypts the
+  payload, RSA-OAEP wraps only that key, and both halves come back together.
+- `CipherService` — the facade the HTTP layer talks to; it only delegates.
+
+Frontend: `html/cipher_aes.html` (AES) and `html/cipher_rsa.html` (RSA key pairs, encrypt/decrypt,
+sign/verify, and hybrid encryption with file support). The hybrid tabs exchange an *envelope* —
+`{"encryptedKey", "data", "name"?, "type"?}` — which is a frontend convention, not an API shape;
+the file name in it is metadata in the clear, only the payload is encrypted.
 
 ## YouTube functionality
 

@@ -112,6 +112,16 @@ class RsaServiceTest {
     }
 
     @Test
+    void malformedKeyThrowsIllegalArgument() {
+        String notAKey = Base64.getEncoder().encodeToString("definitely not a DER key".getBytes(StandardCharsets.UTF_8));
+
+        assertThatThrownBy(() -> RsaService.encrypt(b64("data"), notAKey))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> RsaService.decrypt(b64("data"), notAKey))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void cipherServiceDelegatesToRsaService() {
         CipherService cipherService = new CipherService();
 
@@ -121,4 +131,80 @@ class RsaServiceTest {
 
         assertThat(decrypted).isEqualTo(data);
     }
+
+    // region signatures
+
+    @Test
+    void signVerifyRoundtrip() {
+        RsaService.RsaKeyPair keyPair = RsaService.generateRsaKeyPair();
+        String data = b64("sign me, привет, 日本語!");
+
+        String signature = RsaService.sign(data, keyPair.privateKey());
+
+        assertThat(signature).isNotBlank();
+        assertThat(RsaService.verify(data, signature, keyPair.publicKey())).isTrue();
+    }
+
+    @Test
+    void signHandlesPayloadsLargerThanTheKey() {
+        RsaService.RsaKeyPair keyPair = RsaService.generateRsaKeyPair();
+        // Signing hashes first, so unlike encryption there is no size ceiling.
+        String data = Base64.getEncoder().encodeToString(new byte[64 * 1024]);
+
+        String signature = RsaService.sign(data, keyPair.privateKey());
+
+        assertThat(RsaService.verify(data, signature, keyPair.publicKey())).isTrue();
+    }
+
+    @Test
+    void verifyRejectsTamperedData() {
+        RsaService.RsaKeyPair keyPair = RsaService.generateRsaKeyPair();
+        String signature = RsaService.sign(b64("original"), keyPair.privateKey());
+
+        assertThat(RsaService.verify(b64("tampered"), signature, keyPair.publicKey())).isFalse();
+    }
+
+    @Test
+    void verifyRejectsSignatureFromAnotherKey() {
+        RsaService.RsaKeyPair keyPair = RsaService.generateRsaKeyPair();
+        RsaService.RsaKeyPair otherKeyPair = RsaService.generateRsaKeyPair();
+        String data = b64("signed by someone else");
+
+        String signature = RsaService.sign(data, otherKeyPair.privateKey());
+
+        assertThat(RsaService.verify(data, signature, keyPair.publicKey())).isFalse();
+    }
+
+    @Test
+    void verifyReportsBrokenSignatureAsInvalidRatherThanThrowing() {
+        RsaService.RsaKeyPair keyPair = RsaService.generateRsaKeyPair();
+        String data = b64("data");
+        byte[] signature = Base64.getDecoder().decode(RsaService.sign(data, keyPair.privateKey()));
+        byte[] truncated = java.util.Arrays.copyOf(signature, signature.length - 10);
+
+        assertThat(RsaService.verify(data, Base64.getEncoder().encodeToString(truncated), keyPair.publicKey()))
+            .isFalse();
+    }
+
+    @Test
+    void signWithPublicKeyThrows() {
+        RsaService.RsaKeyPair keyPair = RsaService.generateRsaKeyPair();
+
+        assertThatThrownBy(() -> RsaService.sign(b64("data"), keyPair.publicKey()))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void cipherServiceDelegatesSignAndVerify() {
+        CipherService cipherService = new CipherService();
+
+        RsaService.RsaKeyPair keyPair = cipherService.generateRsaKeyPair();
+        String data = b64("via CipherService signature");
+        String signature = cipherService.signRsa(data, keyPair.privateKey());
+
+        assertThat(cipherService.verifyRsa(data, signature, keyPair.publicKey())).isTrue();
+        assertThat(cipherService.verifyRsa(b64("other"), signature, keyPair.publicKey())).isFalse();
+    }
+
+    // endregion
 }

@@ -203,6 +203,165 @@ class ServerHttpIntegrationTest {
         });
     }
 
+    @Test
+    void rsaKeyPairEncryptDecryptRoundtripOverHttp() {
+        JavalinTest.test(app, (server, client) -> {
+            String publicKey;
+            String privateKey;
+            try (Response keyResponse = client.get("/api/v0/cipher/rsa/keypair")) {
+                assertThat(keyResponse.code()).isEqualTo(200);
+                JsonNode body = json(keyResponse);
+                publicKey = body.get("publicKey").asText();
+                privateKey = body.get("privateKey").asText();
+                assertThat(publicKey).isNotBlank();
+                assertThat(privateKey).isNotBlank();
+            }
+
+            String data = Base64.getEncoder()
+                .encodeToString("rsa integration secret".getBytes(StandardCharsets.UTF_8));
+
+            String encrypted;
+            try (Response encryptResponse = client.request("/api/v0/cipher/rsa/encrypt",
+                    b -> b.post(jsonBody("{\"data\":\"" + data + "\",\"publicKey\":\"" + publicKey + "\"}")))) {
+                assertThat(encryptResponse.code()).isEqualTo(200);
+                encrypted = json(encryptResponse).get("data").asText();
+            }
+
+            try (Response decryptResponse = client.request("/api/v0/cipher/rsa/decrypt",
+                    b -> b.post(jsonBody("{\"data\":\"" + encrypted + "\",\"privateKey\":\"" + privateKey + "\"}")))) {
+                assertThat(decryptResponse.code()).isEqualTo(200);
+                assertThat(json(decryptResponse).get("data").asText()).isEqualTo(data);
+            }
+        });
+    }
+
+    @Test
+    void rsaSignAndVerifyOverHttp() {
+        JavalinTest.test(app, (server, client) -> {
+            String publicKey;
+            String privateKey;
+            try (Response keyResponse = client.get("/api/v0/cipher/rsa/keypair")) {
+                JsonNode body = json(keyResponse);
+                publicKey = body.get("publicKey").asText();
+                privateKey = body.get("privateKey").asText();
+            }
+
+            String data = Base64.getEncoder()
+                .encodeToString("sign this".getBytes(StandardCharsets.UTF_8));
+            String otherData = Base64.getEncoder()
+                .encodeToString("not this".getBytes(StandardCharsets.UTF_8));
+
+            String signature;
+            try (Response signResponse = client.request("/api/v0/cipher/rsa/sign",
+                    b -> b.post(jsonBody("{\"data\":\"" + data + "\",\"privateKey\":\"" + privateKey + "\"}")))) {
+                assertThat(signResponse.code()).isEqualTo(200);
+                signature = json(signResponse).get("signature").asText();
+                assertThat(signature).isNotBlank();
+            }
+
+            try (Response verifyResponse = client.request("/api/v0/cipher/rsa/verify",
+                    b -> b.post(jsonBody("{\"data\":\"" + data + "\",\"signature\":\"" + signature
+                        + "\",\"publicKey\":\"" + publicKey + "\"}")))) {
+                assertThat(verifyResponse.code()).isEqualTo(200);
+                assertThat(json(verifyResponse).get("valid").asBoolean()).isTrue();
+            }
+
+            // A signature that does not match is a 200 with valid=false, not an error.
+            try (Response verifyResponse = client.request("/api/v0/cipher/rsa/verify",
+                    b -> b.post(jsonBody("{\"data\":\"" + otherData + "\",\"signature\":\"" + signature
+                        + "\",\"publicKey\":\"" + publicKey + "\"}")))) {
+                assertThat(verifyResponse.code()).isEqualTo(200);
+                assertThat(json(verifyResponse).get("valid").asBoolean()).isFalse();
+            }
+        });
+    }
+
+    @Test
+    void rsaEncryptRejectsMalformedKey() {
+        JavalinTest.test(app, (server, client) -> {
+            String data = Base64.getEncoder().encodeToString("x".getBytes(StandardCharsets.UTF_8));
+            String notAKey = Base64.getEncoder().encodeToString("nope".getBytes(StandardCharsets.UTF_8));
+
+            try (Response response = client.request("/api/v0/cipher/rsa/encrypt",
+                    b -> b.post(jsonBody("{\"data\":\"" + data + "\",\"publicKey\":\"" + notAKey + "\"}")))) {
+                assertThat(response.code()).isEqualTo(400);
+            }
+        });
+    }
+
+    @Test
+    void rsaEncryptRejectsPayloadLargerThanTheKey() {
+        JavalinTest.test(app, (server, client) -> {
+            String publicKey;
+            try (Response keyResponse = client.get("/api/v0/cipher/rsa/keypair")) {
+                publicKey = json(keyResponse).get("publicKey").asText();
+            }
+
+            // Past what OAEP-SHA256 leaves room for in a 2048-bit key.
+            String tooLarge = Base64.getEncoder().encodeToString(new byte[512]);
+
+            try (Response response = client.request("/api/v0/cipher/rsa/encrypt",
+                    b -> b.post(jsonBody("{\"data\":\"" + tooLarge + "\",\"publicKey\":\"" + publicKey + "\"}")))) {
+                assertThat(response.code()).isEqualTo(400);
+                assertThat(response.body().string()).contains("hybrid");
+            }
+        });
+    }
+
+    @Test
+    void rsaSignRejectsMissingFields() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/cipher/rsa/sign",
+                    b -> b.post(jsonBody("{\"data\":\"\",\"privateKey\":\"\"}")))) {
+                assertThat(response.code()).isEqualTo(400);
+            }
+        });
+    }
+
+    @Test
+    void hybridEncryptDecryptRoundtripOverHttp() {
+        JavalinTest.test(app, (server, client) -> {
+            String publicKey;
+            String privateKey;
+            try (Response keyResponse = client.get("/api/v0/cipher/rsa/keypair")) {
+                JsonNode body = json(keyResponse);
+                publicKey = body.get("publicKey").asText();
+                privateKey = body.get("privateKey").asText();
+            }
+
+            // Comfortably past what a 2048-bit RSA key could encrypt on its own.
+            String data = Base64.getEncoder().encodeToString(new byte[8192]);
+
+            String encrypted;
+            String encryptedKey;
+            try (Response encryptResponse = client.request("/api/v0/cipher/hybrid/encrypt",
+                    b -> b.post(jsonBody("{\"data\":\"" + data + "\",\"publicKey\":\"" + publicKey + "\"}")))) {
+                assertThat(encryptResponse.code()).isEqualTo(200);
+                JsonNode body = json(encryptResponse);
+                encrypted = body.get("data").asText();
+                encryptedKey = body.get("encryptedKey").asText();
+                assertThat(encryptedKey).isNotBlank();
+            }
+
+            try (Response decryptResponse = client.request("/api/v0/cipher/hybrid/decrypt",
+                    b -> b.post(jsonBody("{\"data\":\"" + encrypted + "\",\"encryptedKey\":\"" + encryptedKey
+                        + "\",\"privateKey\":\"" + privateKey + "\"}")))) {
+                assertThat(decryptResponse.code()).isEqualTo(200);
+                assertThat(json(decryptResponse).get("data").asText()).isEqualTo(data);
+            }
+        });
+    }
+
+    @Test
+    void hybridDecryptRejectsMissingFields() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/cipher/hybrid/decrypt",
+                    b -> b.post(jsonBody("{\"data\":\"abc\",\"encryptedKey\":\"\",\"privateKey\":\"\"}")))) {
+                assertThat(response.code()).isEqualTo(400);
+            }
+        });
+    }
+
     // endregion
 
     // region short url

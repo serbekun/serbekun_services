@@ -44,7 +44,9 @@
 
         <nav class="toc">
             <a href="#general">general</a>
-            <a href="#cipher">cipher</a>
+            <a href="#cipher">cipher / aes</a>
+            <a href="#cipher-rsa">cipher / rsa</a>
+            <a href="#cipher-hybrid">cipher / hybrid</a>
             <a href="#short-url">short url</a>
             <a href="#repository-links">link repository</a>
             <a href="#uploaded-files">uploaded files</a>
@@ -89,7 +91,11 @@
         <!-- ══════════ CIPHER ══════════ -->
         <section class="group" id="cipher">
             <div class="group-label">02 — cipher / aes</div>
-            <p class="group-note">AES-GCM helpers. Keys and payloads travel as Base64 strings; the server never stores them.</p>
+            <p class="group-note">
+                AES-GCM helpers — symmetric, so both sides share one key. Keys and payloads travel as
+                Base64 strings and the server never stores them. See <a href="#cipher-rsa">cipher / rsa</a>
+                for public-key encryption and signatures.
+            </p>
 
             <details class="endpoint">
                 <summary>
@@ -187,9 +193,278 @@
             </details>
         </section>
 
+        <!-- ══════════ CIPHER / RSA ══════════ -->
+        <section class="group" id="cipher-rsa">
+            <div class="group-label">03 — cipher / rsa</div>
+            <p class="group-note">
+                RSA-2048 with OAEP-SHA256 padding for encryption and SHA256withRSA for signatures.
+                Keys are Base64 DER — X.509 for the public key, PKCS#8 for the private one — and the
+                server keeps neither: whatever a call needs must be sent with it. Direct RSA encryption
+                fits at most <b>190 bytes</b>; anything larger belongs in
+                <a href="#cipher-hybrid">cipher / hybrid</a>.
+            </p>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method get">get</span>
+                    <span class="path">/api/v0/cipher/rsa/keypair</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Generates a fresh 2048-bit RSA key pair. Both keys are returned once and never persisted.</p>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "publicKey": "b64-x509-public-key",
+  "privateKey": "b64-pkcs8-private-key"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>key pair generated</span>
+                        <span class="status-chip err"><b>500</b>key generation failed</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s $BASE/api/v0/cipher/rsa/keypair</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/cipher/rsa/encrypt</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Encrypts <code>data</code> with an RSA <code>publicKey</code>. Only the holder of the matching private key can read the result.</p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>data</td><td>string</td><td><span class="req">required</span></td><td>Base64 payload, at most 190 bytes decoded</td></tr>
+                        <tr><td>publicKey</td><td>string</td><td><span class="req">required</span></td><td>Base64 X.509 RSA public key</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "data": "b64-cipher-text"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>encrypted</span>
+                        <span class="status-chip err"><b>400</b>field blank, bad Base64, unusable key, or payload over 190 bytes</span>
+                        <span class="status-chip err"><b>500</b>encryption failed</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/cipher/rsa/encrypt \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"aGVsbG8=","publicKey":"&lt;public-key&gt;"}'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/cipher/rsa/decrypt</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Decrypts <code>data</code> produced by the encrypt endpoint using the matching private key.</p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>data</td><td>string</td><td><span class="req">required</span></td><td>Base64 cipher text</td></tr>
+                        <tr><td>privateKey</td><td>string</td><td><span class="req">required</span></td><td>Base64 PKCS#8 RSA private key</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "data": "aGVsbG8="
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>decrypted</span>
+                        <span class="status-chip err"><b>400</b>field blank, bad Base64, or unusable key</span>
+                        <span class="status-chip err"><b>500</b>wrong key or corrupted payload</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/cipher/rsa/decrypt \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"&lt;cipher&gt;","privateKey":"&lt;private-key&gt;"}'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/cipher/rsa/sign</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">
+                        Signs <code>data</code> with the private key using SHA256withRSA. The payload is hashed
+                        first, so there is no size limit — and note that a signature proves authorship without
+                        hiding anything: the data itself stays readable.
+                    </p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>data</td><td>string</td><td><span class="req">required</span></td><td>Base64 payload to sign</td></tr>
+                        <tr><td>privateKey</td><td>string</td><td><span class="req">required</span></td><td>Base64 PKCS#8 RSA private key</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "signature": "b64-signature"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>signed</span>
+                        <span class="status-chip err"><b>400</b>field blank, bad Base64, or unusable key</span>
+                        <span class="status-chip err"><b>500</b>signing failed</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/cipher/rsa/sign \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"aGVsbG8=","privateKey":"&lt;private-key&gt;"}'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/cipher/rsa/verify</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">
+                        Checks a signature against <code>data</code> with the public key. A signature that simply
+                        does not match is a normal <code>200</code> answer with <code>valid: false</code> — not an error.
+                    </p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>data</td><td>string</td><td><span class="req">required</span></td><td>Base64 payload that was signed</td></tr>
+                        <tr><td>signature</td><td>string</td><td><span class="req">required</span></td><td>Base64 signature from the sign endpoint</td></tr>
+                        <tr><td>publicKey</td><td>string</td><td><span class="req">required</span></td><td>Base64 X.509 RSA public key</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "valid": true
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>checked — see <code>valid</code></span>
+                        <span class="status-chip err"><b>400</b>field blank, bad Base64, or unusable key</span>
+                        <span class="status-chip err"><b>500</b>verification failed</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/cipher/rsa/verify \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"aGVsbG8=","signature":"&lt;signature&gt;","publicKey":"&lt;public-key&gt;"}'</pre>
+                </div>
+            </details>
+        </section>
+
+        <!-- ══════════ CIPHER / HYBRID ══════════ -->
+        <section class="group" id="cipher-hybrid">
+            <div class="group-label">04 — cipher / hybrid</div>
+            <p class="group-note">
+                RSA cannot encrypt a large file directly, so hybrid encryption does what TLS and PGP do:
+                a fresh single-use AES-256-GCM key encrypts the payload, and RSA-OAEP wraps only that key.
+                Encryption therefore returns <b>two</b> values — <code>data</code> and <code>encryptedKey</code> —
+                and decryption needs both plus the private key. Either half alone is useless.
+            </p>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/cipher/hybrid/encrypt</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Encrypts a payload of any size for the holder of the matching RSA private key.</p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>data</td><td>string</td><td><span class="req">required</span></td><td>Base64 payload, no size limit beyond the request body cap</td></tr>
+                        <tr><td>publicKey</td><td>string</td><td><span class="req">required</span></td><td>Base64 X.509 RSA public key</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "data": "b64-aes-gcm-cipher-text",
+  "encryptedKey": "b64-rsa-wrapped-aes-key"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>encrypted</span>
+                        <span class="status-chip err"><b>400</b>field blank, bad Base64, or unusable key</span>
+                        <span class="status-chip err"><b>500</b>encryption failed</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/cipher/hybrid/encrypt \
+  -H 'Content-Type: application/json' \
+  -d "{\"data\":\"$(base64 -w0 report.pdf)\",\"publicKey\":\"&lt;public-key&gt;\"}"</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/cipher/hybrid/decrypt</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">Unwraps the AES key with the private key and decrypts the payload. The GCM tag is checked, so tampered data fails instead of decoding to garbage.</p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>data</td><td>string</td><td><span class="req">required</span></td><td>Base64 cipher text from the encrypt endpoint</td></tr>
+                        <tr><td>encryptedKey</td><td>string</td><td><span class="req">required</span></td><td>Base64 wrapped AES key from the same response</td></tr>
+                        <tr><td>privateKey</td><td>string</td><td><span class="req">required</span></td><td>Base64 PKCS#8 RSA private key</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "data": "b64-original-payload"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>decrypted</span>
+                        <span class="status-chip err"><b>400</b>field blank, bad Base64, or unusable key</span>
+                        <span class="status-chip err"><b>500</b>wrong key or corrupted payload</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/cipher/hybrid/decrypt \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"&lt;cipher&gt;","encryptedKey":"&lt;wrapped-key&gt;","privateKey":"&lt;private-key&gt;"}'</pre>
+                </div>
+            </details>
+        </section>
+
         <!-- ══════════ SHORT URL ══════════ -->
         <section class="group" id="short-url">
-            <div class="group-label">03 — short url</div>
+            <div class="group-label">05 — short url</div>
             <p class="group-note">The delete <code>token</code> is returned only once, at creation time. Without it a short url cannot be removed.</p>
 
             <details class="endpoint">
@@ -286,7 +561,7 @@
 
         <!-- ══════════ REPOSITORY LINKS ══════════ -->
         <section class="group" id="repository-links">
-            <div class="group-label">04 — link repository</div>
+            <div class="group-label">06 — link repository</div>
             <p class="group-note">
                 A repository is a token-protected bag of links. The <code>token</code> is shown only in the
                 create response — every other call needs it as <code>?token=</code>. A wrong token is answered
@@ -493,7 +768,7 @@
 
         <!-- ══════════ UPLOADED FILES ══════════ -->
         <section class="group" id="uploaded-files">
-            <div class="group-label">05 — uploaded files</div>
+            <div class="group-label">07 — uploaded files</div>
             <p class="group-note">
                 Files are stored with an optional TTL and are swept by a background cleanup task once expired.
                 Every read and delete needs the <code>token</code> handed out at upload time.
@@ -679,7 +954,7 @@
 
         <!-- ══════════ YOUTUBE ══════════ -->
         <section class="group" id="youtube">
-            <div class="group-label">06 — youtube</div>
+            <div class="group-label">08 — youtube</div>
             <p class="group-note">
                 Backed by <code>yt-dlp</code> on the server. Playlist parameters are ignored, age-restricted
                 videos need server-side cookies, and each call is capped at a 120 second timeout.
@@ -742,7 +1017,7 @@
 
         <!-- ══════════ NETWORK ══════════ -->
         <section class="group" id="network">
-            <div class="group-label">07 — network</div>
+            <div class="group-label">09 — network</div>
 
             <details class="endpoint">
                 <summary>
@@ -770,7 +1045,7 @@
 
         <!-- ══════════ STATIC ══════════ -->
         <section class="group" id="static">
-            <div class="group-label">08 — static</div>
+            <div class="group-label">10 — static</div>
             <p class="group-note">
                 Classpath resources served straight from the jar. Every category behaves the same way:
                 without a name it lists what is available, with a name it returns the file.

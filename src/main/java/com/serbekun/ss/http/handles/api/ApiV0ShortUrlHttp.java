@@ -1,5 +1,7 @@
 package com.serbekun.ss.http.handles.api;
 
+import java.util.Locale;
+
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
@@ -10,11 +12,15 @@ import com.serbekun.ss.domain.dto.http.ErrorResponse;
 import com.serbekun.ss.domain.dto.http.shorturl.V0ShortUrlDeleteRequest;
 import com.serbekun.ss.domain.dto.http.shorturl.V0ShortUrlPostRequest;
 import com.serbekun.ss.domain.dto.http.shorturl.V0ShortUrlPostResponse;
+import com.serbekun.ss.domain.dto.http.shorturl.V0ShortUrlQrRequest;
+import com.serbekun.ss.domain.dto.http.shorturl.V0ShortUrlQrResponse;
 import com.serbekun.ss.domain.models.ShortUrl;
+import com.serbekun.ss.service.qr.QrService;
 import com.serbekun.ss.service.shorturl.ShortUrlService;
 
 /**
- * HTTP handler for shortened URLs — create, resolve (redirect), delete.
+ * HTTP handler for shortened URLs — create, resolve (redirect), delete, and
+ * create-with-a-QR-code in one call.
  */
 public class ApiV0ShortUrlHttp {
 
@@ -26,10 +32,14 @@ public class ApiV0ShortUrlHttp {
     /** Short url service instance */
     private final ShortUrlService service;
 
+    /** Renders the short link as a scannable code */
+    private final QrService qrService;
+
     // endregion
 
-    public ApiV0ShortUrlHttp(ShortUrlService service) {
+    public ApiV0ShortUrlHttp(ShortUrlService service, QrService qrService) {
         this.service = service;
+        this.qrService = qrService;
     }
 
     // region main handler
@@ -38,7 +48,13 @@ public class ApiV0ShortUrlHttp {
     public void main(Context ctx) {
         switch (ctx.method()) {
             case GET    -> handleGet(ctx);
-            case POST   -> handlePost(ctx);
+            case POST   -> {
+                if (ctx.path().endsWith("/qr")) {
+                    handlePostQr(ctx);
+                } else {
+                    handlePost(ctx);
+                }
+            }
             case DELETE -> handleDelete(ctx);
             default     -> ctx.status(HttpStatus.METHOD_NOT_ALLOWED);
         }
@@ -104,6 +120,120 @@ public class ApiV0ShortUrlHttp {
 
         ctx.status(HttpStatus.CREATED);
         ctx.json(new V0ShortUrlPostResponse(shortUrl.id(), shortUrl.token()));
+    }
+
+    // endregion
+
+    // region qr
+
+    /**
+     * Handles POST requests that shorten a url and render the short link as a
+     * QR code in one round trip.
+     * <p>
+     * Takes the same body as plain creation plus the QR options of
+     * {@code /api/v0/qr/generate}, and answers with the created record and the
+     * code as a {@code data:} URL — the two things a "print this link" page
+     * needs, without a second call. The link the code points at is built from
+     * the request host unless the caller names a {@code baseUrl}, which is what
+     * a deployment behind a custom domain needs.
+     */
+    private void handlePostQr(Context ctx) {
+        ctx.contentType("application/json");
+
+        V0ShortUrlQrRequest body = parseBody(ctx, V0ShortUrlQrRequest.class);
+        if (body == null || body.url() == null || body.url().isBlank()) {
+            ctx.status(HttpStatus.BAD_REQUEST);
+            ctx.json(ErrorResponse.of("'url' is required"));
+            return;
+        }
+
+        QrService.QrOptions options;
+        String baseUrl;
+        try {
+            options = QrService.QrOptions.of(body.format(), body.size(), body.errorCorrection(),
+                    body.foreground(), body.background(), body.margin());
+            baseUrl = resolveBaseUrl(ctx, body.baseUrl());
+        } catch (IllegalArgumentException e) {
+            ctx.status(HttpStatus.BAD_REQUEST);
+            ctx.json(ErrorResponse.of(e.getMessage()));
+            return;
+        }
+
+        // Options are validated above, before anything is stored, so a bad
+        // request cannot leave a short url behind. The code itself encodes the
+        // short id, so it can only be rendered once the record exists.
+        ShortUrl shortUrl;
+        QrService.QrImage image;
+        try {
+            shortUrl = service.createShortUrl(body.url(), body.name(), body.description());
+            image = qrService.generate(baseUrl + "/api/v0/short-url/" + shortUrl.id(), options);
+        } catch (IllegalArgumentException e) {
+            ctx.status(HttpStatus.BAD_REQUEST);
+            ctx.json(ErrorResponse.of(e.getMessage()));
+            return;
+        } catch (Exception e) {
+            log.error("Failed to render a QR code for a short url", e);
+            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
+            ctx.json(ErrorResponse.of("QR generation failed"));
+            return;
+        }
+
+        ctx.status(HttpStatus.CREATED);
+        ctx.json(new V0ShortUrlQrResponse(
+                shortUrl.id(),
+                shortUrl.token(),
+                baseUrl + "/api/v0/short-url/" + shortUrl.id(),
+                image.format().wireName(),
+                image.contentType(),
+                image.size(),
+                image.dataUrl()));
+    }
+
+    /**
+     * Works out the origin the short link should carry.
+     *
+     * @param requested the caller's own {@code baseUrl}, or null to derive one
+     * @return the origin without a trailing slash
+     * @throws IllegalArgumentException when the given baseUrl is not an http(s) origin
+     */
+    private static String resolveBaseUrl(Context ctx, String requested) {
+        if (requested != null && !requested.isBlank()) {
+            String trimmed = requested.strip();
+            String lower = trimmed.toLowerCase(Locale.ROOT);
+            if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
+                throw new IllegalArgumentException("baseUrl must start with http:// or https://");
+            }
+            return stripTrailingSlash(trimmed);
+        }
+
+        // Behind a reverse proxy the request's own scheme and host are the
+        // proxy's, not the ones a scanner will have to reach.
+        String scheme = firstForwarded(ctx.header("X-Forwarded-Proto"));
+        if (scheme == null) {
+            scheme = ctx.scheme();
+        }
+        String host = firstForwarded(ctx.header("X-Forwarded-Host"));
+        if (host == null) {
+            host = ctx.host();
+        }
+        if (host == null || host.isBlank()) {
+            throw new IllegalArgumentException("baseUrl is required — the request carries no host");
+        }
+
+        return stripTrailingSlash(scheme + "://" + host);
+    }
+
+    /** A forwarding header may list every hop; the client-facing one comes first. */
+    private static String firstForwarded(String header) {
+        if (header == null || header.isBlank()) {
+            return null;
+        }
+        String first = header.split(",")[0].strip();
+        return first.isEmpty() ? null : first;
+    }
+
+    private static String stripTrailingSlash(String url) {
+        return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
     }
 
     // endregion

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>QR Codes — Serbekun</title>
+    <link rel="icon" href="/icon" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/v0/css/theme.css">
+    <link rel="stylesheet" href="/static/v0/css/shared.css">
+    <link rel="stylesheet" href="/static/v0/css/qr.css">
+    <script src="/static/v0/js/theme.js"></script>
+</head>
+<body>
+
+    <button class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="tt-sun">☀</span><span class="tt-moon">☾</span>
+    </button>
+
+    <div class="container">
+        <a href="/" class="back-link">back</a>
+
+        <div class="header">
+            <h1 class="header-title">QR Codes</h1>
+            <p class="header-sub">// generate · read · short link</p>
+        </div>
+
+        <div class="prompt-line">
+            <span class="cwd">~/serbekun/qr</span>
+            <span>$</span>
+            <span>qr --interactive</span>
+            <span class="prompt-cursor"></span>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" type="button" data-panel="generatePanel">generate</button>
+            <button class="tab-btn" type="button" data-panel="readPanel">read</button>
+            <button class="tab-btn" type="button" data-panel="shortPanel">short link</button>
+        </div>
+
+        <!-- Generate -->
+        <div id="generatePanel" class="panel active">
+            <p class="panel-note">
+                Anything that is text can go in a QR code — a link, a wifi string, a note.
+                PNG is the one to paste into a document; SVG stays sharp however large it is printed.
+            </p>
+
+            <div class="field">
+                <div class="field-label">data</div>
+                <textarea id="genData" placeholder="https://ss.serbekun.com" spellcheck="false"></textarea>
+            </div>
+
+            <div class="enc-row">
+                <span class="enc-label">format</span>
+                <button class="enc-btn active" type="button" data-format="png">png</button>
+                <button class="enc-btn" type="button" data-format="svg">svg</button>
+            </div>
+
+            <div class="enc-row">
+                <span class="enc-label">error correction</span>
+                <button class="enc-btn" type="button" data-ec="L">L · 7%</button>
+                <button class="enc-btn active" type="button" data-ec="M">M · 15%</button>
+                <button class="enc-btn" type="button" data-ec="Q">Q · 25%</button>
+                <button class="enc-btn" type="button" data-ec="H">H · 30%</button>
+            </div>
+
+            <div class="opt-grid">
+                <div class="opt">
+                    <div class="field-label">size · px</div>
+                    <input type="number" id="genSize" value="512" min="64" max="4096" step="32">
+                </div>
+                <div class="opt">
+                    <div class="field-label">quiet zone · modules</div>
+                    <input type="number" id="genMargin" value="4" min="0" max="32" step="1">
+                </div>
+                <div class="opt">
+                    <div class="field-label">foreground</div>
+                    <div class="color-row">
+                        <input type="color" id="genForeground" value="#000000">
+                        <input type="text" id="genForegroundHex" value="#000000" spellcheck="false">
+                    </div>
+                </div>
+                <div class="opt">
+                    <div class="field-label">background</div>
+                    <div class="color-row">
+                        <input type="color" id="genBackground" value="#ffffff">
+                        <input type="text" id="genBackgroundHex" value="#ffffff" spellcheck="false">
+                    </div>
+                    <label class="check-row">
+                        <input type="checkbox" id="genTransparent">
+                        <span>transparent</span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="run-btn" type="button" id="genBtn">render code</button>
+
+            <div id="genResult" class="qr-result">
+                <div class="qr-stage">
+                    <img id="genPreview" alt="the generated QR code">
+                </div>
+                <div class="qr-meta" id="genMeta"></div>
+                <div class="qr-actions">
+                    <a class="copy-btn" id="genDownload" download="qr.png">download</a>
+                    <button class="copy-btn" type="button" id="genCopyImage">copy image</button>
+                    <button class="copy-btn" type="button" id="genCopyData">copy data url</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Read -->
+        <div id="readPanel" class="panel">
+            <p class="panel-note">
+                Send a picture of a code — a screenshot, a photo, a downloaded PNG — and the text
+                inside it comes back. Light-on-dark codes are read too.
+            </p>
+
+            <div class="field">
+                <div class="field-label">image</div>
+                <input type="file" id="readFile" class="file-input" accept="image/*">
+                <label class="file-drop" for="readFile" id="readLabel">choose an image, drop one here, or paste…</label>
+            </div>
+
+            <div id="readThumb" class="read-thumb">
+                <img id="readPreview" alt="the image being read">
+            </div>
+
+            <button class="run-btn" type="button" id="readBtn">read code</button>
+
+            <div id="readResult" class="result-block">
+                <div class="result-header">
+                    <span class="result-label" id="readResultLabel">decoded text</span>
+                    <button class="copy-btn" type="button" id="readCopy">copy</button>
+                </div>
+                <div class="result-body" id="readResultText"></div>
+                <div class="result-meta" id="readResultMeta"></div>
+            </div>
+        </div>
+
+        <!-- Short link -->
+        <div id="shortPanel" class="panel">
+            <p class="panel-note">
+                Shortens a long url and renders the short link as a code in one call — the pair to
+                print on a poster, where a long url would be unscannable and unreadable both.
+                The format, size and colours are the ones set on the <b>generate</b> tab.
+            </p>
+
+            <div class="field">
+                <div class="field-label">long url</div>
+                <input type="text" id="shortUrlInput" placeholder="https://example.com/very/long/path..." spellcheck="false">
+            </div>
+
+            <div class="field">
+                <div class="field-label">name (optional)</div>
+                <input type="text" id="shortName" placeholder="a short label for this link" spellcheck="false">
+            </div>
+
+            <button class="run-btn" type="button" id="shortBtn">shorten &amp; render</button>
+
+            <div id="shortResult" class="qr-result">
+                <div class="qr-stage">
+                    <img id="shortPreview" alt="the QR code for the short link">
+                </div>
+                <div class="cred-list">
+                    <div class="cred-row">
+                        <span class="cred-key">short link</span>
+                        <span class="cred-val" id="shortLink"></span>
+                    </div>
+                    <div class="cred-row">
+                        <span class="cred-key">id</span>
+                        <span class="cred-val" id="shortId"></span>
+                    </div>
+                    <div class="cred-row">
+                        <span class="cred-key">delete token</span>
+                        <span class="cred-val" id="shortToken"></span>
+                    </div>
+                </div>
+                <p class="panel-note token-warning">
+                    keep the token — it is the only way to delete this link, and it is shown once.
+                </p>
+                <div class="qr-actions">
+                    <a class="copy-btn" id="shortDownload" download="qr.png">download</a>
+                    <button class="copy-btn" type="button" id="shortCopyLink">copy link</button>
+                    <button class="copy-btn" type="button" id="shortCopyToken">copy token</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-line" id="status"></div>
+
+        <div class="footer">serbekun service // qr codes</div>
+    </div>
+
+    <script src="/static/v0/js/qr.js"></script>
+</body>
+</html>

@@ -68,8 +68,8 @@ The project is a Javalin 6 server with token-based auth, JSON-file persistence, 
 
 JUnit 5 + AssertJ + Mockito, run with `./gradlew test`. Coverage (as of 2026-07-19):
 
-- **Unit tests** per layer: services (`cipher` — AES, RSA, hybrid, `shorturl`, `linksrepo`, `uploadedfiles`, `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
-- **HTTP integration tests** at `src/test/java/com/serbekun/ss/http/ServerHttpIntegrationTest.java` — full route tree via `RouteInitializer` + `javalin-testtools`, real services over in-memory repos; only the `Youtube` (yt-dlp) wrapper is mocked. Covers index/static, version, cipher, short-url, repository-links, uploaded-files (multipart), and youtube endpoints.
+- **Unit tests** per layer: services (`cipher` — AES, RSA, hybrid, `hash`, `qr`, `shorturl`, `linksrepo`, `uploadedfiles`, `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
+- **HTTP integration tests** at `src/test/java/com/serbekun/ss/http/ServerHttpIntegrationTest.java` — full route tree via `RouteInitializer` + `javalin-testtools`, real services over in-memory repos; only the `Youtube` (yt-dlp) wrapper is mocked. Covers index/static, version, cipher, hash, qr, short-url, repository-links, uploaded-files (multipart), and youtube endpoints.
 - `YoutubeTest` contains real yt-dlp integration tests that need `yt-dlp`, Deno, and network access — expect failures without them.
 
 Gotcha: don't use Mockito `verify(mock, timeout(...))` on `synchronized` methods (e.g. `UploadedFilesService.deleteExpiredFiles`) — the verifying thread holds the mock's monitor and deadlocks the thread under test. Use `CountDownLatch` answers instead (see `UploadedFilesCleanupServiceTest`).
@@ -96,6 +96,8 @@ All registered in `http/handles/*Routes` classes:
 - `POST /api/v0/hash` — hash a payload (JSON body `{"algorithm", "data", "encoding"?, "key"?}`), returns `{"algorithm", "hash", "bytes"}`
 - `POST /api/v0/hash/file` — hash an uploaded file (multipart `file`, plus optional `algorithm`, `key`, `encoding` fields), returns `{"algorithm", "hash", "bytes", "name"}`; streamed, nothing stored
 - `POST /api/v0/hash/verify` — integrity check (JSON body `{"algorithm", "data", "hash", "encoding"?, "key"?}`), returns `{"valid", "algorithm", "expected", "actual"}`; a mismatch is a 200 with `valid: false`, not an error
+- `POST /api/v0/qr/generate` — render a QR code (JSON body `{"data", "format"?, "size"?, "errorCorrection"?, "foreground"?, "background"?, "margin"?}`); answers with the raw image, or with `{"format", "contentType", "size", "image"}` (a `data:` URL) when the caller sends `Accept: application/json` or `?json=true`
+- `POST /api/v0/qr/read` — read a code out of an image (multipart `file`, a raw `image/*` body, or JSON `{"image": "<base64>"}`), returns `{"found", "text", "format"}`; an image with no code is a 200 with `found: false`, not an error
 - `POST /api/v0/repository/links/` — create a link repository (JSON body `{"name"?}`), returns `{"repositoryId", "token", "name", "createdAt"}` (the `token` is shown only here)
 - `GET /api/v0/repository/links/{repositoryId}?token=...` — get a repository with all its links, 404 if not found or token is invalid
 - `DELETE /api/v0/repository/links/{repositoryId}?token=...` — delete a repository, 204 on success, 404 if not found or token is invalid
@@ -105,6 +107,7 @@ All registered in `http/handles/*Routes` classes:
 - `GET /api/v0/youtube/info?url=...` — get video metadata as JSON
 - `GET /api/v0/youtube/download?url=...` — download video and return MP4 bytes
 - `POST /api/v0/short-url` — create a short url (JSON body `{"url", "name"?, "description"?}`), returns `{"id", "token"}`
+- `POST /api/v0/short-url/qr` — create a short url and render the short link as a QR code in one call; takes the short-url body plus the QR options and an optional `baseUrl`, returns `{"id", "token", "shortUrl", "format", "contentType", "size", "qr"}` where `qr` is a `data:` URL
 - `GET /api/v0/short-url/{id}` — redirect (302) to the target url, 404 if unknown
 - `DELETE /api/v0/short-url/{id}` — delete a short url; requires the delete `token` (`?token=` query param or JSON body), 403 on mismatch, 404 if unknown
 - `GET /api/v0/uploaded-files` — list all uploaded files metadata
@@ -156,6 +159,37 @@ always lowercase hex. On `/hash/file` the file is raw bytes, so `encoding` there
 
 Frontend: `html/hash.html` — algorithm picker shared across text / file / verify tabs, drag-and-drop
 file input, and a failed check showing expected against actual.
+
+## QR functionality
+
+`service/qr/` — stateless generation and reading, nothing stored.
+
+- `QrFormat` / `QrErrorCorrection` — the wire vocabulary (`png`/`svg`, `L`/`M`/`Q`/`H`) with loose
+  parsing and one canonical `wireName()` echoed back, the same shape as `HashAlgorithm`.
+- `QrService.QrOptions.of(...)` — parses and validates everything a caller can ask for (size 64–4096,
+  margin 0–32, CSS-style hex colours including the `#rrggbbaa` alpha form) and fills in the defaults,
+  so the HTTP layer stays a pass-through. Colours are packed ARGB internally.
+- `QrService` — both formats come from the same ZXing module matrix. PNG is rendered at the requested
+  pixel size through `MatrixToImageWriter`; **SVG is rendered from the unscaled module grid** (ZXing
+  is asked for a 1×1 render, which yields exactly the modules plus the quiet zone) and scaled by its
+  `viewBox`, so a 4096 px SVG is the same few kilobytes as a 512 px one. Dark modules are emitted as
+  one path of horizontal runs, not a rect per module.
+- Reading goes through `BufferedImageLuminanceSource` with `TRY_HARDER`, then retries on
+  `source.invert()` — a code printed light-on-dark is ordinary and must still read. An image with no
+  code returns `found: false` rather than throwing; bytes that are not a decodable image are a
+  `400`. SVG cannot be read (`ImageIO` has no decoder), which the error message says.
+- A transparent background (`#00000000`) leaves the backdrop out entirely: no `<rect>` in the SVG,
+  an alpha-0 PNG.
+- **ZXing** (`com.google.zxing:core` + `:javase`) is the only new dependency; `javase` is there for
+  the `BufferedImage`/`ImageIO` bridge that reading needs.
+
+`QrServiceTest` round-trips wherever it can — encode, then decode — so "looks like a QR code" cannot
+pass. The hand-rolled SVG path is rasterized in the test and read back, because a wrong run length
+would show up nowhere else.
+
+Frontend: `html/qr.html` — generate (live preview, download, copy image / data url), read
+(drag-and-drop **and** clipboard paste of a screenshot), and short link, which creates a short url
+and its code in one call using the options set on the generate tab.
 
 ## YouTube functionality
 

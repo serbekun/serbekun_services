@@ -1,0 +1,311 @@
+/* ── qr.css — page-specific overrides & unique styles ── */
+
+.header { margin-bottom: 2rem; }
+.prompt-line { margin-bottom: 2rem; }
+
+/* ── Tab switcher ── */
+.tab-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+    font-family: inherit;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    padding: 8px 16px 10px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+    color: var(--text-bright);
+    border-bottom-color: var(--text-bright);
+}
+
+/* ── Panels ── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+.panel-note {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 1.6rem;
+    padding-left: 2px;
+}
+
+/* ── Inputs ── */
+.field { margin-bottom: 1.4rem; }
+.field.hidden { display: none; }
+
+textarea, input[type="text"], input[type="number"] {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.88rem;
+    padding: 12px 14px;
+    resize: vertical;
+    transition: border-color 0.15s;
+    line-height: 1.6;
+}
+textarea { min-height: 110px; }
+textarea:focus, input[type="text"]:focus, input[type="number"]:focus {
+    outline: none;
+    border-color: var(--border-hover);
+}
+textarea::placeholder, input[type="text"]::placeholder { color: var(--text-dim); }
+
+/* ── Option switches ── */
+.enc-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 1.4rem;
+}
+.enc-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+.enc-btn {
+    font-family: inherit;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 5px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.enc-btn:hover { color: var(--text); border-color: var(--border-hover); }
+.enc-btn.active { color: var(--text-bright); border-color: var(--border-hover); background: var(--bg3); }
+
+/* ── Numeric & colour options ── */
+.opt-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.1rem 1.2rem;
+    margin-bottom: 1.6rem;
+}
+.opt .field-label { margin-bottom: 8px; }
+@media (max-width: 520px) { .opt-grid { grid-template-columns: 1fr; } }
+
+.color-row { display: flex; align-items: center; gap: 8px; }
+.color-row input[type="text"] { font-size: 0.8rem; padding: 9px 12px; }
+input[type="color"] {
+    width: 42px;
+    height: 40px;
+    flex: 0 0 auto;
+    padding: 3px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+}
+input[type="color"]::-webkit-color-swatch { border: none; border-radius: 5px; }
+input[type="color"]::-moz-color-swatch { border: none; border-radius: 5px; }
+
+.check-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 9px;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    cursor: pointer;
+}
+.check-row input { accent-color: var(--text); cursor: pointer; }
+
+/* ── Run button ── */
+.run-btn { margin-top: 0.4rem; }
+.run-btn::before { content: '▶'; font-size: 0.7rem; color: var(--text-dim); }
+
+/* ── File picker ── */
+.file-input { display: none; }
+.file-drop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 1px dashed var(--border-hover);
+    border-radius: 8px;
+    background: var(--bg2);
+    color: var(--accent);
+    font-size: 0.8rem;
+    padding: 26px 16px;
+    cursor: pointer;
+    text-align: center;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.file-drop:hover { color: var(--text); background: var(--bg3); }
+.file-drop.filled { color: var(--text); border-style: solid; }
+.file-drop.dragging { color: var(--text-bright); border-color: var(--text-bright); background: var(--bg3); }
+
+.read-thumb { display: none; margin-bottom: 1.4rem; }
+.read-thumb.shown { display: block; }
+.read-thumb img {
+    max-width: 200px;
+    max-height: 200px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg3);
+}
+
+/* ── The code itself ──
+   The checkerboard shows through a transparent background, so "no backdrop"
+   looks different from "a white backdrop" rather than identical to it. */
+.qr-result {
+    display: none;
+    margin-top: 1.8rem;
+    animation: fadeIn 0.2s ease-out;
+}
+.qr-result.shown { display: block; }
+
+.qr-stage {
+    display: flex;
+    justify-content: center;
+    padding: 22px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background:
+        repeating-conic-gradient(var(--glass) 0% 25%, transparent 0% 50%) 50% / 18px 18px;
+}
+.qr-stage img {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+}
+
+.qr-meta {
+    margin-top: 10px;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: center;
+}
+
+.qr-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 1.2rem;
+}
+
+.copy-btn {
+    font-family: inherit;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.15s, border-color 0.15s;
+}
+.copy-btn:hover { color: var(--text); border-color: var(--text-dim); }
+.copy-btn.copied { color: var(--text-bright); border-color: var(--text-bright); }
+
+/* ── Decoded text ── */
+.result-block {
+    display: none;
+    margin-top: 1.8rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    animation: fadeIn 0.2s ease-out;
+}
+.result-block.error { border-color: var(--err-border); }
+
+.result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+}
+.result-block.error .result-header { background: var(--err-bg); border-bottom-color: var(--err-border-soft); }
+
+.result-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+.result-block.error .result-label { color: var(--err-text); }
+
+.result-body {
+    padding: 14px;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    word-break: break-all;
+    color: var(--text-bright);
+    background: var(--bg3);
+}
+.result-body a { color: var(--text-bright); }
+
+.result-meta {
+    padding: 0 14px 12px;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: var(--bg3);
+}
+
+/* ── Short link credentials ── */
+.cred-list {
+    margin-top: 1.2rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.cred-row {
+    display: flex;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+}
+.cred-row:last-child { border-bottom: none; }
+.cred-key {
+    flex: 0 0 110px;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding-top: 2px;
+}
+.cred-val {
+    flex: 1;
+    font-size: 0.82rem;
+    word-break: break-all;
+    color: var(--text-bright);
+}
+
+.token-warning { margin: 0.9rem 0 0; color: var(--err-text); }

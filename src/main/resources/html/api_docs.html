@@ -48,6 +48,7 @@
             <a href="#cipher-rsa">cipher / rsa</a>
             <a href="#cipher-hybrid">cipher / hybrid</a>
             <a href="#hash">hash</a>
+            <a href="#qr">qr</a>
             <a href="#short-url">short url</a>
             <a href="#repository-links">link repository</a>
             <a href="#uploaded-files">uploaded files</a>
@@ -617,9 +618,129 @@
             </details>
         </section>
 
+        <!-- ══════════ QR ══════════ -->
+        <section class="group" id="qr">
+            <div class="group-label">06 — qr</div>
+            <p class="group-note">
+                Renders any text as a QR code, and reads one back out of an image. Nothing is
+                stored — a code is built per request and handed straight back. <b>png</b> is the one
+                to paste into a document, <b>svg</b> the one to print at any size. A payload is
+                capped at <b>2953</b> bytes, which is all a QR code can hold at all. To shorten a
+                long url and get its code in one call, see
+                <a href="#short-url">post /api/v0/short-url/qr</a>.
+            </p>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/qr/generate</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">
+                        Renders <code>data</code> as a QR code. The response is the image itself, so it can be
+                        saved straight to a file. Send <code>Accept: application/json</code> (or add
+                        <code>?json=true</code>) to get a <code>data:</code> URL in JSON instead — that is the
+                        form to drop into an <code>&lt;img src&gt;</code>.
+                    </p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>data</td><td>string</td><td><span class="req">required</span></td><td>the text to encode — a url, a wifi string, anything; up to 2953 bytes</td></tr>
+                        <tr><td>format</td><td>string</td><td><span class="opt">optional</span></td><td><code>png</code> (default) or <code>svg</code></td></tr>
+                        <tr><td>size</td><td>number</td><td><span class="opt">optional</span></td><td>image edge in pixels, 64–4096; default <code>512</code></td></tr>
+                        <tr><td>errorCorrection</td><td>string</td><td><span class="opt">optional</span></td><td><code>L</code> ~7%, <code>M</code> ~15% (default), <code>Q</code> ~25%, <code>H</code> ~30% of the code may be damaged and still read</td></tr>
+                        <tr><td>foreground</td><td>string</td><td><span class="opt">optional</span></td><td>module colour as <code>#rgb</code>, <code>#rrggbb</code> or <code>#rrggbbaa</code>; default <code>#000000</code></td></tr>
+                        <tr><td>background</td><td>string</td><td><span class="opt">optional</span></td><td>backdrop colour, same notation; default <code>#ffffff</code>. <code>#00000000</code> leaves it out entirely</td></tr>
+                        <tr><td>margin</td><td>number</td><td><span class="opt">optional</span></td><td>quiet zone in modules, 0–32; default <code>4</code>, which is what the spec asks for</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200 — image</div>
+<pre class="code">Content-Type: image/png
+&lt;the png bytes&gt;</pre>
+
+                    <div class="sub-label">response 200 — application/json</div>
+<pre class="code">{
+  "format": "png",
+  "contentType": "image/png",
+  "size": 512,
+  "image": "data:image/png;base64,iVBORw0KGgo…"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>rendered</span>
+                        <span class="status-chip err"><b>400</b>missing <code>data</code>, a payload too long to encode, or an option out of range</span>
+                        <span class="status-chip err"><b>500</b>rendering failed</span>
+                    </div>
+
+                    <div class="sub-label">example — save a png</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/qr/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"https://ss.serbekun.com","size":512}' -o qr.png</pre>
+
+                    <div class="sub-label">example — svg, high redundancy, coloured</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/qr/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"https://ss.serbekun.com","format":"svg",
+       "errorCorrection":"H","foreground":"#123456","background":"#00000000"}' -o qr.svg</pre>
+
+                    <div class="sub-label">example — as a data url</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/qr/generate \
+  -H 'Content-Type: application/json' -H 'Accept: application/json' \
+  -d '{"data":"https://ss.serbekun.com"}'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/qr/read</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">
+                        Reads the code out of an image — a screenshot, a photo, a downloaded png. Codes printed
+                        light-on-dark are read too. An image that simply holds no code is a <code>200</code> with
+                        <code>found: false</code>, not an error. SVG cannot be read; rasterise it first.
+                    </p>
+
+                    <div class="sub-label">body — any one of three</div>
+                    <table class="params">
+                        <tr><th>field</th><th>in</th><th></th><th>description</th></tr>
+                        <tr><td>file</td><td>multipart</td><td><span class="opt">one of</span></td><td>the image as an upload</td></tr>
+                        <tr><td>—</td><td>raw body</td><td><span class="opt">one of</span></td><td>the image bytes with an <code>image/*</code> content type</td></tr>
+                        <tr><td>image</td><td>json</td><td><span class="opt">one of</span></td><td>the image as base64, with or without a <code>data:</code> prefix</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "found": true,
+  "text": "https://ss.serbekun.com",
+  "format": "QR_CODE"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>read, or nothing found</span>
+                        <span class="status-chip err"><b>400</b>no image sent, bad base64, or bytes that are not a readable image</span>
+                        <span class="status-chip err"><b>500</b>reading failed</span>
+                    </div>
+
+                    <div class="sub-label">example — an uploaded file</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/qr/read -F 'file=@qr.png'</pre>
+
+                    <div class="sub-label">example — raw bytes</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/qr/read \
+  -H 'Content-Type: image/png' --data-binary '@qr.png'</pre>
+                </div>
+            </details>
+        </section>
+
         <!-- ══════════ SHORT URL ══════════ -->
         <section class="group" id="short-url">
-            <div class="group-label">06 — short url</div>
+            <div class="group-label">07 — short url</div>
             <p class="group-note">The delete <code>token</code> is returned only once, at creation time. Without it a short url cannot be removed.</p>
 
             <details class="endpoint">
@@ -655,6 +776,55 @@
 <pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/short-url \
   -H 'Content-Type: application/json' \
   -d '{"url":"https://example.com"}'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/short-url/qr</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">
+                        Creates a short url and renders the short link as a QR code in one round trip — the pair
+                        to print on a poster, where the original url would be both unscannable and unreadable.
+                        Takes everything <a href="#qr">post /api/v0/qr/generate</a> takes, plus the fields of a
+                        plain creation.
+                    </p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>url</td><td>string</td><td><span class="req">required</span></td><td>target url</td></tr>
+                        <tr><td>name</td><td>string</td><td><span class="opt">optional</span></td><td>human readable label</td></tr>
+                        <tr><td>description</td><td>string</td><td><span class="opt">optional</span></td><td>free form note</td></tr>
+                        <tr><td>baseUrl</td><td>string</td><td><span class="opt">optional</span></td><td>the origin the code should point at; derived from the request host (and <code>X-Forwarded-*</code>) when absent</td></tr>
+                        <tr><td>format, size, errorCorrection, foreground, background, margin</td><td></td><td><span class="opt">optional</span></td><td>as in <a href="#qr">qr / generate</a></td></tr>
+                    </table>
+
+                    <div class="sub-label">response 201</div>
+<pre class="code">{
+  "id": "aB3xY",
+  "token": "8f14e45f-…",
+  "shortUrl": "https://ss.serbekun.com/api/v0/short-url/aB3xY",
+  "format": "png",
+  "contentType": "image/png",
+  "size": 512,
+  "qr": "data:image/png;base64,iVBORw0KGgo…"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>201</b>created</span>
+                        <span class="status-chip err"><b>400</b><code>url</code> missing or invalid, a bad <code>baseUrl</code>, or a QR option out of range</span>
+                        <span class="status-chip err"><b>500</b>rendering failed</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/short-url/qr \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://example.com/a/very/long/path","size":640}'</pre>
                 </div>
             </details>
 
@@ -716,7 +886,7 @@
 
         <!-- ══════════ REPOSITORY LINKS ══════════ -->
         <section class="group" id="repository-links">
-            <div class="group-label">07 — link repository</div>
+            <div class="group-label">08 — link repository</div>
             <p class="group-note">
                 A repository is a token-protected bag of links. The <code>token</code> is shown only in the
                 create response — every other call needs it as <code>?token=</code>. A wrong token is answered
@@ -923,7 +1093,7 @@
 
         <!-- ══════════ UPLOADED FILES ══════════ -->
         <section class="group" id="uploaded-files">
-            <div class="group-label">08 — uploaded files</div>
+            <div class="group-label">09 — uploaded files</div>
             <p class="group-note">
                 Files are stored with an optional TTL and are swept by a background cleanup task once expired.
                 Every read and delete needs the <code>token</code> handed out at upload time.
@@ -1109,7 +1279,7 @@
 
         <!-- ══════════ YOUTUBE ══════════ -->
         <section class="group" id="youtube">
-            <div class="group-label">09 — youtube</div>
+            <div class="group-label">10 — youtube</div>
             <p class="group-note">
                 Backed by <code>yt-dlp</code> on the server. Playlist parameters are ignored, age-restricted
                 videos need server-side cookies, and each call is capped at a 120 second timeout.
@@ -1172,7 +1342,7 @@
 
         <!-- ══════════ NETWORK ══════════ -->
         <section class="group" id="network">
-            <div class="group-label">10 — network</div>
+            <div class="group-label">11 — network</div>
 
             <details class="endpoint">
                 <summary>
@@ -1200,7 +1370,7 @@
 
         <!-- ══════════ STATIC ══════════ -->
         <section class="group" id="static">
-            <div class="group-label">11 — static</div>
+            <div class="group-label">12 — static</div>
             <p class="group-note">
                 Classpath resources served straight from the jar. Every category behaves the same way:
                 without a name it lists what is available, with a name it returns the file.

@@ -10,6 +10,7 @@ import com.serbekun.ss.http.handles.CipherRoutes;
 import com.serbekun.ss.http.handles.HashRoutes;
 import com.serbekun.ss.http.handles.HttpHandler;
 import com.serbekun.ss.http.handles.NetworkRoutes;
+import com.serbekun.ss.http.handles.QrRoutes;
 import com.serbekun.ss.http.handles.RepositoryLinksRoutes;
 import com.serbekun.ss.http.handles.ShortUrlRoutes;
 import com.serbekun.ss.http.handles.StaticRoutes;
@@ -23,6 +24,7 @@ import com.serbekun.ss.service.auth.api.EndpointRegistrar;
 import com.serbekun.ss.service.cipher.CipherService;
 import com.serbekun.ss.service.hash.HashService;
 import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
+import com.serbekun.ss.service.qr.QrService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.shorturl.ShortUrlService;
 import com.serbekun.ss.service.uploadedfiles.UploadedFilesService;
@@ -45,6 +47,7 @@ public final class ServerFactory {
             LinkRepositoryService linkRepositoryService,
             CipherService cipherService,
             HashService hashService,
+            QrService qrService,
             YoutubeService youtubeService,
             UploadedFilesService uploadedFilesService,
             ShortUrlService shortUrlService,
@@ -60,10 +63,11 @@ public final class ServerFactory {
             new StaticRoutes(resourcesService, endpointRegistrar),
             new CipherRoutes(cipherService, endpointRegistrar),
             new HashRoutes(hashService, endpointRegistrar),
+            new QrRoutes(qrService, endpointRegistrar),
             new RepositoryLinksRoutes(linkRepositoryService, endpointRegistrar),
             new YoutubeRoutes(youtubeService),
             new UploadedFilesRoutes(uploadedFilesService, config, endpointRegistrar),
-            new ShortUrlRoutes(shortUrlService, endpointRegistrar),
+            new ShortUrlRoutes(shortUrlService, qrService, endpointRegistrar),
             new VersionRoutes(endpointRegistrar),
             new NetworkRoutes()
         );

@@ -3,6 +3,7 @@ package com.serbekun.ss.http.handles;
 import com.serbekun.ss.http.handles.api.ApiV0ShortUrlHttp;
 import com.serbekun.ss.service.auth.api.Endpoint;
 import com.serbekun.ss.service.auth.api.EndpointRegistrar;
+import com.serbekun.ss.service.qr.QrService;
 import com.serbekun.ss.service.shorturl.ShortUrlService;
 
 import io.javalin.Javalin;
@@ -17,8 +18,9 @@ public class ShortUrlRoutes implements HttpHandler {
 
     private final Endpoint endpointApiV0ShortUrl = new Endpoint("/api/v0/short-url");
 
-    public ShortUrlRoutes(ShortUrlService shortUrlService, EndpointRegistrar endpointRegistrar) {
-        this.apiV0ShortUrlHttp = new ApiV0ShortUrlHttp(shortUrlService);
+    public ShortUrlRoutes(ShortUrlService shortUrlService, QrService qrService,
+            EndpointRegistrar endpointRegistrar) {
+        this.apiV0ShortUrlHttp = new ApiV0ShortUrlHttp(shortUrlService, qrService);
         this.endpointRegistrar = endpointRegistrar;
     }
 
@@ -31,9 +33,11 @@ public class ShortUrlRoutes implements HttpHandler {
 
         svr.before("/api/v0/short-url", ctx -> ctx.attribute("endpoint", endpointApiV0ShortUrl));
         svr.before("/api/v0/short-url/{id}", ctx -> ctx.attribute("endpoint", endpointApiV0ShortUrl));
+        svr.before("/api/v0/short-url/qr", ctx -> ctx.attribute("endpoint", endpointApiV0ShortUrl));
 
         svr.get("/api/v0/short-url/{id}", ctx -> apiV0ShortUrlHttp.main(ctx));
         svr.post("/api/v0/short-url", ctx -> apiV0ShortUrlHttp.main(ctx));
+        svr.post("/api/v0/short-url/qr", ctx -> apiV0ShortUrlHttp.main(ctx));
         svr.delete("/api/v0/short-url/{id}", ctx -> apiV0ShortUrlHttp.main(ctx));
     }
 }

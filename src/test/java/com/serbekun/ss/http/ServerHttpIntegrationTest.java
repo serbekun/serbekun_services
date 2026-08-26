@@ -15,6 +15,7 @@ import com.serbekun.ss.service.auth.EndpointRegistry;
 import com.serbekun.ss.service.cipher.CipherService;
 import com.serbekun.ss.service.hash.HashService;
 import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
+import com.serbekun.ss.service.qr.QrService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.shorturl.ShortUrlService;
 import com.serbekun.ss.service.uploadedfiles.UploadedFilesService;
@@ -89,8 +90,8 @@ class ServerHttpIntegrationTest {
         var resourcesService = new ResourcesService(loader, new ResourceCache(loader));
 
         app = ServerFactory.create(config, resourcesService, linkService,
-            new CipherService(), new HashService(), youtubeService, uploadedService, shortUrlService,
-            authService, endpointRegistry);
+            new CipherService(), new HashService(), new QrService(), youtubeService, uploadedService,
+            shortUrlService, authService, endpointRegistry);
     }
 
     private static RequestBody jsonBody(String json) {
@@ -708,6 +709,249 @@ class ServerHttpIntegrationTest {
         JavalinTest.test(app, (server, client) -> {
             try (Response response = client.get("/api/v0/short-url/zzzzzzzz")) {
                 assertThat(response.code()).isEqualTo(404);
+            }
+        });
+    }
+
+    @Test
+    void shortUrlQrCreatesTheLinkAndACodeThatPointsAtIt() {
+        JavalinTest.test(app, (server, client) -> {
+            String id;
+            String token;
+            String shortUrl;
+            String qr;
+            try (Response created = client.request("/api/v0/short-url/qr",
+                    b -> b.post(jsonBody("{\"url\":\"https://example.com/target\","
+                        + "\"baseUrl\":\"https://ss.serbekun.com/\",\"size\":320}")))) {
+                assertThat(created.code()).isEqualTo(201);
+                JsonNode body = json(created);
+                id = body.get("id").asText();
+                token = body.get("token").asText();
+                shortUrl = body.get("shortUrl").asText();
+                qr = body.get("qr").asText();
+
+                assertThat(id).matches("[A-Za-z0-9]{8}");
+                assertThat(shortUrl).isEqualTo("https://ss.serbekun.com/api/v0/short-url/" + id);
+                assertThat(body.get("format").asText()).isEqualTo("png");
+                assertThat(body.get("contentType").asText()).isEqualTo("image/png");
+                assertThat(body.get("size").asInt()).isEqualTo(320);
+                assertThat(qr).startsWith("data:image/png;base64,");
+            }
+
+            // The code is only useful if it scans back to the short link.
+            try (Response read = client.request("/api/v0/qr/read",
+                    b -> b.post(jsonBody(mapper.createObjectNode().put("image", qr).toString())))) {
+                assertThat(read.code()).isEqualTo(200);
+                assertThat(json(read).get("text").asText()).isEqualTo(shortUrl);
+            }
+
+            // And the record behind it is an ordinary short url.
+            try (Response deleted = client.delete("/api/v0/short-url/" + id + "?token=" + token)) {
+                assertThat(deleted.code()).isEqualTo(204);
+            }
+        });
+    }
+
+    @Test
+    void shortUrlQrDerivesTheLinkFromTheRequestHost() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response created = client.request("/api/v0/short-url/qr",
+                    b -> b.post(jsonBody("{\"url\":\"https://example.com/target\"}")))) {
+                assertThat(created.code()).isEqualTo(201);
+                assertThat(json(created).get("shortUrl").asText())
+                    .startsWith(client.getOrigin() + "/api/v0/short-url/");
+            }
+        });
+    }
+
+    @Test
+    void shortUrlQrRejectsABadRequestWithoutCreatingAnything() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response noUrl = client.request("/api/v0/short-url/qr",
+                    b -> b.post(jsonBody("{\"size\":512}")))) {
+                assertThat(noUrl.code()).isEqualTo(400);
+            }
+            try (Response badSize = client.request("/api/v0/short-url/qr",
+                    b -> b.post(jsonBody("{\"url\":\"https://example.com\",\"size\":4}")))) {
+                assertThat(badSize.code()).isEqualTo(400);
+                assertThat(json(badSize).get("error").asText()).contains("size must be between");
+            }
+            try (Response badBase = client.request("/api/v0/short-url/qr",
+                    b -> b.post(jsonBody("{\"url\":\"https://example.com\",\"baseUrl\":\"ss.serbekun.com\"}")))) {
+                assertThat(badBase.code()).isEqualTo(400);
+            }
+        });
+    }
+
+    // endregion
+
+    // region qr
+
+    @Test
+    void qrGenerateReturnsAPngThatReadsBackAsThePayload() {
+        JavalinTest.test(app, (server, client) -> {
+            byte[] png;
+            try (Response response = client.request("/api/v0/qr/generate",
+                    b -> b.post(jsonBody("{\"data\":\"https://ss.serbekun.com\",\"size\":256}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                assertThat(response.header("Content-Type")).contains("image/png");
+                assertThat(response.header("Content-Disposition")).contains("qr.png");
+                png = response.body().bytes();
+            }
+            assertThat(png).startsWith((byte) 0x89, (byte) 'P', (byte) 'N', (byte) 'G');
+
+            MultipartBody upload = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", "qr.png", RequestBody.create(png, MediaType.parse("image/png")))
+                .build();
+
+            try (Response read = client.request("/api/v0/qr/read", b -> b.post(upload))) {
+                assertThat(read.code()).isEqualTo(200);
+                JsonNode body = json(read);
+                assertThat(body.get("found").asBoolean()).isTrue();
+                assertThat(body.get("text").asText()).isEqualTo("https://ss.serbekun.com");
+                assertThat(body.get("format").asText()).isEqualTo("QR_CODE");
+            }
+        });
+    }
+
+    @Test
+    void qrGenerateReturnsSvgWhenAsked() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/qr/generate",
+                    b -> b.post(jsonBody("{\"data\":\"https://ss.serbekun.com\",\"format\":\"svg\","
+                        + "\"size\":512,\"errorCorrection\":\"H\","
+                        + "\"foreground\":\"#123456\",\"background\":\"#ffffff\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                assertThat(response.header("Content-Type")).contains("image/svg+xml");
+                assertThat(response.body().string())
+                    .startsWith("<svg")
+                    .contains("width=\"512\" height=\"512\"")
+                    .contains("fill=\"#123456\"");
+            }
+        });
+    }
+
+    @Test
+    void qrGenerateWrapsTheCodeInJsonWhenTheCallerAsksForIt() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/qr/generate",
+                    b -> b.post(jsonBody("{\"data\":\"embed me\"}"))
+                          .header("Accept", "application/json"))) {
+                assertThat(response.code()).isEqualTo(200);
+                assertThat(response.header("Content-Type")).contains("application/json");
+                JsonNode body = json(response);
+                assertThat(body.get("format").asText()).isEqualTo("png");
+                assertThat(body.get("contentType").asText()).isEqualTo("image/png");
+                assertThat(body.get("size").asInt()).isEqualTo(512);
+                assertThat(body.get("image").asText()).startsWith("data:image/png;base64,");
+            }
+
+            // ?json=true is the same request for a client that cannot set headers.
+            try (Response response = client.request("/api/v0/qr/generate?json=true",
+                    b -> b.post(jsonBody("{\"data\":\"embed me\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                assertThat(json(response).get("image").asText()).startsWith("data:image/png;base64,");
+            }
+        });
+    }
+
+    @Test
+    void qrGenerateRejectsWhatItCannotEncode() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response noData = client.request("/api/v0/qr/generate",
+                    b -> b.post(jsonBody("{\"size\":512}")))) {
+                assertThat(noData.code()).isEqualTo(400);
+                assertThat(json(noData).get("error").asText()).contains("'data' is required");
+            }
+
+            try (Response badFormat = client.request("/api/v0/qr/generate",
+                    b -> b.post(jsonBody("{\"data\":\"x\",\"format\":\"tiff\"}")))) {
+                assertThat(badFormat.code()).isEqualTo(400);
+                assertThat(json(badFormat).get("error").asText()).contains("unsupported format");
+            }
+
+            try (Response badColor = client.request("/api/v0/qr/generate",
+                    b -> b.post(jsonBody("{\"data\":\"x\",\"foreground\":\"salmon\"}")))) {
+                assertThat(badColor.code()).isEqualTo(400);
+                assertThat(json(badColor).get("error").asText()).contains("foreground must be a hex color");
+            }
+
+            String tooLong = "x".repeat(3000);
+            try (Response tooMuch = client.request("/api/v0/qr/generate",
+                    b -> b.post(jsonBody("{\"data\":\"" + tooLong + "\"}")))) {
+                assertThat(tooMuch.code()).isEqualTo(400);
+                assertThat(json(tooMuch).get("error").asText()).contains("too long");
+            }
+        });
+    }
+
+    @Test
+    void qrReadAcceptsBase64AndARawImageBody() {
+        JavalinTest.test(app, (server, client) -> {
+            String dataUrl;
+            try (Response generated = client.request("/api/v0/qr/generate?json=true",
+                    b -> b.post(jsonBody("{\"data\":\"scan me\"}")))) {
+                dataUrl = json(generated).get("image").asText();
+            }
+
+            // The data: URL exactly as it came back.
+            try (Response read = client.request("/api/v0/qr/read",
+                    b -> b.post(jsonBody(mapper.createObjectNode().put("image", dataUrl).toString())))) {
+                assertThat(read.code()).isEqualTo(200);
+                assertThat(json(read).get("text").asText()).isEqualTo("scan me");
+            }
+
+            // The same bytes posted raw.
+            byte[] png = Base64.getDecoder().decode(dataUrl.substring(dataUrl.indexOf(',') + 1));
+            try (Response read = client.request("/api/v0/qr/read",
+                    b -> b.post(RequestBody.create(png, MediaType.parse("image/png"))))) {
+                assertThat(read.code()).isEqualTo(200);
+                assertThat(json(read).get("text").asText()).isEqualTo("scan me");
+            }
+        });
+    }
+
+    @Test
+    void qrReadReportsAnImageWithoutACodeRatherThanFailing() {
+        JavalinTest.test(app, (server, client) -> {
+            // A PNG the server itself will render, of a code-free white square.
+            byte[] blank = Base64.getDecoder().decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAIAAAD/gAIDAAAAOklEQVR4nO3BMQEAAADCoPVPbQwf"
+                + "oAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAvg0hAAABgSGF7wAAAABJRU5ErkJggg==");
+
+            MultipartBody upload = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", "blank.png", RequestBody.create(blank, MediaType.parse("image/png")))
+                .build();
+
+            try (Response read = client.request("/api/v0/qr/read", b -> b.post(upload))) {
+                assertThat(read.code()).isEqualTo(200);
+                JsonNode body = json(read);
+                assertThat(body.get("found").asBoolean()).isFalse();
+                assertThat(body.get("text").isNull()).isTrue();
+            }
+        });
+    }
+
+    @Test
+    void qrReadRejectsWhatIsNotAnImage() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response nothing = client.request("/api/v0/qr/read", b -> b.post(jsonBody("{}")))) {
+                assertThat(nothing.code()).isEqualTo(400);
+                assertThat(json(nothing).get("error").asText()).contains("an image is required");
+            }
+
+            try (Response notBase64 = client.request("/api/v0/qr/read",
+                    b -> b.post(jsonBody("{\"image\":\"%%%not base64%%%\"}")))) {
+                assertThat(notBase64.code()).isEqualTo(400);
+            }
+
+            try (Response notAnImage = client.request("/api/v0/qr/read",
+                    b -> b.post(RequestBody.create("hello".getBytes(StandardCharsets.UTF_8),
+                        MediaType.parse("image/png"))))) {
+                assertThat(notAnImage.code()).isEqualTo(400);
+                assertThat(json(notAnImage).get("error").asText()).contains("unsupported image format");
             }
         });
     }

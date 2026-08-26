@@ -26,6 +26,7 @@ import com.serbekun.ss.service.autosave.*;
 import com.serbekun.ss.service.cipher.CipherService;
 import com.serbekun.ss.service.hash.HashService;
 import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
+import com.serbekun.ss.service.qr.QrService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.shorturl.ShortUrlService;
 import com.serbekun.ss.service.uploadedfiles.UploadedFilesCleanupService;
@@ -203,6 +204,7 @@ public class Main {
             ctx.services.linkRepositoryService,
             new CipherService(),
             new HashService(),
+            new QrService(),
             ctx.services.youtubeService,
             ctx.services.uploadedFilesService,
             ctx.services.shortUrlService,

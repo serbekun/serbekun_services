@@ -7,6 +7,7 @@ import io.javalin.config.SizeUnit;
 
 import com.serbekun.ss.config.Config;
 import com.serbekun.ss.http.handles.CipherRoutes;
+import com.serbekun.ss.http.handles.EncodingRoutes;
 import com.serbekun.ss.http.handles.HashRoutes;
 import com.serbekun.ss.http.handles.HttpHandler;
 import com.serbekun.ss.http.handles.NetworkRoutes;
@@ -22,6 +23,7 @@ import com.serbekun.ss.http.middleware.CharsetMiddleware;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.api.EndpointRegistrar;
 import com.serbekun.ss.service.cipher.CipherService;
+import com.serbekun.ss.service.encoding.EncodingService;
 import com.serbekun.ss.service.hash.HashService;
 import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
 import com.serbekun.ss.service.qr.QrService;
@@ -48,6 +50,7 @@ public final class ServerFactory {
             CipherService cipherService,
             HashService hashService,
             QrService qrService,
+            EncodingService encodingService,
             YoutubeService youtubeService,
             UploadedFilesService uploadedFilesService,
             ShortUrlService shortUrlService,
@@ -64,6 +67,7 @@ public final class ServerFactory {
             new CipherRoutes(cipherService, endpointRegistrar),
             new HashRoutes(hashService, endpointRegistrar),
             new QrRoutes(qrService, endpointRegistrar),
+            new EncodingRoutes(encodingService, endpointRegistrar),
             new RepositoryLinksRoutes(linkRepositoryService, endpointRegistrar),
             new YoutubeRoutes(youtubeService),
             new UploadedFilesRoutes(uploadedFilesService, config, endpointRegistrar),

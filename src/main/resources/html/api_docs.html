@@ -49,6 +49,7 @@
             <a href="#cipher-hybrid">cipher / hybrid</a>
             <a href="#hash">hash</a>
             <a href="#qr">qr</a>
+            <a href="#encoding">encoding</a>
             <a href="#short-url">short url</a>
             <a href="#repository-links">link repository</a>
             <a href="#uploaded-files">uploaded files</a>
@@ -738,9 +739,181 @@
             </details>
         </section>
 
+        <!-- ══════════ ENCODING ══════════ -->
+        <section class="group" id="encoding">
+            <div class="group-label">07 — encoding</div>
+            <p class="group-note">
+                The same bytes written another way — <b>base64</b>, <b>base64url</b>, <b>base32</b>,
+                <b>hex</b>, url percent-encoding and plain <b>utf8</b> text. Every route here is one
+                conversion: the input is decoded out of the format it came in, and those bytes are
+                written into the format asked for. Nothing is hidden or protected by any of it — for
+                that see <a href="#cipher">cipher</a>, and for proving data has not changed see
+                <a href="#hash">hash</a>. Format names are matched loosely (<code>BASE-64</code>,
+                <code>b64</code>, <code>base16</code>, <code>text</code>) and every response echoes the
+                canonical spelling. <code>bytes</code> is always the size of the payload itself, not of
+                the text it is written as.
+            </p>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/encoding/<span class="param">{format}</span>/encode</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">
+                        Writes a payload as <code>base64</code>, <code>hex</code> or <code>url</code> — the
+                        format is the one in the path. <code>encoding</code> says how to read the input, so
+                        binary can be handed in as hex or base64 rather than as text.
+                    </p>
+
+                    <div class="sub-label">path params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>format</td><td>string</td><td><span class="req">required</span></td><td><code>base64</code>, <code>hex</code> or <code>url</code></td></tr>
+                    </table>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>data</td><td>string</td><td><span class="req">required</span></td><td>the payload; an empty string is valid</td></tr>
+                        <tr><td>encoding</td><td>string</td><td><span class="opt">optional</span></td><td>how to read <code>data</code>: <code>utf8</code> (default), <code>base64</code>, <code>base64url</code>, <code>base32</code>, <code>hex</code>, <code>url</code>, <code>url-form</code></td></tr>
+                        <tr><td>form</td><td>boolean</td><td><span class="opt">optional</span></td><td>on <code>/url/encode</code> only — true writes <code>x-www-form-urlencoded</code> (a space becomes <code>+</code>) instead of RFC 3986</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "data": "Zm9vYmFy",
+  "bytes": 6,
+  "from": "utf8",
+  "to": "base64"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>converted</span>
+                        <span class="status-chip err"><b>400</b>missing <code>data</code>, an unknown <code>encoding</code>, or input that is not valid in it</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/encoding/base64/encode \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"foobar"}'</pre>
+
+                    <div class="sub-label">example — binary in, hex out</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/encoding/hex/encode \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"Zm9vYmFy","encoding":"base64"}'</pre>
+
+                    <div class="sub-label">example — form-style url encoding</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/encoding/url/encode \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"a b+c","form":true}'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/encoding/<span class="param">{format}</span>/decode</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">
+                        Reads a payload written as <code>base64</code>, <code>hex</code> or <code>url</code>.
+                        <code>outputEncoding</code> says how to write the result — it defaults to
+                        <code>utf8</code>, and bytes that are not valid UTF-8 are refused rather than
+                        mangled into <code>�</code>, so binary needs <code>hex</code> or <code>base64</code>
+                        here. Decoding is forgiving about how the input was pasted: whitespace, lowercase,
+                        missing padding, a <code>0x</code> prefix and <code>:</code> separators in hex, and
+                        the url-safe alphabet on the base64 route.
+                    </p>
+
+                    <div class="sub-label">path params</div>
+                    <table class="params">
+                        <tr><th>param</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>format</td><td>string</td><td><span class="req">required</span></td><td><code>base64</code>, <code>hex</code> or <code>url</code></td></tr>
+                    </table>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>data</td><td>string</td><td><span class="req">required</span></td><td>the encoded payload</td></tr>
+                        <tr><td>outputEncoding</td><td>string</td><td><span class="opt">optional</span></td><td>how to write the result: <code>utf8</code> (default), <code>base64</code>, <code>base64url</code>, <code>base32</code>, <code>hex</code>, <code>url</code>, <code>url-form</code></td></tr>
+                        <tr><td>form</td><td>boolean</td><td><span class="opt">optional</span></td><td>on <code>/url/decode</code> only — true reads <code>x-www-form-urlencoded</code>, where <code>+</code> is a space</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "data": "foobar",
+  "bytes": 6,
+  "from": "base64",
+  "to": "utf8"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>converted</span>
+                        <span class="status-chip err"><b>400</b>input that is not valid in the format, or bytes that are not text when text was asked for</span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/encoding/base64/decode \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"Zm9vYmFy"}'</pre>
+
+                    <div class="sub-label">example — binary payload</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/encoding/base64/decode \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"//79","outputEncoding":"hex"}'</pre>
+                </div>
+            </details>
+
+            <details class="endpoint">
+                <summary>
+                    <span class="method post">post</span>
+                    <span class="path">/api/v0/encoding/convert</span>
+                    <span class="chev">›</span>
+                </summary>
+                <div class="endpoint-body">
+                    <p class="desc">
+                        The general form: name both sides. The six routes above are this one with a side
+                        pinned by the path.
+                    </p>
+
+                    <div class="sub-label">body — application/json</div>
+                    <table class="params">
+                        <tr><th>field</th><th>type</th><th></th><th>description</th></tr>
+                        <tr><td>data</td><td>string</td><td><span class="req">required</span></td><td>the payload as written in <code>from</code></td></tr>
+                        <tr><td>from</td><td>string</td><td><span class="req">required</span></td><td><code>utf8</code>, <code>base64</code>, <code>base64url</code>, <code>base32</code>, <code>hex</code>, <code>url</code> or <code>url-form</code></td></tr>
+                        <tr><td>to</td><td>string</td><td><span class="req">required</span></td><td>the format to write the result in, same set</td></tr>
+                    </table>
+
+                    <div class="sub-label">response 200</div>
+<pre class="code">{
+  "data": "MZXW6YTBOI======",
+  "bytes": 6,
+  "from": "base64",
+  "to": "base32"
+}</pre>
+
+                    <div class="sub-label">statuses</div>
+                    <div class="statuses">
+                        <span class="status-chip ok"><b>200</b>converted</span>
+                        <span class="status-chip err"><b>400</b>missing <code>data</code>, an unknown format, or input that is not valid in <code>from</code></span>
+                    </div>
+
+                    <div class="sub-label">example</div>
+<pre class="code"><button class="copy-btn" type="button">copy</button>curl -s -X POST $BASE/api/v0/encoding/convert \
+  -H 'Content-Type: application/json' \
+  -d '{"data":"Zm9vYmFy","from":"base64","to":"base32"}'</pre>
+                </div>
+            </details>
+        </section>
+
         <!-- ══════════ SHORT URL ══════════ -->
         <section class="group" id="short-url">
-            <div class="group-label">07 — short url</div>
+            <div class="group-label">08 — short url</div>
             <p class="group-note">The delete <code>token</code> is returned only once, at creation time. Without it a short url cannot be removed.</p>
 
             <details class="endpoint">
@@ -886,7 +1059,7 @@
 
         <!-- ══════════ REPOSITORY LINKS ══════════ -->
         <section class="group" id="repository-links">
-            <div class="group-label">08 — link repository</div>
+            <div class="group-label">09 — link repository</div>
             <p class="group-note">
                 A repository is a token-protected bag of links. The <code>token</code> is shown only in the
                 create response — every other call needs it as <code>?token=</code>. A wrong token is answered
@@ -1093,7 +1266,7 @@
 
         <!-- ══════════ UPLOADED FILES ══════════ -->
         <section class="group" id="uploaded-files">
-            <div class="group-label">09 — uploaded files</div>
+            <div class="group-label">10 — uploaded files</div>
             <p class="group-note">
                 Files are stored with an optional TTL and are swept by a background cleanup task once expired.
                 Every read and delete needs the <code>token</code> handed out at upload time.
@@ -1279,7 +1452,7 @@
 
         <!-- ══════════ YOUTUBE ══════════ -->
         <section class="group" id="youtube">
-            <div class="group-label">10 — youtube</div>
+            <div class="group-label">11 — youtube</div>
             <p class="group-note">
                 Backed by <code>yt-dlp</code> on the server. Playlist parameters are ignored, age-restricted
                 videos need server-side cookies, and each call is capped at a 120 second timeout.
@@ -1342,7 +1515,7 @@
 
         <!-- ══════════ NETWORK ══════════ -->
         <section class="group" id="network">
-            <div class="group-label">11 — network</div>
+            <div class="group-label">12 — network</div>
 
             <details class="endpoint">
                 <summary>
@@ -1370,7 +1543,7 @@
 
         <!-- ══════════ STATIC ══════════ -->
         <section class="group" id="static">
-            <div class="group-label">12 — static</div>
+            <div class="group-label">13 — static</div>
             <p class="group-note">
                 Classpath resources served straight from the jar. Every category behaves the same way:
                 without a name it lists what is available, with a name it returns the file.

@@ -68,8 +68,8 @@ The project is a Javalin 6 server with token-based auth, JSON-file persistence, 
 
 JUnit 5 + AssertJ + Mockito, run with `./gradlew test`. Coverage (as of 2026-07-19):
 
-- **Unit tests** per layer: services (`cipher` — AES, RSA, hybrid, `hash`, `qr`, `shorturl`, `linksrepo`, `uploadedfiles`, `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
-- **HTTP integration tests** at `src/test/java/com/serbekun/ss/http/ServerHttpIntegrationTest.java` — full route tree via `RouteInitializer` + `javalin-testtools`, real services over in-memory repos; only the `Youtube` (yt-dlp) wrapper is mocked. Covers index/static, version, cipher, hash, qr, short-url, repository-links, uploaded-files (multipart), and youtube endpoints.
+- **Unit tests** per layer: services (`cipher` — AES, RSA, hybrid, `hash`, `qr`, `encoding`, `shorturl`, `linksrepo`, `uploadedfiles`, `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
+- **HTTP integration tests** at `src/test/java/com/serbekun/ss/http/ServerHttpIntegrationTest.java` — full route tree via `RouteInitializer` + `javalin-testtools`, real services over in-memory repos; only the `Youtube` (yt-dlp) wrapper is mocked. Covers index/static, version, cipher, hash, qr, encoding, short-url, repository-links, uploaded-files (multipart), and youtube endpoints.
 - `YoutubeTest` contains real yt-dlp integration tests that need `yt-dlp`, Deno, and network access — expect failures without them.
 
 Gotcha: don't use Mockito `verify(mock, timeout(...))` on `synchronized` methods (e.g. `UploadedFilesService.deleteExpiredFiles`) — the verifying thread holds the mock's monitor and deadlocks the thread under test. Use `CountDownLatch` answers instead (see `UploadedFilesCleanupServiceTest`).
@@ -98,6 +98,9 @@ All registered in `http/handles/*Routes` classes:
 - `POST /api/v0/hash/verify` — integrity check (JSON body `{"algorithm", "data", "hash", "encoding"?, "key"?}`), returns `{"valid", "algorithm", "expected", "actual"}`; a mismatch is a 200 with `valid: false`, not an error
 - `POST /api/v0/qr/generate` — render a QR code (JSON body `{"data", "format"?, "size"?, "errorCorrection"?, "foreground"?, "background"?, "margin"?}`); answers with the raw image, or with `{"format", "contentType", "size", "image"}` (a `data:` URL) when the caller sends `Accept: application/json` or `?json=true`
 - `POST /api/v0/qr/read` — read a code out of an image (multipart `file`, a raw `image/*` body, or JSON `{"image": "<base64>"}`), returns `{"found", "text", "format"}`; an image with no code is a 200 with `found: false`, not an error
+- `POST /api/v0/encoding/{base64|hex|url}/encode` — write a payload in that format (JSON body `{"data", "encoding"?, "form"?}`, where `encoding` says how to read the input, default `utf8`), returns `{"data", "bytes", "from", "to"}`
+- `POST /api/v0/encoding/{base64|hex|url}/decode` — read a payload written in that format (JSON body `{"data", "outputEncoding"?, "form"?}`, where `outputEncoding` says how to write the result, default `utf8`), same response shape
+- `POST /api/v0/encoding/convert` — convert between any two formats (JSON body `{"data", "from", "to"}`), same response shape; the six routes above are this one with a side pinned by the path
 - `POST /api/v0/repository/links/` — create a link repository (JSON body `{"name"?}`), returns `{"repositoryId", "token", "name", "createdAt"}` (the `token` is shown only here)
 - `GET /api/v0/repository/links/{repositoryId}?token=...` — get a repository with all its links, 404 if not found or token is invalid
 - `DELETE /api/v0/repository/links/{repositoryId}?token=...` — delete a repository, 204 on success, 404 if not found or token is invalid
@@ -190,6 +193,38 @@ would show up nowhere else.
 Frontend: `html/qr.html` — generate (live preview, download, copy image / data url), read
 (drag-and-drop **and** clipboard paste of a screenshot), and short link, which creates a short url
 and its code in one call using the options set on the generate tab.
+
+## Encoding functionality
+
+`service/encoding/` — conversion between representations, stateless and nothing stored. It is
+neither encryption nor hashing: every step is reversible by anyone, which the page and the docs say
+out loud so the three are not confused.
+
+- `EncodingFormat` — the seven formats (`utf8`, `base64`, `base64url`, `base32`, `hex`, `url`,
+  `url-form`), each a two-way street between text and bytes. That is what makes one conversion
+  enough for all seven endpoints: decode out of `from`, encode into `to`. `fromWire(name, field)`
+  matches spelling loosely and names the offending field in its error.
+- **Encoding is canonical, decoding is forgiving** — output is padded uppercase base32, lowercase
+  hex, padded base64; input may carry whitespace, lowercase, missing padding, a `0x` prefix or `:`
+  separators in hex, and the url-safe alphabet on the standard base64 route (a JWT segment decodes
+  without picking a variant).
+- **The two url variants are kept apart on purpose.** `url` is RFC 3986 (space → `%20`, `+` is a
+  literal plus); `url-form` is `x-www-form-urlencoded` (space → `+`). Reading one as the other is
+  the classic way `a+b` becomes `a b`, so the fixed url routes take a `form` boolean and `convert`
+  takes the name.
+- **UTF-8 output refuses rather than mangles** — the lenient decoder would answer `�` for arbitrary
+  bytes, losing the data and hiding that it happened, so `EncodingFormat.UTF8.encode` throws and the
+  HTTP layer answers `400` naming hex/base64/base32 as the fix.
+- `Base32` is hand-rolled (the JDK ships none) — RFC 4648, no new dependency.
+- `bytes` in every response is the size of the payload itself, never of the text it is written as.
+
+`EncodingServiceTest` pins the RFC 4648 §10 vectors for base64, base32 and hex first — everything
+else only proves self-consistency, those prove agreement with the rest of the world — then
+round-trips 512 random bytes through every format.
+
+Frontend: `html/encoding.html` — one live converter (from/to pickers, debounced conversion as you
+type, byte count, copy) with a swap button that carries the output back into the input, so "encode
+this" becomes "now decode it again" in one click.
 
 ## YouTube functionality
 

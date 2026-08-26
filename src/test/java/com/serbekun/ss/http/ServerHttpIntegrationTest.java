@@ -13,6 +13,7 @@ import com.serbekun.ss.resources.ResourceLoader;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.EndpointRegistry;
 import com.serbekun.ss.service.cipher.CipherService;
+import com.serbekun.ss.service.encoding.EncodingService;
 import com.serbekun.ss.service.hash.HashService;
 import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
 import com.serbekun.ss.service.qr.QrService;
@@ -90,7 +91,7 @@ class ServerHttpIntegrationTest {
         var resourcesService = new ResourcesService(loader, new ResourceCache(loader));
 
         app = ServerFactory.create(config, resourcesService, linkService,
-            new CipherService(), new HashService(), new QrService(), youtubeService, uploadedService,
+            new CipherService(), new HashService(), new QrService(), new EncodingService(), youtubeService, uploadedService,
             shortUrlService, authService, endpointRegistry);
     }
 
@@ -952,6 +953,139 @@ class ServerHttpIntegrationTest {
                         MediaType.parse("image/png"))))) {
                 assertThat(notAnImage.code()).isEqualTo(400);
                 assertThat(json(notAnImage).get("error").asText()).contains("unsupported image format");
+            }
+        });
+    }
+
+
+    // region encoding
+
+    @Test
+    void base64EncodeAndDecodeRoundTrip() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response encoded = client.request("/api/v0/encoding/base64/encode",
+                    b -> b.post(jsonBody("{\"data\":\"foobar\"}")))) {
+                assertThat(encoded.code()).isEqualTo(200);
+                JsonNode body = json(encoded);
+                assertThat(body.get("data").asText()).isEqualTo("Zm9vYmFy");
+                assertThat(body.get("bytes").asInt()).isEqualTo(6);
+                assertThat(body.get("from").asText()).isEqualTo("utf8");
+                assertThat(body.get("to").asText()).isEqualTo("base64");
+            }
+
+            try (Response decoded = client.request("/api/v0/encoding/base64/decode",
+                    b -> b.post(jsonBody("{\"data\":\"Zm9vYmFy\"}")))) {
+                assertThat(decoded.code()).isEqualTo(200);
+                JsonNode body = json(decoded);
+                assertThat(body.get("data").asText()).isEqualTo("foobar");
+                assertThat(body.get("from").asText()).isEqualTo("base64");
+                assertThat(body.get("to").asText()).isEqualTo("utf8");
+            }
+        });
+    }
+
+    @Test
+    void hexEncodeReadsBinaryInputAndDecodeWritesIt() {
+        JavalinTest.test(app, (server, client) -> {
+            // `encoding` describes the input, so binary can be handed in as base64.
+            try (Response encoded = client.request("/api/v0/encoding/hex/encode",
+                    b -> b.post(jsonBody("{\"data\":\"Zm9vYmFy\",\"encoding\":\"base64\"}")))) {
+                assertThat(encoded.code()).isEqualTo(200);
+                assertThat(json(encoded).get("data").asText()).isEqualTo("666f6f626172");
+            }
+
+            // `outputEncoding` describes the result, so bytes that are not text still come back.
+            try (Response decoded = client.request("/api/v0/encoding/hex/decode",
+                    b -> b.post(jsonBody("{\"data\":\"0x66:6F:6F\",\"outputEncoding\":\"base64\"}")))) {
+                assertThat(decoded.code()).isEqualTo(200);
+                JsonNode body = json(decoded);
+                assertThat(body.get("data").asText()).isEqualTo("Zm9v");
+                assertThat(body.get("to").asText()).isEqualTo("base64");
+            }
+        });
+    }
+
+    @Test
+    void urlEncodingHasBothVariants() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response rfc = client.request("/api/v0/encoding/url/encode",
+                    b -> b.post(jsonBody("{\"data\":\"a b+c\"}")))) {
+                assertThat(rfc.code()).isEqualTo(200);
+                JsonNode body = json(rfc);
+                assertThat(body.get("data").asText()).isEqualTo("a%20b%2Bc");
+                assertThat(body.get("to").asText()).isEqualTo("url");
+            }
+
+            try (Response form = client.request("/api/v0/encoding/url/encode",
+                    b -> b.post(jsonBody("{\"data\":\"a b+c\",\"form\":true}")))) {
+                assertThat(form.code()).isEqualTo(200);
+                JsonNode body = json(form);
+                assertThat(body.get("data").asText()).isEqualTo("a+b%2Bc");
+                assertThat(body.get("to").asText()).isEqualTo("url-form");
+            }
+
+            // The same text decoded the other way round means something different.
+            try (Response rfc = client.request("/api/v0/encoding/url/decode",
+                    b -> b.post(jsonBody("{\"data\":\"a+b\"}")))) {
+                assertThat(json(rfc).get("data").asText()).isEqualTo("a+b");
+            }
+            try (Response form = client.request("/api/v0/encoding/url/decode",
+                    b -> b.post(jsonBody("{\"data\":\"a+b\",\"form\":true}")))) {
+                assertThat(json(form).get("data").asText()).isEqualTo("a b");
+            }
+        });
+    }
+
+    @Test
+    void convertGoesBetweenAnyTwoFormats() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/encoding/convert",
+                    b -> b.post(jsonBody("{\"data\":\"Zm9vYmFy\",\"from\":\"base64\",\"to\":\"base32\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode body = json(response);
+                assertThat(body.get("data").asText()).isEqualTo("MZXW6YTBOI======");
+                assertThat(body.get("bytes").asInt()).isEqualTo(6);
+                assertThat(body.get("from").asText()).isEqualTo("base64");
+                assertThat(body.get("to").asText()).isEqualTo("base32");
+            }
+
+            // Format names are matched loosely, and echoed back canonically.
+            try (Response response = client.request("/api/v0/encoding/convert",
+                    b -> b.post(jsonBody("{\"data\":\"MZXW6YTBOI\",\"from\":\"BASE-32\",\"to\":\"base16\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode body = json(response);
+                assertThat(body.get("data").asText()).isEqualTo("666f6f626172");
+                assertThat(body.get("to").asText()).isEqualTo("hex");
+            }
+        });
+    }
+
+    @Test
+    void encodingRejectsWhatItCannotRead() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response noData = client.request("/api/v0/encoding/base64/encode",
+                    b -> b.post(jsonBody("{}")))) {
+                assertThat(noData.code()).isEqualTo(400);
+                assertThat(json(noData).get("error").asText()).contains("'data' is required");
+            }
+
+            try (Response badBase64 = client.request("/api/v0/encoding/base64/decode",
+                    b -> b.post(jsonBody("{\"data\":\"not base64!!\"}")))) {
+                assertThat(badBase64.code()).isEqualTo(400);
+                assertThat(json(badBase64).get("error").asText()).contains("not valid base64");
+            }
+
+            try (Response badFormat = client.request("/api/v0/encoding/convert",
+                    b -> b.post(jsonBody("{\"data\":\"x\",\"from\":\"utf8\",\"to\":\"rot13\"}")))) {
+                assertThat(badFormat.code()).isEqualTo(400);
+                assertThat(json(badFormat).get("error").asText()).contains("unsupported to 'rot13'");
+            }
+
+            // Arbitrary bytes asked for as text are refused, not mangled into '?'.
+            try (Response notText = client.request("/api/v0/encoding/hex/decode",
+                    b -> b.post(jsonBody("{\"data\":\"80\"}")))) {
+                assertThat(notText.code()).isEqualTo(400);
+                assertThat(json(notText).get("error").asText()).contains("not valid UTF-8 text");
             }
         });
     }

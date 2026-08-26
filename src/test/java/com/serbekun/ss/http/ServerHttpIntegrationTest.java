@@ -15,6 +15,7 @@ import com.serbekun.ss.service.auth.EndpointRegistry;
 import com.serbekun.ss.service.cipher.CipherService;
 import com.serbekun.ss.service.encoding.EncodingService;
 import com.serbekun.ss.service.hash.HashService;
+import com.serbekun.ss.service.id.IdService;
 import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
 import com.serbekun.ss.service.qr.QrService;
 import com.serbekun.ss.service.resource.ResourcesService;
@@ -40,8 +41,10 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -91,7 +94,7 @@ class ServerHttpIntegrationTest {
         var resourcesService = new ResourcesService(loader, new ResourceCache(loader));
 
         app = ServerFactory.create(config, resourcesService, linkService,
-            new CipherService(), new HashService(), new QrService(), new EncodingService(), youtubeService, uploadedService,
+            new CipherService(), new HashService(), new QrService(), new EncodingService(), new IdService(), youtubeService, uploadedService,
             shortUrlService, authService, endpointRegistry);
     }
 
@@ -1086,6 +1089,177 @@ class ServerHttpIntegrationTest {
                     b -> b.post(jsonBody("{\"data\":\"80\"}")))) {
                 assertThat(notText.code()).isEqualTo(400);
                 assertThat(json(notText).get("error").asText()).contains("not valid UTF-8 text");
+            }
+        });
+    }
+
+
+    // region id + random
+
+    @Test
+    void uuidEndpointIssuesCanonicalV4ByDefault() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.get("/api/v0/id/uuid")) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode body = json(response);
+                assertThat(body.get("type").asText()).isEqualTo("uuid");
+                assertThat(body.get("version").asText()).isEqualTo("v4");
+                assertThat(body.get("format").asText()).isEqualTo("canonical");
+                assertThat(body.get("bits").asInt()).isEqualTo(122);
+                assertThat(body.get("count").asInt()).isEqualTo(1);
+                // One value still comes back as an array, so a client never branches on the count.
+                assertThat(body.get("values").isArray()).isTrue();
+                assertThat(body.get("values").get(0).asText())
+                    .matches("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}");
+            }
+        });
+    }
+
+    @Test
+    void uuidEndpointTakesCountVersionAndFormat() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.get("/api/v0/id/uuid?count=5&version=v7&format=compact")) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode body = json(response);
+                assertThat(body.get("version").asText()).isEqualTo("v7");
+                assertThat(body.get("format").asText()).isEqualTo("compact");
+                assertThat(body.get("values")).hasSize(5);
+                body.get("values").forEach(value ->
+                    assertThat(value.asText()).matches("[0-9a-f]{12}7[0-9a-f]{19}"));
+            }
+        });
+    }
+
+    @Test
+    void ulidEndpointIssuesSortedIds() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.get("/api/v0/id/ulid?count=4")) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode body = json(response);
+                assertThat(body.get("type").asText()).isEqualTo("ulid");
+                assertThat(body.get("bits").asInt()).isEqualTo(80);
+
+                List<String> values = new ArrayList<>();
+                body.get("values").forEach(value -> values.add(value.asText()));
+                assertThat(values).hasSize(4).isSorted()
+                    .allMatch(v -> v.matches("[0-9A-HJKMNP-TV-Z]{26}"));
+            }
+
+            try (Response response = client.get("/api/v0/id/ulid?format=uuid")) {
+                assertThat(json(response).get("values").get(0).asText())
+                    .matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+            }
+        });
+    }
+
+    @Test
+    void tokenEndpointTakesLengthAlphabetAndACustomSet() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.get("/api/v0/random/token?count=2&length=16&alphabet=base58")) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode body = json(response);
+                assertThat(body.get("alphabet").asText()).isEqualTo("base58");
+                assertThat(body.get("length").asInt()).isEqualTo(16);
+                assertThat(body.get("values")).hasSize(2);
+                body.get("values").forEach(value ->
+                    assertThat(value.asText()).matches("[123456789A-HJ-NP-Za-km-z]{16}"));
+            }
+
+            try (Response response = client.get("/api/v0/random/token?length=8&chars=ATGC")) {
+                JsonNode body = json(response);
+                assertThat(body.get("alphabet").asText()).isEqualTo("custom");
+                assertThat(body.get("bits").asInt()).isEqualTo(16);
+                assertThat(body.get("values").get(0).asText()).matches("[ATGC]{8}");
+            }
+        });
+    }
+
+    @Test
+    void randomBytesEndpointTakesLengthAndFormat() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.get("/api/v0/random/bytes?length=16")) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode body = json(response);
+                assertThat(body.get("format").asText()).isEqualTo("hex");
+                assertThat(body.get("bits").asInt()).isEqualTo(128);
+                assertThat(body.get("values").get(0).asText()).matches("[0-9a-f]{32}");
+            }
+
+            try (Response response = client.get("/api/v0/random/bytes?length=32&format=base64")) {
+                String value = json(response).get("values").get(0).asText();
+                assertThat(Base64.getDecoder().decode(value)).hasSize(32);
+            }
+        });
+    }
+
+    @Test
+    void batchMixesKindsInOneCall() {
+        JavalinTest.test(app, (server, client) -> {
+            String request = "{\"items\":["
+                + "{\"type\":\"uuid\",\"count\":2,\"version\":\"v7\"},"
+                + "{\"type\":\"ulid\",\"count\":3},"
+                + "{\"type\":\"token\",\"length\":12,\"alphabet\":\"hex\"},"
+                + "{\"type\":\"bytes\",\"length\":8,\"format\":\"base64url\"}]}";
+
+            try (Response response = client.request("/api/v0/id/batch", b -> b.post(jsonBody(request)))) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode items = json(response).get("items");
+                assertThat(items).hasSize(4);
+                assertThat(items.get(0).get("type").asText()).isEqualTo("uuid");
+                assertThat(items.get(0).get("values")).hasSize(2);
+                assertThat(items.get(1).get("values")).hasSize(3);
+                assertThat(items.get(2).get("values").get(0).asText()).matches("[0-9a-f]{12}");
+                assertThat(items.get(3).get("format").asText()).isEqualTo("base64url");
+            }
+        });
+    }
+
+    @Test
+    void batchAlsoTakesASingleItemUnwrapped() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/id/batch",
+                    b -> b.post(jsonBody("{\"type\":\"uuid\",\"count\":3}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode items = json(response).get("items");
+                assertThat(items).hasSize(1);
+                assertThat(items.get(0).get("values")).hasSize(3);
+            }
+        });
+    }
+
+    @Test
+    void idEndpointsRejectWhatTheyCannotGenerate() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response notANumber = client.get("/api/v0/id/uuid?count=lots")) {
+                assertThat(notANumber.code()).isEqualTo(400);
+                assertThat(json(notANumber).get("error").asText()).contains("count must be a whole number");
+            }
+
+            try (Response outOfRange = client.get("/api/v0/id/uuid?count=0")) {
+                assertThat(outOfRange.code()).isEqualTo(400);
+                assertThat(json(outOfRange).get("error").asText()).contains("count must be between 1 and 1000");
+            }
+
+            try (Response badAlphabet = client.get("/api/v0/random/token?alphabet=emoji")) {
+                assertThat(badAlphabet.code()).isEqualTo(400);
+                assertThat(json(badAlphabet).get("error").asText()).contains("unsupported alphabet 'emoji'");
+            }
+
+            try (Response asText = client.get("/api/v0/random/bytes?format=utf8")) {
+                assertThat(asText.code()).isEqualTo(400);
+                assertThat(json(asText).get("error").asText()).contains("random bytes are not text");
+            }
+
+            try (Response noType = client.request("/api/v0/id/batch",
+                    b -> b.post(jsonBody("{\"count\":3}")))) {
+                assertThat(noType.code()).isEqualTo(400);
+            }
+
+            try (Response tooMany = client.request("/api/v0/id/batch",
+                    b -> b.post(jsonBody("{\"items\":[{\"type\":\"uuid\",\"count\":600},"
+                        + "{\"type\":\"ulid\",\"count\":600}]}")))) {
+                assertThat(tooMany.code()).isEqualTo(400);
+                assertThat(json(tooMany).get("error").asText()).contains("at most 1000 values in total");
             }
         });
     }

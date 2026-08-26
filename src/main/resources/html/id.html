@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>IDs &amp; Tokens — Serbekun</title>
+    <link rel="icon" href="/icon" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/v0/css/theme.css">
+    <link rel="stylesheet" href="/static/v0/css/shared.css">
+    <link rel="stylesheet" href="/static/v0/css/id.css">
+    <script src="/static/v0/js/theme.js"></script>
+</head>
+<body>
+
+    <button class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="tt-sun">☀</span><span class="tt-moon">☾</span>
+    </button>
+
+    <div class="container">
+        <a href="/" class="back-link">back</a>
+
+        <div class="header">
+            <h1 class="header-title">IDs &amp; Tokens</h1>
+            <p class="header-sub">// uuid · ulid · tokens · random bytes</p>
+        </div>
+
+        <div class="prompt-line">
+            <span class="cwd">~/serbekun/id</span>
+            <span>$</span>
+            <span>gen --interactive</span>
+            <span class="prompt-cursor"></span>
+        </div>
+
+        <!-- Kind -->
+        <div class="tab-bar">
+            <button class="tab-btn active" type="button" data-type="uuid">uuid</button>
+            <button class="tab-btn" type="button" data-type="ulid">ulid</button>
+            <button class="tab-btn" type="button" data-type="token">token</button>
+            <button class="tab-btn" type="button" data-type="bytes">bytes</button>
+        </div>
+
+        <p class="panel-note" id="note"></p>
+
+        <!-- uuid options -->
+        <div class="opt-block" id="uuidOptions">
+            <div class="enc-row">
+                <span class="enc-label">version</span>
+                <button class="enc-btn active" type="button" data-group="uuidVersion" data-value="v4">v4 · random</button>
+                <button class="enc-btn" type="button" data-group="uuidVersion" data-value="v7">v7 · time-ordered</button>
+            </div>
+            <div class="enc-row">
+                <span class="enc-label">format</span>
+                <button class="enc-btn active" type="button" data-group="uuidFormat" data-value="canonical">canonical</button>
+                <button class="enc-btn" type="button" data-group="uuidFormat" data-value="compact">compact</button>
+                <button class="enc-btn" type="button" data-group="uuidFormat" data-value="upper">upper</button>
+                <button class="enc-btn" type="button" data-group="uuidFormat" data-value="urn">urn</button>
+            </div>
+        </div>
+
+        <!-- ulid options -->
+        <div class="opt-block hidden" id="ulidOptions">
+            <div class="enc-row">
+                <span class="enc-label">format</span>
+                <button class="enc-btn active" type="button" data-group="ulidFormat" data-value="canonical">canonical</button>
+                <button class="enc-btn" type="button" data-group="ulidFormat" data-value="lower">lower</button>
+                <button class="enc-btn" type="button" data-group="ulidFormat" data-value="uuid">as uuid</button>
+                <button class="enc-btn" type="button" data-group="ulidFormat" data-value="hex">hex</button>
+            </div>
+        </div>
+
+        <!-- token options -->
+        <div class="opt-block hidden" id="tokenOptions">
+            <div class="enc-row">
+                <span class="enc-label">alphabet</span>
+                <button class="enc-btn active" type="button" data-group="alphabet" data-value="base62">base62</button>
+                <button class="enc-btn" type="button" data-group="alphabet" data-value="base58">base58</button>
+                <button class="enc-btn" type="button" data-group="alphabet" data-value="base64url">base64url</button>
+                <button class="enc-btn" type="button" data-group="alphabet" data-value="hex">hex</button>
+                <button class="enc-btn" type="button" data-group="alphabet" data-value="digits">digits</button>
+                <button class="enc-btn" type="button" data-group="alphabet" data-value="custom">custom…</button>
+            </div>
+            <div class="field hidden" id="charsField">
+                <div class="field-label">characters to draw from</div>
+                <input type="text" id="chars" placeholder="ATGC" spellcheck="false" autocomplete="off">
+            </div>
+        </div>
+
+        <!-- bytes options -->
+        <div class="opt-block hidden" id="bytesOptions">
+            <div class="enc-row">
+                <span class="enc-label">format</span>
+                <button class="enc-btn active" type="button" data-group="bytesFormat" data-value="hex">hex</button>
+                <button class="enc-btn" type="button" data-group="bytesFormat" data-value="base64">base64</button>
+                <button class="enc-btn" type="button" data-group="bytesFormat" data-value="base64url">base64url</button>
+                <button class="enc-btn" type="button" data-group="bytesFormat" data-value="base32">base32</button>
+            </div>
+        </div>
+
+        <!-- shared numbers -->
+        <div class="num-grid">
+            <div class="opt">
+                <div class="field-label">how many</div>
+                <input type="number" id="count" value="5" min="1" max="1000" step="1">
+            </div>
+            <div class="opt hidden" id="lengthField">
+                <div class="field-label" id="lengthLabel">length</div>
+                <input type="number" id="length" value="32" min="1" max="4096" step="1">
+            </div>
+        </div>
+
+        <button class="run-btn" type="button" id="runBtn">generate</button>
+
+        <div id="result" class="result-block">
+            <div class="result-header">
+                <span class="result-label" id="resultLabel">values</span>
+                <button class="copy-btn" type="button" id="copyAll">copy all</button>
+            </div>
+            <div class="values" id="values"></div>
+            <div class="result-meta" id="meta"></div>
+        </div>
+
+        <div class="status-line" id="status"></div>
+
+        <div class="footer">serbekun service // ids &amp; tokens</div>
+    </div>
+
+    <script src="/static/v0/js/id.js"></script>
+</body>
+</html>

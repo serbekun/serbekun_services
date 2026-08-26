@@ -68,8 +68,8 @@ The project is a Javalin 6 server with token-based auth, JSON-file persistence, 
 
 JUnit 5 + AssertJ + Mockito, run with `./gradlew test`. Coverage (as of 2026-07-19):
 
-- **Unit tests** per layer: services (`cipher` — AES, RSA, hybrid, `hash`, `qr`, `encoding`, `shorturl`, `linksrepo`, `uploadedfiles`, `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
-- **HTTP integration tests** at `src/test/java/com/serbekun/ss/http/ServerHttpIntegrationTest.java` — full route tree via `RouteInitializer` + `javalin-testtools`, real services over in-memory repos; only the `Youtube` (yt-dlp) wrapper is mocked. Covers index/static, version, cipher, hash, qr, encoding, short-url, repository-links, uploaded-files (multipart), and youtube endpoints.
+- **Unit tests** per layer: services (`cipher` — AES, RSA, hybrid, `hash`, `qr`, `encoding`, `id` (+ `Ulid`), `shorturl`, `linksrepo`, `uploadedfiles`, `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
+- **HTTP integration tests** at `src/test/java/com/serbekun/ss/http/ServerHttpIntegrationTest.java` — full route tree via `RouteInitializer` + `javalin-testtools`, real services over in-memory repos; only the `Youtube` (yt-dlp) wrapper is mocked. Covers index/static, version, cipher, hash, qr, encoding, id/random, short-url, repository-links, uploaded-files (multipart), and youtube endpoints.
 - `YoutubeTest` contains real yt-dlp integration tests that need `yt-dlp`, Deno, and network access — expect failures without them.
 
 Gotcha: don't use Mockito `verify(mock, timeout(...))` on `synchronized` methods (e.g. `UploadedFilesService.deleteExpiredFiles`) — the verifying thread holds the mock's monitor and deadlocks the thread under test. Use `CountDownLatch` answers instead (see `UploadedFilesCleanupServiceTest`).
@@ -101,6 +101,11 @@ All registered in `http/handles/*Routes` classes:
 - `POST /api/v0/encoding/{base64|hex|url}/encode` — write a payload in that format (JSON body `{"data", "encoding"?, "form"?}`, where `encoding` says how to read the input, default `utf8`), returns `{"data", "bytes", "from", "to"}`
 - `POST /api/v0/encoding/{base64|hex|url}/decode` — read a payload written in that format (JSON body `{"data", "outputEncoding"?, "form"?}`, where `outputEncoding` says how to write the result, default `utf8`), same response shape
 - `POST /api/v0/encoding/convert` — convert between any two formats (JSON body `{"data", "from", "to"}`), same response shape; the six routes above are this one with a side pinned by the path
+- `GET /api/v0/id/uuid?count=&version=&format=` — UUIDs, `v4` (default) or `v7`, in `canonical` / `compact` / `upper` / `urn`
+- `GET /api/v0/id/ulid?count=&format=` — ULIDs, in `canonical` / `lower` / `uuid` / `hex`
+- `POST /api/v0/id/batch` — every kind in one call (JSON body `{"items":[{"type", "count"?, …}]}`, or a single item unwrapped), returns `{"items":[…]}`
+- `GET /api/v0/random/token?count=&length=&alphabet=&chars=` — random strings from `base62` (default), `base58`, `base64url`, `base32`, `hex`, `digits`, `lower`, `upper`, or a custom `chars` set
+- `GET /api/v0/random/bytes?count=&length=&format=` — raw randomness in `hex` (default), `base64`, `base64url` or `base32`
 - `POST /api/v0/repository/links/` — create a link repository (JSON body `{"name"?}`), returns `{"repositoryId", "token", "name", "createdAt"}` (the `token` is shown only here)
 - `GET /api/v0/repository/links/{repositoryId}?token=...` — get a repository with all its links, 404 if not found or token is invalid
 - `DELETE /api/v0/repository/links/{repositoryId}?token=...` — delete a repository, 204 on success, 404 if not found or token is invalid
@@ -225,6 +230,40 @@ round-trips 512 random bytes through every format.
 Frontend: `html/encoding.html` — one live converter (from/to pickers, debounced conversion as you
 type, byte count, copy) with a swap button that carries the output back into the input, so "encode
 this" becomes "now decode it again" in one click.
+
+## Identifiers and random material
+
+`service/id/` — UUIDs, ULIDs, tokens and raw bytes, all from one `SecureRandom`. Nothing is stored.
+
+- Every request is an `IdService.Spec` and every answer a `Result`, both holding wire values. That is
+  why `/id/batch` is three lines: it is a list of exactly the specs the single-purpose endpoints
+  build for themselves. Validation lives in the service, so an error reads the same whichever route
+  it arrived through.
+- **The `SecureRandom` is the point, not decoration** — these values end up as session tokens and
+  delete keys. Token draws use `nextInt(bound)` rather than `nextInt() % size`, because the modulo
+  form quietly favours the start of any alphabet whose size is not a power of two, which is most of
+  them. A custom `chars` set that repeats a character is refused: it would be drawn twice as often
+  and the reported `bits` would lie.
+- `Ulid` is hand-rolled and **monotonic**: within one millisecond the 80-bit random half is
+  incremented rather than redrawn, so a batch sorts correctly, and a clock that steps backwards
+  keeps the last timestamp instead of issuing an id that sorts before one already handed out. A ULID
+  that does not sort by time is just a slower UUID, so `UlidTest` pins both rules along with the two
+  extreme encodings and a round trip through an independently written decoder.
+- UUID v7 is built by hand (48-bit timestamp, version and variant nibbles, randomness around them);
+  v4 comes from `UUID.randomUUID()`, which is itself `SecureRandom`-backed.
+- `bits` in every response is the randomness one value carries, rounded **down** — 122 for v4, 74 for
+  v7, 80 for a ULID, `floor(length × log2(alphabet))` for a token. Rounding a security margin up is
+  how a token ends up weaker than the number beside it claims.
+- `count` is capped at 1000, and on a batch the cap is on the **whole call** — a per-item limit would
+  let a hundred items of a thousand values each straight through.
+- Random bytes reuse `EncodingFormat` from `service/encoding/` for output; `utf8` is refused by name,
+  since random bytes are not text.
+- **Two endpoint registrations, one generator** — `/api/v0/id/*` issues identifiers meant to be
+  shared, `/api/v0/random/*` issues secrets. Keeping them apart means the day one of them needs a
+  token or a rate limit, it can have one without the other.
+
+Frontend: `html/id.html` — one picker per kind with only that kind's options shown, click-a-value to
+copy, and a note on each tab saying what the kind is actually for (v4 vs v7, why base58).
 
 ## YouTube functionality
 

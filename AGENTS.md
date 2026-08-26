@@ -26,7 +26,7 @@ No lint, typecheck, or codegen tasks exist. No CI/CD.
 | Config         | `com.serbekun.ss.config`             | `Config` (port), `Paths` — hardcoded static configuration. |
 | Domain         | `com.serbekun.ss.domain.*`           | Domain entities (`Link`, `LinkRepository`, `ShortUrl`, `UploadedFile`) and HTTP DTOs (`domain/dto/http/*`). No framework dependencies. |
 | Repository     | `com.serbekun.ss.repo.*`             | Repository **interfaces** + JSON-file implementations (Jackson). All implement `AutoSavable`. |
-| Service        | `com.serbekun.ss.service.*`          | Business logic and orchestration only (auth, cipher, link repositories, short urls, resources, tokens, autosave, youtube, uploaded files cleanup). |
+| Service        | `com.serbekun.ss.service.*`          | Business logic and orchestration only (auth, cipher, hash, link repositories, short urls, resources, tokens, autosave, youtube, uploaded files cleanup). |
 | HTTP (thin)    | `com.serbekun.ss.http.handles.*`     | Javalin route registration, DTOs mapping, validation, and service calls. **No business logic**. |
 | Infrastructure | `com.serbekun.ss.infrastructure.*`   | Low-level technical components (FS initialization, autosave scheduler). |
 | Resources      | `com.serbekun.ss.resources.*`        | Load and cache static files from classpath (`src/main/resources/`). |
@@ -93,6 +93,9 @@ All registered in `http/handles/*Routes` classes:
 - `POST /api/v0/cipher/rsa/verify` — verify a signature (JSON body `{"data", "signature", "publicKey"}`), returns `{"valid"}`; a mismatch is a 200 with `valid: false`, not an error
 - `POST /api/v0/cipher/hybrid/encrypt` — hybrid encrypt of any size (JSON body `{"data", "publicKey"}`), returns `{"data", "encryptedKey"}`
 - `POST /api/v0/cipher/hybrid/decrypt` — hybrid decrypt (JSON body `{"data", "encryptedKey", "privateKey"}`)
+- `POST /api/v0/hash` — hash a payload (JSON body `{"algorithm", "data", "encoding"?, "key"?}`), returns `{"algorithm", "hash", "bytes"}`
+- `POST /api/v0/hash/file` — hash an uploaded file (multipart `file`, plus optional `algorithm`, `key`, `encoding` fields), returns `{"algorithm", "hash", "bytes", "name"}`; streamed, nothing stored
+- `POST /api/v0/hash/verify` — integrity check (JSON body `{"algorithm", "data", "hash", "encoding"?, "key"?}`), returns `{"valid", "algorithm", "expected", "actual"}`; a mismatch is a 200 with `valid: false`, not an error
 - `POST /api/v0/repository/links/` — create a link repository (JSON body `{"name"?}`), returns `{"repositoryId", "token", "name", "createdAt"}` (the `token` is shown only here)
 - `GET /api/v0/repository/links/{repositoryId}?token=...` — get a repository with all its links, 404 if not found or token is invalid
 - `DELETE /api/v0/repository/links/{repositoryId}?token=...` — delete a repository, 204 on success, 404 if not found or token is invalid
@@ -130,6 +133,29 @@ Frontend: `html/cipher_aes.html` (AES) and `html/cipher_rsa.html` (RSA key pairs
 sign/verify, and hybrid encryption with file support). The hybrid tabs exchange an *envelope* —
 `{"encryptedKey", "data", "name"?, "type"?}` — which is a frontend convention, not an API shape;
 the file name in it is metadata in the clear, only the payload is encrypted.
+
+## Hash functionality
+
+`service/hash/` — stateless digests and integrity checks, no storage.
+
+- `HashAlgorithm` — the supported set (`sha256`, `sha512`, `blake3`, `hmac-sha256`) plus loose parsing
+  of caller spelling (`SHA-256`, `sha_256`) and one canonical `wireName()` echoed in every response.
+- `HashService` — one-shot and streaming variants of each algorithm. Files stream through a 64 KB
+  buffer so a large upload never has to fit in memory. `verify` compares with
+  `MessageDigest.isEqual`, i.e. constant time, so repeated guesses cannot be timed to recover an HMAC.
+  A non-matching digest is a `false`, not an exception.
+- **BLAKE3** is the one algorithm the JDK does not ship. It comes from
+  `io.github.rctcwyvrn:blake3` (pure Java, ~10 KB, no transitive deps). That implementation takes
+  whole arrays only, so the streaming path trims a short final read before feeding it —
+  `HashServiceTest` pins all 34 official BLAKE3 test vectors, one-shot **and** streamed, precisely
+  because that trimming is where such a bug would hide.
+
+On the wire, `data` is UTF-8 text by default so `{"algorithm":"sha256","data":"hello"}` works as
+written; `"encoding": "base64"` or `"hex"` switches how both `data` and `key` are read. Digests are
+always lowercase hex. On `/hash/file` the file is raw bytes, so `encoding` there describes the key only.
+
+Frontend: `html/hash.html` — algorithm picker shared across text / file / verify tabs, drag-and-drop
+file input, and a failed check showing expected against actual.
 
 ## YouTube functionality
 

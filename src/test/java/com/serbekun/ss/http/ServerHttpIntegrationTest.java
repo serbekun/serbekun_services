@@ -13,6 +13,7 @@ import com.serbekun.ss.resources.ResourceLoader;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.EndpointRegistry;
 import com.serbekun.ss.service.cipher.CipherService;
+import com.serbekun.ss.service.hash.HashService;
 import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
 import com.serbekun.ss.service.resource.ResourcesService;
 import com.serbekun.ss.service.shorturl.ShortUrlService;
@@ -88,7 +89,7 @@ class ServerHttpIntegrationTest {
         var resourcesService = new ResourcesService(loader, new ResourceCache(loader));
 
         app = ServerFactory.create(config, resourcesService, linkService,
-            new CipherService(), youtubeService, uploadedService, shortUrlService,
+            new CipherService(), new HashService(), youtubeService, uploadedService, shortUrlService,
             authService, endpointRegistry);
     }
 
@@ -358,6 +359,291 @@ class ServerHttpIntegrationTest {
             try (Response response = client.request("/api/v0/cipher/hybrid/decrypt",
                     b -> b.post(jsonBody("{\"data\":\"abc\",\"encryptedKey\":\"\",\"privateKey\":\"\"}")))) {
                 assertThat(response.code()).isEqualTo(400);
+            }
+        });
+    }
+
+    // endregion
+
+    // region hash
+
+    @Test
+    void hashReturnsKnownDigestForPlainText() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/hash",
+                    b -> b.post(jsonBody("{\"algorithm\":\"sha256\",\"data\":\"hello\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode body = json(response);
+                assertThat(body.get("algorithm").asText()).isEqualTo("sha256");
+                assertThat(body.get("hash").asText())
+                    .isEqualTo("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824");
+                assertThat(body.get("bytes").asLong()).isEqualTo(5);
+            }
+        });
+    }
+
+    @Test
+    void hashSupportsEveryAdvertisedAlgorithm() {
+        JavalinTest.test(app, (server, client) -> {
+            record Case(String algorithm, String body, String expected) {
+            }
+
+            var cases = java.util.List.of(
+                new Case("sha256", "{\"algorithm\":\"sha256\",\"data\":\"hello\"}",
+                    "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"),
+                new Case("sha512", "{\"algorithm\":\"sha512\",\"data\":\"hello\"}",
+                    "9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca7"
+                        + "2323c3d99ba5c11d7c7acc6e14b8c5da0c4663475c2e5c3adef46f73bcdec043"),
+                new Case("blake3", "{\"algorithm\":\"blake3\",\"data\":\"hello\"}",
+                    "ea8f163db38682925e4491c5e58d4bb3506ef8c14eb78a86e908c5624a67200f"),
+                new Case("hmac-sha256", "{\"algorithm\":\"hmac-sha256\",\"data\":\"hello\",\"key\":\"secret\"}",
+                    "88aab3ede8d3adf94d26ab90d3bafd4a2083070c3bcce9c014ee04a443847c0b"));
+
+            for (Case testCase : cases) {
+                try (Response response = client.request("/api/v0/hash", b -> b.post(jsonBody(testCase.body())))) {
+                    assertThat(response.code()).as(testCase.algorithm()).isEqualTo(200);
+                    JsonNode body = json(response);
+                    assertThat(body.get("algorithm").asText()).isEqualTo(testCase.algorithm());
+                    assertThat(body.get("hash").asText()).as(testCase.algorithm()).isEqualTo(testCase.expected());
+                }
+            }
+        });
+    }
+
+    @Test
+    void hashReadsBase64AndHexEncodedData() {
+        JavalinTest.test(app, (server, client) -> {
+            String sha256OfHello = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+
+            // "hello" spelled three ways must land on the same digest.
+            try (Response response = client.request("/api/v0/hash",
+                    b -> b.post(jsonBody("{\"algorithm\":\"sha256\",\"data\":\"aGVsbG8=\",\"encoding\":\"base64\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                assertThat(json(response).get("hash").asText()).isEqualTo(sha256OfHello);
+            }
+            try (Response response = client.request("/api/v0/hash",
+                    b -> b.post(jsonBody("{\"algorithm\":\"sha256\",\"data\":\"68656c6c6f\",\"encoding\":\"hex\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                assertThat(json(response).get("hash").asText()).isEqualTo(sha256OfHello);
+            }
+        });
+    }
+
+    @Test
+    void hashOfAnEmptyStringIsTheEmptyDigest() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/hash",
+                    b -> b.post(jsonBody("{\"algorithm\":\"sha256\",\"data\":\"\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode body = json(response);
+                assertThat(body.get("hash").asText())
+                    .isEqualTo("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+                assertThat(body.get("bytes").asLong()).isZero();
+            }
+        });
+    }
+
+    @Test
+    void hashRejectsUnknownAlgorithmAndMissingData() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/hash",
+                    b -> b.post(jsonBody("{\"algorithm\":\"md5\",\"data\":\"hello\"}")))) {
+                assertThat(response.code()).isEqualTo(400);
+                String body = response.body().string();
+                assertThat(body).contains("md5").contains("sha256").contains("blake3");
+            }
+            try (Response response = client.request("/api/v0/hash",
+                    b -> b.post(jsonBody("{\"algorithm\":\"sha256\"}")))) {
+                assertThat(response.code()).isEqualTo(400);
+                assertThat(response.body().string()).contains("data is required");
+            }
+        });
+    }
+
+    @Test
+    void hmacWithoutAKeyIsRejected() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/hash",
+                    b -> b.post(jsonBody("{\"algorithm\":\"hmac-sha256\",\"data\":\"hello\"}")))) {
+                assertThat(response.code()).isEqualTo(400);
+                assertThat(response.body().string()).contains("key is required");
+            }
+        });
+    }
+
+    @Test
+    void hashRejectsBadEncodingAndUndecodableData() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/hash",
+                    b -> b.post(jsonBody("{\"algorithm\":\"sha256\",\"data\":\"hello\",\"encoding\":\"rot13\"}")))) {
+                assertThat(response.code()).isEqualTo(400);
+                assertThat(response.body().string()).contains("rot13");
+            }
+            try (Response response = client.request("/api/v0/hash",
+                    b -> b.post(jsonBody("{\"algorithm\":\"sha256\",\"data\":\"zzz!\",\"encoding\":\"base64\"}")))) {
+                assertThat(response.code()).isEqualTo(400);
+                assertThat(response.body().string()).contains("data");
+            }
+        });
+    }
+
+    @Test
+    void hashFileStreamsAnUploadAndReportsItsName() {
+        JavalinTest.test(app, (server, client) -> {
+            MultipartBody body = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("algorithm", "sha256")
+                .addFormDataPart("file", "notes.txt",
+                    RequestBody.create("hello".getBytes(StandardCharsets.UTF_8),
+                        MediaType.parse("text/plain")))
+                .build();
+
+            try (Response response = client.request("/api/v0/hash/file", b -> b.post(body))) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode json = json(response);
+                assertThat(json.get("hash").asText())
+                    .isEqualTo("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824");
+                assertThat(json.get("name").asText()).isEqualTo("notes.txt");
+                assertThat(json.get("bytes").asLong()).isEqualTo(5);
+                assertThat(json.get("algorithm").asText()).isEqualTo("sha256");
+            }
+        });
+    }
+
+    @Test
+    void hashFileDefaultsToSha256AndAcceptsOtherAlgorithms() {
+        JavalinTest.test(app, (server, client) -> {
+            MultipartBody noAlgorithm = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", "a.bin",
+                    RequestBody.create("hello".getBytes(StandardCharsets.UTF_8),
+                        MediaType.parse("application/octet-stream")))
+                .build();
+
+            try (Response response = client.request("/api/v0/hash/file", b -> b.post(noAlgorithm))) {
+                assertThat(response.code()).isEqualTo(200);
+                assertThat(json(response).get("algorithm").asText()).isEqualTo("sha256");
+            }
+
+            MultipartBody blake3 = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("algorithm", "blake3")
+                .addFormDataPart("file", "a.bin",
+                    RequestBody.create("hello".getBytes(StandardCharsets.UTF_8),
+                        MediaType.parse("application/octet-stream")))
+                .build();
+
+            try (Response response = client.request("/api/v0/hash/file", b -> b.post(blake3))) {
+                assertThat(response.code()).isEqualTo(200);
+                assertThat(json(response).get("hash").asText())
+                    .isEqualTo("ea8f163db38682925e4491c5e58d4bb3506ef8c14eb78a86e908c5624a67200f");
+            }
+        });
+    }
+
+    @Test
+    void hashFileRequiresAFile() {
+        JavalinTest.test(app, (server, client) -> {
+            MultipartBody body = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("algorithm", "sha256")
+                .build();
+
+            try (Response response = client.request("/api/v0/hash/file", b -> b.post(body))) {
+                assertThat(response.code()).isEqualTo(400);
+                assertThat(response.body().string()).contains("file");
+            }
+        });
+    }
+
+    @Test
+    void hashFileMatchesTheInMemoryEndpointForALargePayload() {
+        JavalinTest.test(app, (server, client) -> {
+            // Bigger than the streaming buffer, so the chunked path is what runs.
+            byte[] payload = new byte[300_000];
+            for (int i = 0; i < payload.length; i++) {
+                payload[i] = (byte) (i % 251);
+            }
+
+            String viaJson;
+            try (Response response = client.request("/api/v0/hash",
+                    b -> b.post(jsonBody("{\"algorithm\":\"blake3\",\"data\":\""
+                        + Base64.getEncoder().encodeToString(payload) + "\",\"encoding\":\"base64\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                viaJson = json(response).get("hash").asText();
+            }
+
+            MultipartBody body = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("algorithm", "blake3")
+                .addFormDataPart("file", "big.bin",
+                    RequestBody.create(payload, MediaType.parse("application/octet-stream")))
+                .build();
+
+            try (Response response = client.request("/api/v0/hash/file", b -> b.post(body))) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode json = json(response);
+                assertThat(json.get("hash").asText()).isEqualTo(viaJson);
+                assertThat(json.get("bytes").asLong()).isEqualTo(payload.length);
+            }
+        });
+    }
+
+    @Test
+    void verifyAcceptsAMatchingDigestAndRejectsAlteredData() {
+        JavalinTest.test(app, (server, client) -> {
+            String sha256OfHello = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+
+            try (Response response = client.request("/api/v0/hash/verify",
+                    b -> b.post(jsonBody("{\"algorithm\":\"sha256\",\"data\":\"hello\",\"hash\":\""
+                        + sha256OfHello + "\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode json = json(response);
+                assertThat(json.get("valid").asBoolean()).isTrue();
+                assertThat(json.get("expected").asText()).isEqualTo(sha256OfHello);
+                assertThat(json.get("actual").asText()).isEqualTo(sha256OfHello);
+            }
+
+            // A mismatch is a 200 with valid=false, not an error.
+            try (Response response = client.request("/api/v0/hash/verify",
+                    b -> b.post(jsonBody("{\"algorithm\":\"sha256\",\"data\":\"hello!\",\"hash\":\""
+                        + sha256OfHello + "\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode json = json(response);
+                assertThat(json.get("valid").asBoolean()).isFalse();
+                assertThat(json.get("actual").asText()).isNotEqualTo(sha256OfHello);
+            }
+        });
+    }
+
+    @Test
+    void verifyRejectsANonHexHash() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/hash/verify",
+                    b -> b.post(jsonBody("{\"algorithm\":\"sha256\",\"data\":\"hello\",\"hash\":\"nothex\"}")))) {
+                assertThat(response.code()).isEqualTo(400);
+                assertThat(response.body().string()).contains("hex");
+            }
+        });
+    }
+
+    @Test
+    void verifyWorksForKeyedHmac() {
+        JavalinTest.test(app, (server, client) -> {
+            String hmac = "88aab3ede8d3adf94d26ab90d3bafd4a2083070c3bcce9c014ee04a443847c0b";
+
+            try (Response response = client.request("/api/v0/hash/verify",
+                    b -> b.post(jsonBody("{\"algorithm\":\"hmac-sha256\",\"data\":\"hello\","
+                        + "\"key\":\"secret\",\"hash\":\"" + hmac + "\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                assertThat(json(response).get("valid").asBoolean()).isTrue();
+            }
+
+            try (Response response = client.request("/api/v0/hash/verify",
+                    b -> b.post(jsonBody("{\"algorithm\":\"hmac-sha256\",\"data\":\"hello\","
+                        + "\"key\":\"wrong\",\"hash\":\"" + hmac + "\"}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                assertThat(json(response).get("valid").asBoolean()).isFalse();
             }
         });
     }

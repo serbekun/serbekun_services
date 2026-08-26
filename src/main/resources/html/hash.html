@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Hash &amp; Integrity — Serbekun</title>
+    <link rel="icon" href="/icon" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/v0/css/theme.css">
+    <link rel="stylesheet" href="/static/v0/css/shared.css">
+    <link rel="stylesheet" href="/static/v0/css/hash.css">
+    <script src="/static/v0/js/theme.js"></script>
+</head>
+<body>
+
+    <button class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="tt-sun">☀</span><span class="tt-moon">☾</span>
+    </button>
+
+    <div class="container">
+        <a href="/" class="back-link">back</a>
+
+        <div class="header">
+            <h1 class="header-title">Hash &amp; Integrity</h1>
+            <p class="header-sub">// sha-256 · sha-512 · blake3 · hmac-sha256</p>
+        </div>
+
+        <div class="prompt-line">
+            <span class="cwd">~/serbekun/hash</span>
+            <span>$</span>
+            <span>hash --interactive</span>
+            <span class="prompt-cursor"></span>
+        </div>
+
+        <!-- Algorithm — shared by every panel below -->
+        <div class="field-label">algorithm</div>
+        <div class="algo-row">
+            <button class="algo-btn active" type="button" data-algo="sha256">sha-256</button>
+            <button class="algo-btn" type="button" data-algo="sha512">sha-512</button>
+            <button class="algo-btn" type="button" data-algo="blake3">blake3</button>
+            <button class="algo-btn" type="button" data-algo="hmac-sha256">hmac-sha256</button>
+        </div>
+
+        <div class="field hidden" id="keyField">
+            <div class="field-label">hmac key</div>
+            <input type="text" id="key" placeholder="shared secret..." spellcheck="false" autocomplete="off">
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" type="button" data-panel="textPanel">text</button>
+            <button class="tab-btn" type="button" data-panel="filePanel">file</button>
+            <button class="tab-btn" type="button" data-panel="verifyPanel">verify</button>
+        </div>
+
+        <!-- Text -->
+        <div id="textPanel" class="panel active">
+            <p class="panel-note">
+                Hashes text exactly as the API does — the same bytes in give the same digest anywhere,
+                which is the whole point of a hash.
+            </p>
+
+            <div class="field">
+                <div class="field-label">input</div>
+                <textarea id="textInput" placeholder="enter text to hash..."></textarea>
+            </div>
+
+            <div class="enc-row">
+                <span class="enc-label">read input as</span>
+                <button class="enc-btn active" type="button" data-enc="utf8" data-target="text">utf-8 text</button>
+                <button class="enc-btn" type="button" data-enc="base64" data-target="text">base64</button>
+                <button class="enc-btn" type="button" data-enc="hex" data-target="text">hex</button>
+            </div>
+
+            <button class="run-btn" type="button" id="textBtn">run hash</button>
+
+            <div id="textResult" class="result-block">
+                <div class="result-header">
+                    <span class="result-label" id="textResultLabel">digest</span>
+                    <button class="copy-btn" type="button" data-copy-result="textResultText">copy</button>
+                </div>
+                <div class="result-body" id="textResultText"></div>
+                <div class="result-meta" id="textResultMeta"></div>
+            </div>
+        </div>
+
+        <!-- File -->
+        <div id="filePanel" class="panel">
+            <p class="panel-note">
+                The file is streamed to the server and hashed there — nothing is stored, and the
+                digest is the one to compare against a published checksum.
+            </p>
+
+            <div class="field">
+                <div class="field-label">file</div>
+                <input type="file" id="fileInput" class="file-input">
+                <label class="file-drop" for="fileInput" id="fileLabel">choose a file, or drop one here…</label>
+            </div>
+
+            <button class="run-btn" type="button" id="fileBtn">run hash</button>
+
+            <div id="fileResult" class="result-block">
+                <div class="result-header">
+                    <span class="result-label" id="fileResultLabel">digest</span>
+                    <button class="copy-btn" type="button" data-copy-result="fileResultText">copy</button>
+                </div>
+                <div class="result-body" id="fileResultText"></div>
+                <div class="result-meta" id="fileResultMeta"></div>
+            </div>
+        </div>
+
+        <!-- Verify -->
+        <div id="verifyPanel" class="panel">
+            <p class="panel-note">
+                Recomputes the digest and compares it with the one you expect, in constant time.
+                Paste a checksum from a download page and check text or a file against it.
+            </p>
+
+            <div class="enc-row">
+                <span class="enc-label">check</span>
+                <button class="enc-btn active" type="button" data-source="text" data-target="verify">text</button>
+                <button class="enc-btn" type="button" data-source="file" data-target="verify">file</button>
+            </div>
+
+            <div class="field" id="verifyTextField">
+                <div class="field-label">input</div>
+                <textarea id="verifyInput" placeholder="enter the text to check..."></textarea>
+            </div>
+
+            <div class="field hidden" id="verifyFileField">
+                <input type="file" id="verifyFileInput" class="file-input">
+                <label class="file-drop" for="verifyFileInput" id="verifyFileLabel">choose a file, or drop one here…</label>
+            </div>
+
+            <div class="field">
+                <div class="field-label">expected hash (hex)</div>
+                <textarea id="verifyHash" class="hash-area" placeholder="paste the published checksum..." spellcheck="false"></textarea>
+            </div>
+
+            <button class="run-btn" type="button" id="verifyBtn">run verify</button>
+
+            <div id="verifyVerdict" class="verdict">
+                <span class="verdict-mark" id="verifyMark"></span>
+                <span id="verifyText"></span>
+            </div>
+
+            <div id="verifyDetail" class="verdict-detail">
+                <div class="verdict-detail-row">
+                    <span class="verdict-detail-key">expected</span>
+                    <span id="verifyExpected"></span>
+                </div>
+                <div class="verdict-detail-row">
+                    <span class="verdict-detail-key">actual</span>
+                    <span id="verifyActual"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-line" id="status"></div>
+
+        <div class="footer">serbekun service // hash &amp; integrity</div>
+    </div>
+
+    <script src="/static/v0/js/hash.js"></script>
+</body>
+</html>

@@ -16,6 +16,7 @@ import com.serbekun.ss.service.cipher.CipherService;
 import com.serbekun.ss.service.encoding.EncodingService;
 import com.serbekun.ss.service.hash.HashService;
 import com.serbekun.ss.service.id.IdService;
+import com.serbekun.ss.service.json.JsonService;
 import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
 import com.serbekun.ss.service.qr.QrService;
 import com.serbekun.ss.service.resource.ResourcesService;
@@ -94,7 +95,7 @@ class ServerHttpIntegrationTest {
         var resourcesService = new ResourcesService(loader, new ResourceCache(loader));
 
         app = ServerFactory.create(config, resourcesService, linkService,
-            new CipherService(), new HashService(), new QrService(), new EncodingService(), new IdService(), youtubeService, uploadedService,
+            new CipherService(), new HashService(), new QrService(), new EncodingService(), new IdService(), new JsonService(), youtubeService, uploadedService,
             shortUrlService, authService, endpointRegistry);
     }
 
@@ -1260,6 +1261,173 @@ class ServerHttpIntegrationTest {
                         + "{\"type\":\"ulid\",\"count\":600}]}")))) {
                 assertThat(tooMany.code()).isEqualTo(400);
                 assertThat(json(tooMany).get("error").asText()).contains("at most 1000 values in total");
+            }
+        });
+    }
+
+
+    // region json
+
+    @Test
+    void jsonValidateAnswersWhereADocumentStopsBeingJson() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response ok = client.request("/api/v0/json/validate",
+                    b -> b.post(jsonBody("{\"a\": [1, 2, 3]}")))) {
+                assertThat(ok.code()).isEqualTo(200);
+                JsonNode body = json(ok);
+                assertThat(body.get("valid").asBoolean()).isTrue();
+                assertThat(body.get("bytes").asInt()).isEqualTo(16);
+            }
+
+            // A broken document is a 200 with the reason, not an error status:
+            // reporting where the problem is, is the whole job.
+            try (Response broken = client.request("/api/v0/json/validate",
+                    b -> b.post(jsonBody("{\n  \"a\": 1,\n  \"b\":\n}")))) {
+                assertThat(broken.code()).isEqualTo(200);
+                JsonNode body = json(broken);
+                assertThat(body.get("valid").asBoolean()).isFalse();
+                assertThat(body.get("line").asInt()).isEqualTo(4);
+                assertThat(body.get("error").asText()).isNotBlank();
+            }
+
+            try (Response duplicate = client.request("/api/v0/json/validate",
+                    b -> b.post(jsonBody("{\"a\":1,\"a\":2}")))) {
+                JsonNode body = json(duplicate);
+                assertThat(body.get("valid").asBoolean()).isFalse();
+                assertThat(body.get("error").asText().toLowerCase()).contains("duplicate");
+            }
+        });
+    }
+
+    @Test
+    void jsonFormatAnswersWithTheDocumentItself() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/json/format",
+                    b -> b.post(jsonBody("{\"b\":1,\"a\":[1,2]}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                assertThat(response.header("Content-Type")).contains("application/json");
+                // Not wrapped in a field — a caller should not have to unescape
+                // a JSON document out of a JSON string.
+                assertThat(response.body().string())
+                    .isEqualTo("{\n  \"b\": 1,\n  \"a\": [\n    1,\n    2\n  ]\n}");
+            }
+
+            try (Response response = client.request("/api/v0/json/format?indent=4&sort=true",
+                    b -> b.post(jsonBody("{\"b\":1,\"a\":2}")))) {
+                assertThat(response.body().string()).isEqualTo("{\n    \"a\": 2,\n    \"b\": 1\n}");
+            }
+
+            try (Response response = client.request("/api/v0/json/format?indent=tab",
+                    b -> b.post(jsonBody("{\"a\":1}")))) {
+                assertThat(response.body().string()).isEqualTo("{\n\t\"a\": 1\n}");
+            }
+        });
+    }
+
+    @Test
+    void jsonMinifyStripsEveryAvoidableByte() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/json/minify",
+                    b -> b.post(jsonBody("{\n  \"a\" : 1,\n  \"b\" : [ 1, 2 ]\n}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                assertThat(response.body().string()).isEqualTo("{\"a\":1,\"b\":[1,2]}");
+            }
+        });
+    }
+
+    @Test
+    void jsonQueryTakesAPointerOrAPath() {
+        JavalinTest.test(app, (server, client) -> {
+            String document = "{\"store\":{\"book\":[{\"title\":\"a\",\"price\":5},"
+                + "{\"title\":\"b\",\"price\":15}]}}";
+
+            try (Response pointer = client.request("/api/v0/json/query?pointer=/store/book/1/title",
+                    b -> b.post(jsonBody(document)))) {
+                assertThat(pointer.code()).isEqualTo(200);
+                JsonNode body = json(pointer);
+                assertThat(body.get("syntax").asText()).isEqualTo("pointer");
+                assertThat(body.get("count").asInt()).isEqualTo(1);
+                assertThat(body.get("matches").get(0).asText()).isEqualTo("b");
+            }
+
+            try (Response path = client.request("/api/v0/json/query?path=$..book%5B%3F(@.price%20%3C%2010)%5D.title",
+                    b -> b.post(jsonBody(document)))) {
+                assertThat(path.code()).isEqualTo(200);
+                JsonNode body = json(path);
+                assertThat(body.get("syntax").asText()).isEqualTo("jsonpath");
+                assertThat(body.get("count").asInt()).isEqualTo(1);
+                assertThat(body.get("matches").get(0).asText()).isEqualTo("a");
+                assertThat(body.get("paths").get(0).asText()).contains("book");
+            }
+
+            // Nothing at that path is an answer, not a 404.
+            try (Response none = client.request("/api/v0/json/query?pointer=/store/dvd",
+                    b -> b.post(jsonBody(document)))) {
+                assertThat(none.code()).isEqualTo(200);
+                assertThat(json(none).get("count").asInt()).isZero();
+            }
+        });
+    }
+
+    @Test
+    void jsonDiffReturnsAPatchThatDescribesTheChange() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response response = client.request("/api/v0/json/diff",
+                    b -> b.post(jsonBody("{\"from\":{\"a\":1,\"gone\":true},"
+                        + "\"to\":{\"a\":2,\"added\":\"x\"}}")))) {
+                assertThat(response.code()).isEqualTo(200);
+                JsonNode body = json(response);
+                assertThat(body.get("equal").asBoolean()).isFalse();
+                assertThat(body.get("operations").asInt()).isEqualTo(3);
+
+                List<String> operations = new ArrayList<>();
+                body.get("patch").forEach(op ->
+                    operations.add(op.get("op").asText() + " " + op.get("path").asText()));
+                assertThat(operations).containsExactlyInAnyOrder(
+                    "remove /gone", "replace /a", "add /added");
+            }
+
+            try (Response same = client.request("/api/v0/json/diff",
+                    b -> b.post(jsonBody("{\"from\":{\"a\":1},\"to\":{\"a\":1.0}}")))) {
+                // RFC 6902 compares numbers by value: 1 and 1.0 are one number.
+                JsonNode body = json(same);
+                assertThat(body.get("equal").asBoolean()).isTrue();
+                assertThat(body.get("patch")).isEmpty();
+            }
+        });
+    }
+
+    @Test
+    void jsonEndpointsRejectWhatTheyCannotRead() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response broken = client.request("/api/v0/json/format",
+                    b -> b.post(jsonBody("{\"a\":}")))) {
+                assertThat(broken.code()).isEqualTo(400);
+                assertThat(json(broken).get("error").asText()).contains("invalid JSON at line 1");
+            }
+
+            try (Response badIndent = client.request("/api/v0/json/format?indent=99",
+                    b -> b.post(jsonBody("{\"a\":1}")))) {
+                assertThat(badIndent.code()).isEqualTo(400);
+                assertThat(json(badIndent).get("error").asText()).contains("between 1 and 16");
+            }
+
+            try (Response noExpression = client.request("/api/v0/json/query",
+                    b -> b.post(jsonBody("{\"a\":1}")))) {
+                assertThat(noExpression.code()).isEqualTo(400);
+                assertThat(json(noExpression).get("error").asText()).contains("expression is required");
+            }
+
+            try (Response badPointer = client.request("/api/v0/json/query?pointer=a/b",
+                    b -> b.post(jsonBody("{\"a\":1}")))) {
+                assertThat(badPointer.code()).isEqualTo(400);
+                assertThat(json(badPointer).get("error").asText()).contains("start with '/'");
+            }
+
+            try (Response halfADiff = client.request("/api/v0/json/diff",
+                    b -> b.post(jsonBody("{\"from\":{\"a\":1}}")))) {
+                assertThat(halfADiff.code()).isEqualTo(400);
+                assertThat(json(halfADiff).get("error").asText()).contains("both 'from' and 'to' are required");
             }
         });
     }

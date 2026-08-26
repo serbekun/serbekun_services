@@ -11,6 +11,7 @@ import com.serbekun.ss.http.handles.EncodingRoutes;
 import com.serbekun.ss.http.handles.HashRoutes;
 import com.serbekun.ss.http.handles.HttpHandler;
 import com.serbekun.ss.http.handles.IdRoutes;
+import com.serbekun.ss.http.handles.JsonRoutes;
 import com.serbekun.ss.http.handles.NetworkRoutes;
 import com.serbekun.ss.http.handles.QrRoutes;
 import com.serbekun.ss.http.handles.RepositoryLinksRoutes;
@@ -27,6 +28,7 @@ import com.serbekun.ss.service.cipher.CipherService;
 import com.serbekun.ss.service.encoding.EncodingService;
 import com.serbekun.ss.service.hash.HashService;
 import com.serbekun.ss.service.id.IdService;
+import com.serbekun.ss.service.json.JsonService;
 import com.serbekun.ss.service.linksrepo.LinkRepositoryService;
 import com.serbekun.ss.service.qr.QrService;
 import com.serbekun.ss.service.resource.ResourcesService;
@@ -54,6 +56,7 @@ public final class ServerFactory {
             QrService qrService,
             EncodingService encodingService,
             IdService idService,
+            JsonService jsonService,
             YoutubeService youtubeService,
             UploadedFilesService uploadedFilesService,
             ShortUrlService shortUrlService,
@@ -72,6 +75,7 @@ public final class ServerFactory {
             new QrRoutes(qrService, endpointRegistrar),
             new EncodingRoutes(encodingService, endpointRegistrar),
             new IdRoutes(idService, endpointRegistrar),
+            new JsonRoutes(jsonService, endpointRegistrar),
             new RepositoryLinksRoutes(linkRepositoryService, endpointRegistrar),
             new YoutubeRoutes(youtubeService),
             new UploadedFilesRoutes(uploadedFilesService, config, endpointRegistrar),

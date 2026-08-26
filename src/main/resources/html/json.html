@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>JSON Tools — Serbekun</title>
+    <link rel="icon" href="/icon" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/v0/css/theme.css">
+    <link rel="stylesheet" href="/static/v0/css/shared.css">
+    <link rel="stylesheet" href="/static/v0/css/json.css">
+    <script src="/static/v0/js/theme.js"></script>
+</head>
+<body>
+
+    <button class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="tt-sun">☀</span><span class="tt-moon">☾</span>
+    </button>
+
+    <div class="container">
+        <a href="/" class="back-link">back</a>
+
+        <div class="header">
+            <h1 class="header-title">JSON Tools</h1>
+            <p class="header-sub">// validate · format · minify · query · diff</p>
+        </div>
+
+        <div class="prompt-line">
+            <span class="cwd">~/serbekun/json</span>
+            <span>$</span>
+            <span>json --interactive</span>
+            <span class="prompt-cursor"></span>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" type="button" data-mode="format">format</button>
+            <button class="tab-btn" type="button" data-mode="minify">minify</button>
+            <button class="tab-btn" type="button" data-mode="validate">validate</button>
+            <button class="tab-btn" type="button" data-mode="query">query</button>
+            <button class="tab-btn" type="button" data-mode="diff">diff</button>
+        </div>
+
+        <p class="panel-note" id="note"></p>
+
+        <!-- Document -->
+        <div class="field">
+            <div class="field-label" id="inputLabel">document</div>
+            <textarea id="input" placeholder='{"paste": "anything"}' spellcheck="false" autocomplete="off"></textarea>
+        </div>
+
+        <!-- The second document, for diff only -->
+        <div class="field hidden" id="targetField">
+            <div class="field-label">to</div>
+            <textarea id="target" placeholder='{"paste": "the other one"}' spellcheck="false" autocomplete="off"></textarea>
+        </div>
+
+        <!-- Query options -->
+        <div class="opt-block hidden" id="queryOptions">
+            <div class="field">
+                <div class="field-label">expression</div>
+                <input type="text" id="expression" placeholder="/store/book/0/title  or  $..book[?(@.price &lt; 10)]" spellcheck="false" autocomplete="off">
+            </div>
+            <div class="enc-row">
+                <span class="enc-label">syntax</span>
+                <button class="enc-btn active" type="button" data-group="syntax" data-value="">detect</button>
+                <button class="enc-btn" type="button" data-group="syntax" data-value="pointer">pointer</button>
+                <button class="enc-btn" type="button" data-group="syntax" data-value="jsonpath">jsonpath</button>
+            </div>
+        </div>
+
+        <!-- Write options -->
+        <div class="opt-block" id="writeOptions">
+            <div class="enc-row" id="indentRow">
+                <span class="enc-label">indent</span>
+                <button class="enc-btn active" type="button" data-group="indent" data-value="2">2 spaces</button>
+                <button class="enc-btn" type="button" data-group="indent" data-value="4">4 spaces</button>
+                <button class="enc-btn" type="button" data-group="indent" data-value="tab">tab</button>
+            </div>
+            <label class="check-row">
+                <input type="checkbox" id="sort">
+                <span>sort keys</span>
+            </label>
+        </div>
+
+        <button class="run-btn" type="button" id="runBtn">run</button>
+
+        <!-- Verdict, for validate -->
+        <div id="verdict" class="verdict">
+            <span class="verdict-mark" id="verdictMark"></span>
+            <span id="verdictText"></span>
+        </div>
+
+        <div id="result" class="result-block">
+            <div class="result-header">
+                <span class="result-label" id="resultLabel">output</span>
+                <div class="result-actions">
+                    <button class="copy-btn" type="button" id="useAsInput">use as input</button>
+                    <button class="copy-btn" type="button" id="copyBtn">copy</button>
+                </div>
+            </div>
+            <pre class="result-body" id="output"></pre>
+            <div class="result-meta" id="meta"></div>
+        </div>
+
+        <div class="status-line" id="status"></div>
+
+        <div class="footer">serbekun service // json tools</div>
+    </div>
+
+    <script src="/static/v0/js/json.js"></script>
+</body>
+</html>

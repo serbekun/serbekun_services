@@ -48,6 +48,10 @@ dependencies {
     // BLAKE3 — the one hash in the API the JDK does not ship. Pure Java, ~10 KB, no transitive deps.
     implementation 'io.github.rctcwyvrn:blake3:1.3'
 
+    // JSONPath. Jackson already covers JSON Pointer (`JsonNode.at`), but a real
+    // JSONPath — filters and all — is not something to hand-roll half of.
+    implementation 'com.jayway.jsonpath:json-path:2.9.0'
+
     // QR codes. `core` encodes and decodes; `javase` is the thin bridge to
     // BufferedImage/ImageIO that reading an uploaded PNG needs.
     implementation 'com.google.zxing:core:3.5.3'

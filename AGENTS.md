@@ -68,8 +68,8 @@ The project is a Javalin 6 server with token-based auth, JSON-file persistence, 
 
 JUnit 5 + AssertJ + Mockito, run with `./gradlew test`. Coverage (as of 2026-07-19):
 
-- **Unit tests** per layer: services (`cipher` — AES, RSA, hybrid, `hash`, `qr`, `encoding`, `id` (+ `Ulid`), `shorturl`, `linksrepo`, `uploadedfiles`, `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
-- **HTTP integration tests** at `src/test/java/com/serbekun/ss/http/ServerHttpIntegrationTest.java` — full route tree via `RouteInitializer` + `javalin-testtools`, real services over in-memory repos; only the `Youtube` (yt-dlp) wrapper is mocked. Covers index/static, version, cipher, hash, qr, encoding, id/random, short-url, repository-links, uploaded-files (multipart), and youtube endpoints.
+- **Unit tests** per layer: services (`cipher` — AES, RSA, hybrid, `hash`, `qr`, `encoding`, `id` (+ `Ulid`), `json` (+ `JsonDiff`), `shorturl`, `linksrepo`, `uploadedfiles`, `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
+- **HTTP integration tests** at `src/test/java/com/serbekun/ss/http/ServerHttpIntegrationTest.java` — full route tree via `RouteInitializer` + `javalin-testtools`, real services over in-memory repos; only the `Youtube` (yt-dlp) wrapper is mocked. Covers index/static, version, cipher, hash, qr, encoding, id/random, json, short-url, repository-links, uploaded-files (multipart), and youtube endpoints.
 - `YoutubeTest` contains real yt-dlp integration tests that need `yt-dlp`, Deno, and network access — expect failures without them.
 
 Gotcha: don't use Mockito `verify(mock, timeout(...))` on `synchronized` methods (e.g. `UploadedFilesService.deleteExpiredFiles`) — the verifying thread holds the mock's monitor and deadlocks the thread under test. Use `CountDownLatch` answers instead (see `UploadedFilesCleanupServiceTest`).
@@ -106,6 +106,11 @@ All registered in `http/handles/*Routes` classes:
 - `POST /api/v0/id/batch` — every kind in one call (JSON body `{"items":[{"type", "count"?, …}]}`, or a single item unwrapped), returns `{"items":[…]}`
 - `GET /api/v0/random/token?count=&length=&alphabet=&chars=` — random strings from `base62` (default), `base58`, `base64url`, `base32`, `hex`, `digits`, `lower`, `upper`, or a custom `chars` set
 - `GET /api/v0/random/bytes?count=&length=&format=` — raw randomness in `hex` (default), `base64`, `base64url` or `base32`
+- `POST /api/v0/json/validate` — is the body JSON? Returns `{"valid", "error"?, "line"?, "column"?, "bytes"}`; a broken document is a 200 with `valid: false`, not an error
+- `POST /api/v0/json/format?indent=&sort=` — pretty-print; answers with the **document itself**, not a wrapper (`indent` is 1–16 spaces or `tab`)
+- `POST /api/v0/json/minify?sort=` — strip every avoidable byte; also answers with the document
+- `POST /api/v0/json/query?pointer=|path=|expression=&syntax=` — JSON Pointer or JSONPath, returns `{"expression", "syntax", "count", "matches", "paths"}`; no match is a 200 with `count: 0`
+- `POST /api/v0/json/diff` — RFC 6902 patch between two documents (JSON body `{"from", "to"}`), returns `{"equal", "operations", "patch"}`
 - `POST /api/v0/repository/links/` — create a link repository (JSON body `{"name"?}`), returns `{"repositoryId", "token", "name", "createdAt"}` (the `token` is shown only here)
 - `GET /api/v0/repository/links/{repositoryId}?token=...` — get a repository with all its links, 404 if not found or token is invalid
 - `DELETE /api/v0/repository/links/{repositoryId}?token=...` — delete a repository, 204 on success, 404 if not found or token is invalid
@@ -264,6 +269,41 @@ this" becomes "now decode it again" in one click.
 
 Frontend: `html/id.html` — one picker per kind with only that kind's options shown, click-a-value to
 copy, and a note on each tab saying what the kind is actually for (v4 vs v7, why base58).
+
+## JSON functionality
+
+`service/json/` — validate, format, minify, query and diff. Stateless, nothing stored.
+
+- **The request body is the document itself**, options ride in the query string. That is what makes
+  these usable from a shell (`curl --data-binary @file.json`) and the only shape that can accept a
+  *broken* document at all, since invalid JSON cannot be quoted inside a JSON envelope. `/diff` is
+  the one exception — two documents need a wrapper. `format` and `minify` answer with the document
+  rather than a field holding it, for the same reason.
+- **Duplicate keys are an error** (`STRICT_DUPLICATE_DETECTION`). A lenient parser keeps the last one,
+  which would make the formatter delete data while reporting success. A tool whose job is to tell you
+  about your document has to say so instead.
+- **Numbers keep their value exactly** — `USE_BIG_DECIMAL_FOR_FLOATS` plus
+  `JsonNodeFactory.withExactBigDecimals(true)`, because the default factory strips trailing zeros and
+  would quietly rewrite `1.0` as `1`. The text may still be normalised (`1e2` → `1E+2`), the value
+  never is.
+- The pretty printer is a `DefaultPrettyPrinter` subclass only because Jackson writes `"a" : 1` by
+  default and every other formatter in the world writes `"a": 1`.
+- `JsonDiff` emits `add`/`remove`/`replace` only — `move` and `copy` are optional in RFC 6902 and only
+  shorten a patch. Numbers compare **by value** (`1` and `1.0` are one number per the RFC), which
+  Jackson's own `equals` would call a change. Arrays of equal length are compared element-wise so a
+  nested change stays nested; unequal lengths go through an LCS match, so one insertion into a
+  thousand-element array is one operation. Past a million LCS cells it falls back to comparing by
+  index and fixing the tail — still correct, just longer.
+- Query: JSON Pointer is Jackson's own `JsonNode.at`; JSONPath is **jayway json-path** configured with
+  the Jackson node provider (`ALWAYS_RETURN_LIST` for values, a second config with `AS_PATH_LIST` for
+  where each match was). The syntax is detected from the expression — only a JSONPath starts with `$`,
+  only a pointer starts with `/` — and `syntax` overrides the guess.
+
+`JsonDiffTest` applies every generated patch with an applier written in the test, because a patch is
+only correct if applying it yields the target; the rest of its cases check the patch is also *small*.
+
+Frontend: `html/json.html` — five tabs over one document box (two in diff), a verdict line for
+validate, the byte saving computed locally for minify, and "use as input" to chain format → query.
 
 ## YouTube functionality
 

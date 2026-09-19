@@ -90,6 +90,18 @@ public class Paths {
         }
     }
 
+    /** class that contain configuration for {@link com.serbekun.ss.repo.burnlink.BurnLinkRepo} */
+    public static class BurnLinkConfig {
+        /**
+         * Returns the path to the burn link storage file.
+         * @return the path to the burn link storage file
+         */
+        public static Path getBurnLinkStorageFile() {
+            return Path.of(configOrDefault(Config::getBurnLinkStorageFile,
+                    "repository/burn_link/burn_link.json"));
+        }
+    }
+
     public static class YoutubeConfig {
         /**
          * Returns the path to the YouTube cookies file.

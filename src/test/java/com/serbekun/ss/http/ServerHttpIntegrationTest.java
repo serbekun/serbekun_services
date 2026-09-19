@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serbekun.ss.BuildInfo;
 import com.serbekun.ss.config.Config;
+import com.serbekun.ss.repo.burnlink.BurnLinkRepo;
 import com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensRepo;
 import com.serbekun.ss.repo.linksrepo.LinkRepositoryRepo;
 import com.serbekun.ss.repo.shorturl.ShortUrlRepo;
@@ -12,6 +13,7 @@ import com.serbekun.ss.resources.ResourceCache;
 import com.serbekun.ss.resources.ResourceLoader;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.EndpointRegistry;
+import com.serbekun.ss.service.burnlink.BurnLinkService;
 import com.serbekun.ss.service.cipher.CipherService;
 import com.serbekun.ss.service.encoding.EncodingService;
 import com.serbekun.ss.service.hash.HashService;
@@ -67,6 +69,7 @@ class ServerHttpIntegrationTest {
 
     private Javalin app;
     private Youtube youtube;
+    private BurnLinkRepo burnLinkRepo;
 
     @BeforeEach
     void setUp() {
@@ -74,18 +77,20 @@ class ServerHttpIntegrationTest {
             "repository", "repository/repositories/links_repositories.json",
             "repository/endpoint_access_tokens.json", "repository/uploaded_files_raw/",
             "repository/uploaded_files/uploaded_files.json", "repository/short_url/short_url.json",
-            "repository/www.youtube.com_cookies.txt");
+            "repository/burn_link/burn_link.json", "repository/www.youtube.com_cookies.txt");
 
         var linkRepo = new LinkRepositoryRepo(new HashMap<>());
         var tokensRepo = new EndpointsAccessTokensRepo(new HashMap<>());
         var uploadedRepo = new UploadedFilesRepo(new HashMap<>());
         var shortUrlRepo = new ShortUrlRepo(new HashMap<>());
+        burnLinkRepo = new BurnLinkRepo(new HashMap<>());
 
         var endpointRegistry = new EndpointRegistry();
         var authService = new AuthService(tokensRepo, endpointRegistry);
         var linkService = new LinkRepositoryService(linkRepo);
         var shortUrlService = new ShortUrlService(shortUrlRepo);
         var uploadedService = new UploadedFilesService(uploadedRepo, tempDir.resolve("raw"));
+        var burnLinkService = new BurnLinkService(burnLinkRepo);
 
         youtube = mock(Youtube.class);
         var youtubeService = new YoutubeService(
@@ -96,7 +101,7 @@ class ServerHttpIntegrationTest {
 
         app = ServerFactory.create(config, resourcesService, linkService,
             new CipherService(), new HashService(), new QrService(), new EncodingService(), new IdService(), new JsonService(), youtubeService, uploadedService,
-            shortUrlService, authService, endpointRegistry);
+            shortUrlService, burnLinkService, authService, endpointRegistry);
     }
 
     private static RequestBody jsonBody(String json) {
@@ -784,6 +789,177 @@ class ServerHttpIntegrationTest {
             try (Response badBase = client.request("/api/v0/short-url/qr",
                     b -> b.post(jsonBody("{\"url\":\"https://example.com\",\"baseUrl\":\"ss.serbekun.com\"}")))) {
                 assertThat(badBase.code()).isEqualTo(400);
+            }
+        });
+    }
+
+    // endregion
+
+    // region burn link
+
+    private static final String UA_IPHONE =
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1";
+    private static final String UA_ANDROID =
+            "Mozilla/5.0 (Linux; Android 14; Pixel 8) Chrome/120.0 Mobile Safari/537.36";
+
+    @Test
+    void burnLinkLifecycleBurnsExactlyOnce() {
+        JavalinTest.test(app, (server, client) -> {
+            String id;
+            String token;
+            try (Response created = client.request("/api/v0/burn",
+                    b -> b.header("User-Agent", UA_IPHONE).post(jsonBody("{\"text\":\"secret message\"}")))) {
+                assertThat(created.code()).isEqualTo(201);
+                JsonNode body = json(created);
+                id = body.get("id").asText();
+                token = body.get("token").asText();
+                assertThat(id).matches("[A-Za-z0-9]{10}");
+                assertThat(body.get("url").asText()).endsWith("/b/" + id);
+                assertThat(body.get("expiredTime").asLong()).isZero();
+            }
+
+            // The page does not burn.
+            try (Response page = client.request("/b/" + id,
+                    b -> b.header("User-Agent", UA_IPHONE).get())) {
+                assertThat(page.code()).isEqualTo(200);
+                assertThat(page.header("Content-Type")).contains("text/html");
+            }
+            assertThat(burnLinkRepo.getBurnLink(id)).isNotNull();
+
+            // Reveal burns and returns the text.
+            try (Response revealed = client.request("/api/v0/burn/" + id + "/reveal",
+                    b -> b.header("User-Agent", UA_IPHONE).post(jsonBody("{}")))) {
+                assertThat(revealed.code()).isEqualTo(200);
+                assertThat(json(revealed).get("text").asText()).isEqualTo("secret message");
+            }
+
+            // Second reveal and the page are both gone.
+            try (Response again = client.request("/api/v0/burn/" + id + "/reveal",
+                    b -> b.header("User-Agent", UA_IPHONE).post(jsonBody("{}")))) {
+                assertThat(again.code()).isEqualTo(404);
+            }
+            try (Response page = client.request("/b/" + id,
+                    b -> b.header("User-Agent", UA_IPHONE).get())) {
+                assertThat(page.code()).isEqualTo(404);
+            }
+
+            // Deleting an already burned link is a 404 too.
+            try (Response deleted = client.delete("/api/v0/burn/" + id + "?token=" + token)) {
+                assertThat(deleted.code()).isEqualTo(404);
+            }
+        });
+    }
+
+    @Test
+    void burnLinkBlockedVisitorSeesAPlain404WithoutBurning() {
+        JavalinTest.test(app, (server, client) -> {
+            String id;
+            try (Response created = client.request("/api/v0/burn",
+                    b -> b.post(jsonBody("{\"text\":\"secret\",\"devices\":[\"iphone\"]}")))) {
+                id = json(created).get("id").asText();
+            }
+
+            try (Response blockedPage = client.request("/b/" + id,
+                    b -> b.header("User-Agent", UA_ANDROID).get())) {
+                assertThat(blockedPage.code()).isEqualTo(404);
+            }
+            try (Response blockedReveal = client.request("/api/v0/burn/" + id + "/reveal",
+                    b -> b.header("User-Agent", UA_ANDROID).post(jsonBody("{}")))) {
+                assertThat(blockedReveal.code()).isEqualTo(404);
+            }
+
+            // The intended device still gets it.
+            assertThat(burnLinkRepo.getBurnLink(id)).isNotNull();
+            try (Response revealed = client.request("/api/v0/burn/" + id + "/reveal",
+                    b -> b.header("User-Agent", UA_IPHONE).post(jsonBody("{}")))) {
+                assertThat(revealed.code()).isEqualTo(200);
+                assertThat(json(revealed).get("text").asText()).isEqualTo("secret");
+            }
+        });
+    }
+
+    @Test
+    void burnLinkIpBlacklistWinsOverWhitelist() {
+        JavalinTest.test(app, (server, client) -> {
+            String id;
+            try (Response created = client.request("/api/v0/burn",
+                    b -> b.post(jsonBody("{\"text\":\"secret\","
+                        + "\"ipWhitelist\":[\"203.0.113.0/24\"],"
+                        + "\"ipBlacklist\":[\"203.0.113.7\"]}")))) {
+                assertThat(created.code()).isEqualTo(201);
+                id = json(created).get("id").asText();
+            }
+
+            try (Response blacklisted = client.request("/api/v0/burn/" + id + "/reveal",
+                    b -> b.header("CF-Connecting-IP", "203.0.113.7").post(jsonBody("{}")))) {
+                assertThat(blacklisted.code()).isEqualTo(404);
+            }
+            try (Response outside = client.request("/api/v0/burn/" + id + "/reveal",
+                    b -> b.header("CF-Connecting-IP", "198.51.100.1").post(jsonBody("{}")))) {
+                assertThat(outside.code()).isEqualTo(404);
+            }
+            try (Response allowed = client.request("/api/v0/burn/" + id + "/reveal",
+                    b -> b.header("CF-Connecting-IP", "203.0.113.9").post(jsonBody("{}")))) {
+                assertThat(allowed.code()).isEqualTo(200);
+            }
+        });
+    }
+
+    @Test
+    void burnLinkDeleteRequiresToken() {
+        JavalinTest.test(app, (server, client) -> {
+            String id;
+            String token;
+            try (Response created = client.request("/api/v0/burn",
+                    b -> b.post(jsonBody("{\"text\":\"secret\"}")))) {
+                JsonNode body = json(created);
+                id = body.get("id").asText();
+                token = body.get("token").asText();
+            }
+
+            try (Response forbidden = client.delete("/api/v0/burn/" + id + "?token=wrong")) {
+                assertThat(forbidden.code()).isEqualTo(403);
+            }
+            try (Response deleted = client.delete("/api/v0/burn/" + id + "?token=" + token)) {
+                assertThat(deleted.code()).isEqualTo(204);
+            }
+            assertThat(burnLinkRepo.getBurnLink(id)).isNull();
+        });
+    }
+
+    @Test
+    void burnLinkExpiredReturns404() {
+        JavalinTest.test(app, (server, client) -> {
+            long past = System.currentTimeMillis() - 1000;
+            burnLinkRepo.addBurnLink(new com.serbekun.ss.domain.models.BurnLink(
+                    "expired000", "secret", "t", past, past,
+                    java.util.List.of(), java.util.List.of(), java.util.List.of(), java.util.List.of()));
+
+            try (Response page = client.request("/b/expired000", b -> b.get())) {
+                assertThat(page.code()).isEqualTo(404);
+            }
+            try (Response revealed = client.request("/api/v0/burn/expired000/reveal",
+                    b -> b.post(jsonBody("{}")))) {
+                assertThat(revealed.code()).isEqualTo(404);
+            }
+            assertThat(burnLinkRepo.getBurnLink("expired000")).isNull();
+        });
+    }
+
+    @Test
+    void burnLinkCreateRejectsBadInput() {
+        JavalinTest.test(app, (server, client) -> {
+            try (Response noText = client.request("/api/v0/burn",
+                    b -> b.post(jsonBody("{\"ttl\":60}")))) {
+                assertThat(noText.code()).isEqualTo(400);
+            }
+            try (Response badDevice = client.request("/api/v0/burn",
+                    b -> b.post(jsonBody("{\"text\":\"x\",\"devices\":[\"blackberry\"]}")))) {
+                assertThat(badDevice.code()).isEqualTo(400);
+            }
+            try (Response badIp = client.request("/api/v0/burn",
+                    b -> b.post(jsonBody("{\"text\":\"x\",\"ipWhitelist\":[\"not-an-ip\"]}")))) {
+                assertThat(badIp.code()).isEqualTo(400);
             }
         });
     }

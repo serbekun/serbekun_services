@@ -6,6 +6,7 @@ import io.javalin.Javalin;
 import io.javalin.config.SizeUnit;
 
 import com.serbekun.ss.config.Config;
+import com.serbekun.ss.http.handles.BurnLinkRoutes;
 import com.serbekun.ss.http.handles.CipherRoutes;
 import com.serbekun.ss.http.handles.EncodingRoutes;
 import com.serbekun.ss.http.handles.HashRoutes;
@@ -24,6 +25,7 @@ import com.serbekun.ss.http.middleware.AuthMiddleware;
 import com.serbekun.ss.http.middleware.CharsetMiddleware;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.api.EndpointRegistrar;
+import com.serbekun.ss.service.burnlink.BurnLinkService;
 import com.serbekun.ss.service.cipher.CipherService;
 import com.serbekun.ss.service.encoding.EncodingService;
 import com.serbekun.ss.service.hash.HashService;
@@ -60,6 +62,7 @@ public final class ServerFactory {
             YoutubeService youtubeService,
             UploadedFilesService uploadedFilesService,
             ShortUrlService shortUrlService,
+            BurnLinkService burnLinkService,
             AuthService authService,
             EndpointRegistrar endpointRegistrar) {
 
@@ -80,6 +83,7 @@ public final class ServerFactory {
             new YoutubeRoutes(youtubeService),
             new UploadedFilesRoutes(uploadedFilesService, config, endpointRegistrar),
             new ShortUrlRoutes(shortUrlService, qrService, endpointRegistrar),
+            new BurnLinkRoutes(burnLinkService, resourcesService, endpointRegistrar),
             new VersionRoutes(endpointRegistrar),
             new NetworkRoutes()
         );

@@ -68,8 +68,8 @@ The project is a Javalin 6 server with token-based auth, JSON-file persistence, 
 
 JUnit 5 + AssertJ + Mockito, run with `./gradlew test`. Coverage (as of 2026-07-19):
 
-- **Unit tests** per layer: services (`cipher` — AES, RSA, hybrid, `hash`, `qr`, `encoding`, `id` (+ `Ulid`), `json` (+ `JsonDiff`), `shorturl`, `linksrepo`, `uploadedfiles`, `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
-- **HTTP integration tests** at `src/test/java/com/serbekun/ss/http/ServerHttpIntegrationTest.java` — full route tree via `RouteInitializer` + `javalin-testtools`, real services over in-memory repos; only the `Youtube` (yt-dlp) wrapper is mocked. Covers index/static, version, cipher, hash, qr, encoding, id/random, json, short-url, repository-links, uploaded-files (multipart), and youtube endpoints.
+- **Unit tests** per layer: services (`cipher` — AES, RSA, hybrid, `hash`, `qr`, `encoding`, `id` (+ `Ulid`), `json` (+ `JsonDiff`), `shorturl`, `linksrepo`, `uploadedfiles`, `burnlink` (+ `UserAgentClassifier`, `IpAccessList`), `auth`, `resource`), in-memory repos + JSON `*FileRepo` persistence roundtrips (`@TempDir`), `Config` loading/defaults/legacy-field migration, domain model validation + Jackson roundtrips, `ResourceCache`/`ResourcesBasePath`.
+- **HTTP integration tests** at `src/test/java/com/serbekun/ss/http/ServerHttpIntegrationTest.java` — full route tree via `RouteInitializer` + `javalin-testtools`, real services over in-memory repos; only the `Youtube` (yt-dlp) wrapper is mocked. Covers index/static, version, cipher, hash, qr, encoding, id/random, json, short-url, burn-link, repository-links, uploaded-files (multipart), and youtube endpoints.
 - `YoutubeTest` contains real yt-dlp integration tests that need `yt-dlp`, Deno, and network access — expect failures without them.
 
 Gotcha: don't use Mockito `verify(mock, timeout(...))` on `synchronized` methods (e.g. `UploadedFilesService.deleteExpiredFiles`) — the verifying thread holds the mock's monitor and deadlocks the thread under test. Use `CountDownLatch` answers instead (see `UploadedFilesCleanupServiceTest`).
@@ -129,6 +129,35 @@ All registered in `http/handles/*Routes` classes:
 - `GET /api/v0/uploaded-files/{uuid}/download` — download uploaded file content (returns 404 if expired or not found)
 - `POST /api/v0/uploaded-files` — upload a file (multipart form data), returns metadata with `uuid` and `token`
 - `DELETE /api/v0/uploaded-files/{uuid}` — delete uploaded file; requires the delete `token` (`?token=` query param), 403 on mismatch, 404 if unknown
+- `POST /api/v0/burn` — create a self-destructing link (JSON body `{"text", "name"?, "ttl"?, "devices"?, "browsers"?, "ipWhitelist"?, "ipBlacklist"?, "baseUrl"?}`), returns `{"id", "token", "url", "expiredTime", "devices", "browsers", "ipWhitelist", "ipBlacklist"}` where `url` is `<baseUrl>/b/<id>`
+- `GET /b/{id}` — serve the reveal page (button only, **never burns**); 404 for missing, expired, already burned or blocked — all identical
+- `POST /api/v0/burn/{id}/reveal` — burn the link and return `{"text"}`; 404 under the same conditions; the only call that deletes the secret
+- `DELETE /api/v0/burn/{id}` — delete a link early; requires the delete `token` (`?token=` query param or JSON body), 403 on mismatch, 404 if unknown
+
+## Burn-link functionality
+
+`service/burnlink/` + `service/burnlink/UserAgentClassifier` + `service/burnlink/IpAccessList` — links
+whose text is revealed exactly once and then destroyed.
+
+- **Two-step reveal is deliberate.** `GET /b/{id}` serves a static page with a button and does not
+  burn; `POST /api/v0/burn/{id}/reveal` burns. Messaging-app link previews only issue GETs, so they
+  cannot consume the secret before a human opens it.
+- **Blocked = missing.** Missing, expired, already burned and access-blocked all answer the exact
+  same 404, so the link cannot be probed to learn that a filter exists.
+- **Expiration mirrors uploaded files**: `ttl` in seconds (`0`/absent = never), stored as an absolute
+  `expired_time` epoch-ms. Lazy deletion on resolve/reveal plus `BurnLinkCleanupService` every 600 s.
+- **Whitelists** (empty = allow all): `devices` and `browsers` classify the `User-Agent` (device:
+  `iphone/ipad/android/windows/mac/linux/other`; browser: `edge/opera/firefox/chrome/safari/other`).
+  Unknown values are rejected at creation with 400. `IpAccessList` supports exact IPv4/IPv6 and CIDR;
+  `ipBlacklist` is checked before `ipWhitelist`, so an address in both is blocked. Client IP comes
+  from `CF-Connecting-IP` / `X-Forwarded-For` / `ctx.ip()` via `http/handles/api/ClientIps`.
+- **A blocked visit does not burn the link** — only a successful reveal removes the record, so an
+  unintended device cannot destroy it for the intended one.
+- `BurnLinkService.reveal` is `synchronized`: of two concurrent visitors exactly one gets the text.
+- Text is capped at `MAX_TEXT_LENGTH` (100000) and is delivered as data, never injected into HTML
+  (the page writes it through `textContent`).
+- Frontend: `html/burn_link.html` (create + option pickers + credential modal) and the dynamically
+  served `html/burn_reveal.html` (reveal button, then the secret).
 
 ## Cipher functionality
 

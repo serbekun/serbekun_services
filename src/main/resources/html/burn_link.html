@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Burn Link — Serbekun</title>
+    <link rel="icon" href="/icon" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/v0/css/theme.css">
+    <link rel="stylesheet" href="/static/v0/css/shared.css">
+    <link rel="stylesheet" href="/static/v0/css/burn_link.css">
+    <script src="/static/v0/js/theme.js"></script>
+</head>
+<body>
+
+    <button class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="tt-sun">☀</span><span class="tt-moon">☾</span>
+    </button>
+
+    <div class="container">
+        <a href="/" class="back-link">back</a>
+
+        <div class="header">
+            <h1 class="header-title">Burn Link</h1>
+            <p class="header-sub">// one secret, one open, then gone</p>
+        </div>
+
+        <div class="prompt-line">
+            <span class="cwd">~/serbekun/burn</span>
+            <span>$</span>
+            <span>./burn --create</span>
+            <span class="prompt-cursor"></span>
+        </div>
+
+        <div class="field">
+            <div class="field-label">secret text</div>
+            <textarea id="secretText" placeholder="type the message that should self-destruct..." spellcheck="false" rows="6"></textarea>
+            <div class="field-hint" id="textCount">0 / 100000</div>
+        </div>
+
+        <div class="field">
+            <div class="field-label">time-to-live (seconds, 0 = never)</div>
+            <div class="ttl-presets" id="ttlPresets">
+                <button type="button" class="ttl-preset" data-ttl="60" onclick="setTtlPreset(this, 60)">Minute</button>
+                <button type="button" class="ttl-preset" data-ttl="3600" onclick="setTtlPreset(this, 3600)">Hour</button>
+                <button type="button" class="ttl-preset" data-ttl="86400" onclick="setTtlPreset(this, 86400)">Day</button>
+                <button type="button" class="ttl-preset" data-ttl="604800" onclick="setTtlPreset(this, 604800)">Week</button>
+                <button type="button" class="ttl-preset" data-ttl="2592000" onclick="setTtlPreset(this, 2592000)">Month</button>
+                <button type="button" class="ttl-preset" data-ttl="31536000" onclick="setTtlPreset(this, 31536000)">Year</button>
+                <button type="button" class="ttl-preset active" data-ttl="0" onclick="setTtlPreset(this, 0)">Forever</button>
+            </div>
+            <input type="number" id="burnTtl" placeholder="3600" min="0" spellcheck="false" value="0" oninput="syncTtlPresets()">
+        </div>
+
+        <div class="field">
+            <div class="field-label">allowed devices (none = all)</div>
+            <div class="check-grid" id="deviceList"></div>
+        </div>
+
+        <div class="field">
+            <div class="field-label">allowed browsers (none = all)</div>
+            <div class="check-grid" id="browserList"></div>
+        </div>
+
+        <div class="field">
+            <div class="field-label">ip whitelist (none = all)</div>
+            <textarea id="ipWhitelist" placeholder="203.0.113.7&#10;10.0.0.0/8" spellcheck="false" rows="3"></textarea>
+        </div>
+
+        <div class="field">
+            <div class="field-label">ip blacklist</div>
+            <textarea id="ipBlacklist" placeholder="198.51.100.0/24" spellcheck="false" rows="3"></textarea>
+        </div>
+
+        <button class="btn-primary" onclick="createBurnLink()">Create burn link</button>
+
+        <div class="status-line" id="status"></div>
+
+        <div class="footer">serbekun service // burn link</div>
+    </div>
+
+    <div id="resultModal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <h2>burn link created</h2>
+            <p class="modal-warning">the secret is revealed once, to the first allowed visitor — save the delete token, it won't be shown again</p>
+            <div class="credential-row">
+                <span class="cred-label">Link</span>
+                <span class="cred-value mono" id="modalLink"></span>
+            </div>
+            <div class="credential-row">
+                <span class="cred-label">ID</span>
+                <span class="cred-value mono" id="modalId"></span>
+            </div>
+            <div class="credential-row">
+                <span class="cred-label">Token</span>
+                <span class="cred-value mono" id="modalToken"></span>
+            </div>
+            <div class="credential-row">
+                <span class="cred-label">Expires</span>
+                <span class="cred-value" id="modalExpires"></span>
+            </div>
+            <div class="modal-actions">
+                <button class="copy-btn" onclick="copyModalLink()">copy link</button>
+                <button class="copy-btn" onclick="copyCredentials()">copy credentials</button>
+                <button class="close-modal-btn" onclick="closeModal()">close</button>
+            </div>
+            <p class="feedback-text" id="modalFeedback"></p>
+        </div>
+    </div>
+
+    <script src="/static/v0/js/burn_link.js"></script>
+</body>
+</html>

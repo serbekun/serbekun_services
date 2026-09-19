@@ -55,6 +55,8 @@ public class Config {
     private final String uploadedFilesStorageFile;
     /** Path to the short URL storage file. */
     private final String shortUrlStorageFile;
+    /** Path to the burn link storage file. */
+    private final String burnLinkStorageFile;
     /** Path to the YouTube cookies file. */
     private final String youtubeCookiesFile;
 
@@ -76,6 +78,7 @@ public class Config {
     @JsonProperty("uploaded_files_raw_folder") String uploadedFilesRawFolder,
     @JsonProperty("uploaded_files_storage_file") String uploadedFilesStorageFile,
     @JsonProperty("short_url_storage_file") String shortUrlStorageFile,
+    @JsonProperty("burn_link_storage_file") String burnLinkStorageFile,
     @JsonProperty("youtube_cookies_file") String youtubeCookiesFile
 ) {
         this.port = port;
@@ -89,6 +92,7 @@ public class Config {
         this.uploadedFilesRawFolder = uploadedFilesRawFolder;
         this.uploadedFilesStorageFile = uploadedFilesStorageFile;
         this.shortUrlStorageFile = shortUrlStorageFile;
+        this.burnLinkStorageFile = burnLinkStorageFile;
         this.youtubeCookiesFile = youtubeCookiesFile;
     }
 
@@ -141,6 +145,10 @@ public class Config {
     /** @return Path to the short URL storage file */
     @JsonProperty("short_url_storage_file")
     public String getShortUrlStorageFile() { return shortUrlStorageFile; }
+
+    /** @return Path to the burn link storage file */
+    @JsonProperty("burn_link_storage_file")
+    public String getBurnLinkStorageFile() { return burnLinkStorageFile; }
 
     /** @return Path to the YouTube cookies file */
     @JsonProperty("youtube_cookies_file")
@@ -223,6 +231,7 @@ public class Config {
             "repository/uploaded_files_raw/",
             "repository/uploaded_files/uploaded_files.json",
             "repository/short_url/short_url.json",
+            "repository/burn_link/burn_link.json",
             "repository/www.youtube.com_cookies.txt"
         );
     }

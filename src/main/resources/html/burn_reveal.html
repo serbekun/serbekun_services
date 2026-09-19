@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Burn Link — Serbekun</title>
+    <link rel="icon" href="/icon" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/v0/css/theme.css">
+    <link rel="stylesheet" href="/static/v0/css/shared.css">
+    <link rel="stylesheet" href="/static/v0/css/burn_link.css">
+    <script src="/static/v0/js/theme.js"></script>
+</head>
+<body data-burn-id="__BURN_LINK_ID__">
+
+    <button class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="tt-sun">☀</span><span class="tt-moon">☾</span>
+    </button>
+
+    <div class="container container-narrow">
+        <div class="header">
+            <h1 class="header-title">Burn Link</h1>
+            <p class="header-sub">// this message self-destructs when revealed</p>
+        </div>
+
+        <div class="reveal-box" id="revealBox">
+            <p class="reveal-warning">Opening this link will show the secret <strong>once</strong> and permanently delete it from the server.</p>
+            <button class="btn-primary" id="revealBtn" onclick="revealSecret()">Reveal secret</button>
+        </div>
+
+        <div class="secret-box" id="secretBox" style="display: none;">
+            <div class="field-label">secret message</div>
+            <pre id="secretText" class="secret-text"></pre>
+            <button class="copy-btn" onclick="copySecret()">copy</button>
+            <p class="feedback-text" id="copyFeedback"></p>
+        </div>
+
+        <div class="status-line" id="status"></div>
+
+        <div class="footer">serbekun service // burn link</div>
+    </div>
+
+    <script src="/static/v0/js/burn_reveal.js"></script>
+</body>
+</html>

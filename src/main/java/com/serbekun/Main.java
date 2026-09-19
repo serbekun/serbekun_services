@@ -14,6 +14,8 @@ import com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensFileRepo;
 import com.serbekun.ss.repo.endpointaccesstokens.EndpointsAccessTokensRepo;
 import com.serbekun.ss.repo.linksrepo.LinkRepositoryFileRepo;
 import com.serbekun.ss.repo.linksrepo.LinkRepositoryRepo;
+import com.serbekun.ss.repo.burnlink.BurnLinkFileRepo;
+import com.serbekun.ss.repo.burnlink.BurnLinkRepo;
 import com.serbekun.ss.repo.shorturl.ShortUrlFileRepo;
 import com.serbekun.ss.repo.shorturl.ShortUrlRepo;
 import com.serbekun.ss.repo.uploadedfiles.UploadedFilesFileRepo;
@@ -23,6 +25,8 @@ import com.serbekun.ss.resources.ResourceLoader;
 import com.serbekun.ss.service.auth.AuthService;
 import com.serbekun.ss.service.auth.EndpointRegistry;
 import com.serbekun.ss.service.autosave.*;
+import com.serbekun.ss.service.burnlink.BurnLinkCleanupService;
+import com.serbekun.ss.service.burnlink.BurnLinkService;
 import com.serbekun.ss.service.cipher.CipherService;
 import com.serbekun.ss.service.encoding.EncodingService;
 import com.serbekun.ss.service.hash.HashService;
@@ -132,6 +136,11 @@ public class Main {
         ShortUrlRepo shortUrlRepo = new ShortUrlRepo(shortUrlFileRepo.load());
         shortUrlFileRepo.setShortUrlReadInterface(shortUrlRepo);
 
+        // 5. Burn Links
+        BurnLinkFileRepo burnLinkFileRepo = new BurnLinkFileRepo(Paths.BurnLinkConfig.getBurnLinkStorageFile());
+        BurnLinkRepo burnLinkRepo = new BurnLinkRepo(burnLinkFileRepo.load());
+        burnLinkFileRepo.setBurnLinkReadInterface(burnLinkRepo);
+
         return new Repositories(
             linkRepositoryRepo,
             linkRepositoryFileRepo,
@@ -140,7 +149,9 @@ public class Main {
             uploadedFilesRepo,
             uploadedFilesFileRepo,
             shortUrlRepo,
-            shortUrlFileRepo
+            shortUrlFileRepo,
+            burnLinkRepo,
+            burnLinkFileRepo
         );
     }
 
@@ -174,10 +185,13 @@ public class Main {
         // Short URLs
         var shortUrlService = new ShortUrlService(repos.shortUrlRepo);
 
+        // Burn Links
+        var burnLinkService = new BurnLinkService(repos.burnLinkRepo);
+        var burnLinkCleanupService = new BurnLinkCleanupService(burnLinkService, 600);
 
         return new Services(endpointRegistry, linkRepositoryService, authService,
                 youtubeService, uploadedFilesService, uploadedFilesCleanupService,
-                shortUrlService);
+                shortUrlService, burnLinkService, burnLinkCleanupService);
     }
 
     /**
@@ -214,6 +228,7 @@ public class Main {
             ctx.services.youtubeService,
             ctx.services.uploadedFilesService,
             ctx.services.shortUrlService,
+            ctx.services.burnLinkService,
             ctx.services.authService,
             ctx.services.endpointRegistry
         );
@@ -224,7 +239,11 @@ public class Main {
         // Uploaded files expiration cleanup
         ctx.services.uploadedFilesCleanupService.start();
 
-        addShutdownHook(server, autosaveService, ctx.services.uploadedFilesCleanupService);
+        // Burn links expiration cleanup
+        ctx.services.burnLinkCleanupService.start();
+
+        addShutdownHook(server, autosaveService,
+                ctx.services.uploadedFilesCleanupService, ctx.services.burnLinkCleanupService);
 
         // Run
         server.start(config.getPort());
@@ -242,6 +261,7 @@ public class Main {
         autosave.register(repos.endpointsAccessTokensFileRepo);
         autosave.register(repos.uploadedFilesFileRepo);
         autosave.register(repos.shortUrlFileRepo);
+        autosave.register(repos.burnLinkFileRepo);
         autosave.start();
         return autosave;
     }
@@ -251,13 +271,16 @@ public class Main {
      * @param server The Javalin server instance to be stopped
      * @param autosave The AutosaveService instance to be stopped
      * @param cleanupService The UploadedFilesCleanupService instance to be stopped
+     * @param burnLinkCleanupService The BurnLinkCleanupService instance to be stopped
      */
     private static void addShutdownHook(Javalin server, AutosaveService autosave,
-                                         UploadedFilesCleanupService cleanupService) {
+                                         UploadedFilesCleanupService cleanupService,
+                                         BurnLinkCleanupService burnLinkCleanupService) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             log.info("Shutting down server...");
             autosave.stop();
             cleanupService.stop();
+            burnLinkCleanupService.stop();
             server.stop();
         }, "shutdown-hook"));
     }
@@ -289,6 +312,8 @@ public class Main {
         private final UploadedFilesFileRepo uploadedFilesFileRepo;
         private final ShortUrlRepo shortUrlRepo;
         private final ShortUrlFileRepo shortUrlFileRepo;
+        private final BurnLinkRepo burnLinkRepo;
+        private final BurnLinkFileRepo burnLinkFileRepo;
 
         private Repositories(
                 LinkRepositoryRepo linkRepositoryRepo,
@@ -298,7 +323,9 @@ public class Main {
                 UploadedFilesRepo uploadedFilesRepo,
                 UploadedFilesFileRepo uploadedFilesFileRepo,
                 ShortUrlRepo shortUrlRepo,
-                ShortUrlFileRepo shortUrlFileRepo) {
+                ShortUrlFileRepo shortUrlFileRepo,
+                BurnLinkRepo burnLinkRepo,
+                BurnLinkFileRepo burnLinkFileRepo) {
             this.linkRepositoryRepo = linkRepositoryRepo;
             this.linkRepositoryFileRepo = linkRepositoryFileRepo;
             this.endpointsAccessTokensRepo = endpointsAccessTokensRepo;
@@ -307,6 +334,8 @@ public class Main {
             this.uploadedFilesFileRepo = uploadedFilesFileRepo;
             this.shortUrlRepo = shortUrlRepo;
             this.shortUrlFileRepo = shortUrlFileRepo;
+            this.burnLinkRepo = burnLinkRepo;
+            this.burnLinkFileRepo = burnLinkFileRepo;
         }
     }
 
@@ -323,6 +352,8 @@ public class Main {
         private final UploadedFilesService uploadedFilesService;
         private final UploadedFilesCleanupService uploadedFilesCleanupService;
         private final ShortUrlService shortUrlService;
+        private final BurnLinkService burnLinkService;
+        private final BurnLinkCleanupService burnLinkCleanupService;
 
         private Services(
                 EndpointRegistry endpointRegistry,
@@ -331,7 +362,9 @@ public class Main {
                 YoutubeService youtubeService,
                 UploadedFilesService uploadedFilesService,
                 UploadedFilesCleanupService uploadedFilesCleanupService,
-                ShortUrlService shortUrlService) {
+                ShortUrlService shortUrlService,
+                BurnLinkService burnLinkService,
+                BurnLinkCleanupService burnLinkCleanupService) {
             this.endpointRegistry = endpointRegistry;
             this.linkRepositoryService = linkRepositoryService;
             this.authService = authService;
@@ -339,6 +372,8 @@ public class Main {
             this.uploadedFilesService = uploadedFilesService;
             this.uploadedFilesCleanupService = uploadedFilesCleanupService;
             this.shortUrlService = shortUrlService;
+            this.burnLinkService = burnLinkService;
+            this.burnLinkCleanupService = burnLinkCleanupService;
         }
     }
 
